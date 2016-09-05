@@ -234,8 +234,8 @@
                 this.velocity.y *= -1;
                 this.location.y = canvas.height - this.mass;
             }
-            else if (this.location.y - this.mass-2 < 0) { // top
-                this.velocity.y *= -1;
+            else if (this.location.y - this.mass-1 < 0) { // top
+                this.velocity.y *= ;
                 console.log('this.mass');
                 this.location.y = this.mass+1;
 
