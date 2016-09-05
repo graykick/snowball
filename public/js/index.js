@@ -1,6 +1,7 @@
 //window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
+    var groundFrition = 0.02;
 
     var mapArr = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -54,7 +55,7 @@
         }
         //top
         else if (event.keyCode == 87) {
-            player.applyForth(new Vector(0, -5));
+            player.applyForth(new Vector(0, -10));
             console.log('wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww');
         }
         //right
@@ -184,7 +185,7 @@
             this.velocity.add(this.acceleration);
             //console.log(`velocity ${this.velocity.x}, ${this.velocity.y}`);
             this.location.add(this.velocity);
-            //console.log(`location ${this.location.x}, ${this.location.y}`);
+            console.log(`location ${this.location.x}, ${this.location.y}`);
             this.acceleration.mult(0);
         }
 
@@ -201,25 +202,32 @@
         checkEdge() {
             var fix = this.location.y;
             var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / 32)][Math.floor(this.location.x / 32)];
-            if (!(nowPosition == 0)) { // y 출돌검사
-                this.location.y = Math.floor(this.location.y / 32) * 32;
+
+            if (!(nowPosition == 0)) { // y impact check bottom
+                this.location.y = this.location.y-1;
                 this.velocity.y = 0;
-                //  this.applyForth(this.getFriction(0.1,this.velocity));
-                this.acceleration.x += this.getFriction(0.1, this.velocity).x;
+                this.acceleration.x += this.getFriction(groundFrition, this.velocity).x; //add friction only X
             }
+
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
-            if (!(nowPosition == 0)) { // y 출돌검사
-                this.location.y = Math.floor(this.location.y / 32) * 32;
+            if (!(nowPosition == 0)) { // y impact check top
+                this.location.y = this.location.y+1;
                 this.velocity.y = 0;
-                //  this.applyForth(this.getFriction(0.1,this.velocity));
-                //  this.acceleration.x += this.getFriction(0.1,this.velocity).x;
+                this.acceleration.x += this.getFriction(groundFrition,this.velocity).x; //add friction inly X
             }
 
             var nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x + this.mass) / 32)];
-            //  console.log(`${Math.floor(this.location.y/32)} uuu ${Math.floor((this.location.x+this.mass)/32)} uuu ${nowPositionX}`);
-            if (!(nowPositionX == 0)) { //X출돌검사
-                this.location.x = Math.floor(this.location.x / 32) * 32;
-                console.log(`wow`);
+            if (!(nowPositionX == 0)) { // x impact sheck right
+                this.location.x = this.location.x-1;
+                this.velocity.x=0;
+                this.acceleration.y += this.getFriction(groundFrition,this.velocity).y; //add friction inly y
+            }
+
+            nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x - this.mass) / 32)];
+            if(!(nowPositionX ==0 )){ // x impact check left
+                this.location.x = this.location.x+1;
+                this.velocity.x=0;
+                this.acceleration.y += this.getFriction(groundFrition,this.velocity).y; //add friction inly y
             }
 
             if (this.location.x + this.mass > canvas.width) { //right wall
@@ -232,11 +240,11 @@
                 this.location.x = 0 + this.mass;
             }
 
-            if (this.location.y + this.mass > canvas.height) { //bottom
+            if (this.location.y + this.mass > canvas.height) { // bottom
                 this.velocity.y *= -1;
                 this.location.y = canvas.height - this.mass;
             }
-            else if (this.location.y - this.mass < 0) { //top
+            else if (this.location.y - this.mass < 0) { // top
                 console.log('fuck');
                 this.velocity.y *= -1;
                 this.location.y = 0 + this.mass;
@@ -258,7 +266,7 @@
     }
 
     var player = new Player(new Vector(50, 50), 32);
-    var gravity = new Vector(0, 0.1);
+    var gravity = new Vector(0, 1);
 
     function start() {
         setInterval('loop()', 10);
@@ -278,5 +286,6 @@
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillText(`${pointX}, ${pointY}`, 10, 50);
+        console.log(`${pointX}, ${pointY}`);
     }
 //}
