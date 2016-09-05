@@ -69,6 +69,9 @@
 
     canvas.width = 3200;
     canvas.height = 640;
+    var skeletionImg = new Image();
+    skeletionImg.src = "../public/image/skeleton.png"
+
     var mapImage = new Image();
     mapImage.addEventListener('load', pngLoaded, false);
     mapImage.src = "../public/image/map.png";
@@ -170,6 +173,7 @@
             this.velocity = new Vector(0, 0);
             this.acceleration = new Vector(0, 0);
             this.mass = mass;
+            this.flying = true;
         }
 
         update() {
@@ -181,10 +185,14 @@
 
         draw() {
             ctx.save();
-            ctx.beginPath();
-            ctx.fillStyle = "red";
-            ctx.arc(this.location.x, this.location.y, this.mass, 0, Math.PI * 2, true);
-            ctx.fill();
+            var state = "stop"
+            if(!(this.flying)&&(state == "stop")){
+              ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+            }
+            if(this.flying){
+              ctx.drawImage(skeletionImg,0,0,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+
+            }
             ctx.restore();
         }
 
@@ -197,27 +205,28 @@
                 this.location.y = Math.floor(this.location.y/32)*32;
                 this.velocity.y = 0;
                 this.acceleration.x += this.getFriction(groundFrition, this.velocity).x; //add friction only X
+                this.flying = false;
             }
 
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
             if (!(nowPosition == 0)) { // y impact check top
                 this.location.y = this.location.y+1;
                 this.velocity.y = 0;
-                //this.acceleration.x += this.getFriction(groundFrition,this.velocity).x; //add friction inly X
+                this.flying = false;
             }
 
             var nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x + this.mass) / 32)];
             if (!(nowPositionX == 0)) { // x impact sheck right
                 this.location.x = this.location.x-1;
                 this.velocity.x=0;
-
+                this.flying = false;
             }
 
             nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x - this.mass) / 32)];
             if(!(nowPositionX ==0 )){ // x impact check left
                 this.location.x = this.location.x+1;
                 this.velocity.x=0;
-
+                this.flying = false;
             }
 
             if (this.location.x + this.mass > canvas.width) { //right wall
@@ -235,7 +244,7 @@
                 this.location.y = canvas.height - this.mass;
             }
             else if (this.location.y - this.mass-1 < 0) { // top
-                this.velocity.y *= ;
+                this.velocity.y *= -1;
                 console.log('this.mass');
                 this.location.y = this.mass+1;
 
