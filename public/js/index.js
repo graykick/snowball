@@ -62,7 +62,7 @@
 
     var mousePressed = false;
 
-    canvas.width = 3200;
+    canvas.width = 1340;
     canvas.height = 640;
     var skeletionImg = new Image();
     skeletionImg.src = "../public/image/skeleton.png"
@@ -173,6 +173,8 @@
             this.elasticity;
             this.jumpHeight = 150;
             this.speed = 10;
+            this.vLocation = this.location.copy(); // vLocation is only uesed for draw real info is just location
+
         }
 
         update() {
@@ -182,25 +184,35 @@
             this.applyForth(gravity);
             this.velocity.add(this.acceleration);
             this.location.add(this.velocity);
+
+            // vLocation left rught max sync
+            if(this.location.x-670<0){
+              this.vLocation.x = this.location.x;
+            } else if(this.location.x+670>3200){
+              this.vLocation.x = this.location.x-1860;
+            }
+
             this.acceleration.mult(0);
         }
 
         draw() {
             ctx.save();
             var state = "stop"
+
+            //vLocation is middle
             if(!(this.flying)&&(state == "stop")){
               if(this.velocity.x>=0){
-                  ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+                  ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.vLocation.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
               } else if(this.velocity.x<0) {
-                  ctx.drawImage(skeletionImg, 32*16, 64, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+                  ctx.drawImage(skeletionImg, 32*16, 64, 32*2, 32*2, this.vLocation.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
               }
 
             }
             if(this.flying){
               if(this.velocity.x>=0){
-                ctx.drawImage(skeletionImg,0,0,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+                ctx.drawImage(skeletionImg,0,0,64,64,this.vLocation.x-this.mass, this.location.y-this.mass,32*2, 32*2);
               } else if(this.velocity.x<0) {
-                  ctx.drawImage(skeletionImg,0,64,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+                  ctx.drawImage(skeletionImg,0,64,64,64,this.vLocation.x-this.mass, this.location.y-this.mass,32*2, 32*2);
               }
 
             }
@@ -239,29 +251,8 @@
                 this.velocity.x=0;
             }
 
-            if (this.location.x + this.mass > canvas.width) { //right wall
-                this.location.x = canvas.width - this.mass;
-                this.velocity.x *= -1;
-            }
-
-            else if (this.location.x - this.mass < 0) { // left wall
-                this.velocity.x *= -1;
-                this.location.x = 0 + this.mass;
-            }
-
-            if (this.location.y + this.mass > canvas.height) { // bottom
-                this.velocity.y *= -1;
-                this.location.y = canvas.height - this.mass;
-            }
-            else if (this.location.y - this.mass-1 < 0) { // top
-                this.velocity.y *= -1;
-                console.log('this.mass');
-                this.location.y = this.mass+1;
-
-            }
-
-
         }
+
 
         run() {
             this.pressUpdate();
@@ -296,7 +287,7 @@
         start();
     }
 
-    var player = new Player(new Vector(50, 50), 32);
+    var player = new Player(new Vector(670, 50), 32);
     var gravity =  new Vector(0, 2);
 
     function start() {
@@ -304,7 +295,18 @@
     }
 
     function loop() {
-        ctx.drawImage(mapImage, 0, 0);
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+
+        // map move
+        if(player.location.x-670<0){ // if left max
+          ctx.drawImage(mapImage, 0, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        } else if(player.location.x+670>3200){ // if right max
+          console.log("its over");
+          ctx.drawImage(mapImage, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        } else { // middle
+          ctx.drawImage(mapImage, player.location.x-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+      }
+
         player.velocity.limit(5);
         player.run();
         drawString();
@@ -318,6 +320,10 @@
         ctx.fillText(`${pointX}, ${pointY} X velocity ${Math.floor(player.velocity.x)} Y velocity ${Math.floor(player.velocity.y)}`, 10, 50);
         ctx.fillStyle = "blue";
         ctx.fillText(`X acceleration ${Math.floor(player.acceleration.x)} Y acceleration ${Math.floor(player.acceleration.y)}`, 10,75);
+        ctx.fillStyle = "black"
+        ctx.fillText(`X location ${Math.floor(player.location.x)} Y location ${Math.floor(player.location.y)}`, 10,100);
+        ctx.fillText(`X Vlocation ${Math.floor(player.vLocation.x)} Y Vlocation ${Math.floor(player.vLocation.y)}`, 10,125);
+
 
     }
 //}
