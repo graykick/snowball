@@ -1,8 +1,8 @@
 //window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
-    var groundFriction = 0.04;
-    var airFriction = 0.09;
+    var groundFriction = 0.1;
+    var airFriction = 0.08;
     var iceFriction = 0.001;
 
     var mapArr = [
@@ -171,12 +171,15 @@
             this.mass = mass;
             this.flying = true;
             this.elasticity;
+            this.jumpHeight = 150;
+            this.speed = 10;
         }
 
         update() {
-            this.applyForth(this.getFriction(airFriction,this.velocity));
+          if(this.flying){
+            this.acceleration.x += this.getFriction(airFriction,this.velocity).x;
+          }
             this.applyForth(gravity);
-          //  console.log(`in update ${this.acceleration.y}`);
             this.velocity.add(this.acceleration);
             this.location.add(this.velocity);
             this.acceleration.mult(0);
@@ -201,23 +204,21 @@
               }
 
             }
-            ctx.restore();
         }
 
         checkEdge() {
-            var fix = this.location.y;
             var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / 32)][Math.floor(this.location.x / 32)];
-            var nowX = this.location.x;
-            var nowY = this.location.y;
             if (!(nowPosition == 0)) { // y impact check bottom
                 this.location.y = Math.floor(this.location.y/32)*32;
-                this.velocity.y = -(this.velocity.y/3);
+                this.velocity.y = -(this.velocity.y/5);
                 if(nowPosition<=14){
                   this.acceleration.x += this.getFriction(iceFriction, this.velocity).x; //add friction only X
                 } else{
                 this.acceleration.x += this.getFriction(groundFriction, this.velocity).x; //add friction only X
               }
                 this.flying = false;
+            } else {
+              this.flying = true;
             }
 
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
@@ -253,7 +254,7 @@
                 this.location.y = canvas.height - this.mass;
             }
             else if (this.location.y - this.mass-1 < 0) { // top
-              //  this.velocity.y *= -1;
+                this.velocity.y *= -1;
                 console.log('this.mass');
                 this.location.y = this.mass+1;
 
@@ -271,19 +272,19 @@
 
         pressUpdate(){ //65 left 84 top 68 right
           if(press[65]){
-            var left = new Vector(-10, 0);
+            var left = new Vector(-(this.speed), 0);
             this.applyForth(left);
           }
 
           if(press[87]){
             if(!(this.flying)){
-              this.applyForth(new Vector(0, -650));
+              this.applyForth(new Vector(0, -(this.jumpHeight)));
             }
             this.flying = true;
           }
 
           if(press[68]){
-            var right = new Vector(10, 0);
+            var right = new Vector(this.speed, 0);
             this.applyForth(right);
           }
 
