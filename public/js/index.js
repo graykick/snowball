@@ -1,8 +1,9 @@
 //window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
-    var groundFrition = 0.09;
-
+    var groundFriction = 0.04;
+    var airFriction = 0.09;
+    var iceFriction = 0.001;
 
     var mapArr = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -44,23 +45,17 @@
         mousePressed = false;
     });
 
+    var press = {65: false, 87: false, 68: false}; //65 left 84 top 68 right
+
     document.addEventListener('keydown', function (event) {
-        //left
-        if (event.keyCode == 65) {
-            var left = new Vector(-5, 0);
-            player.applyForth(left);
+        if (event.keyCode in press) {
+            press[event.keyCode] = true;
         }
-        //top
-        else if (event.keyCode == 87) {
-            player.applyForth(new Vector(0, -100));
-          }
-        //right
-        else if (event.keyCode == 68) {
-            var right = new Vector(5, 0);
-            player.applyForth(right);
-        }
-        //bottom
-        else if (event.keyCode == 83) {
+    });
+
+    document.addEventListener('keyup', function (event) {
+        if (event.keyCode in press) {
+            press[event.keyCode] = false;
         }
     });
 
@@ -88,6 +83,7 @@
         }
 
         checkEdge() {
+
         }
 
         getFriction(mew, vector) { // mew = 마찰계수
@@ -174,10 +170,13 @@
             this.acceleration = new Vector(0, 0);
             this.mass = mass;
             this.flying = true;
+            this.elasticity;
         }
 
         update() {
+            this.applyForth(this.getFriction(airFriction,this.velocity));
             this.applyForth(gravity);
+          //  console.log(`in update ${this.acceleration.y}`);
             this.velocity.add(this.acceleration);
             this.location.add(this.velocity);
             this.acceleration.mult(0);
@@ -187,10 +186,19 @@
             ctx.save();
             var state = "stop"
             if(!(this.flying)&&(state == "stop")){
-              ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+              if(this.velocity.x>=0){
+                  ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+              } else if(this.velocity.x<0) {
+                  ctx.drawImage(skeletionImg, 32*16, 64, 32*2, 32*2, this.location.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
+              }
+
             }
             if(this.flying){
-              ctx.drawImage(skeletionImg,0,0,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+              if(this.velocity.x>=0){
+                ctx.drawImage(skeletionImg,0,0,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+              } else if(this.velocity.x<0) {
+                  ctx.drawImage(skeletionImg,0,64,64,64,this.location.x-this.mass, this.location.y-this.mass,32*2, 32*2);
+              }
 
             }
             ctx.restore();
@@ -203,8 +211,12 @@
             var nowY = this.location.y;
             if (!(nowPosition == 0)) { // y impact check bottom
                 this.location.y = Math.floor(this.location.y/32)*32;
-                this.velocity.y = 0;
-                this.acceleration.x += this.getFriction(groundFrition, this.velocity).x; //add friction only X
+                this.velocity.y = -(this.velocity.y/3);
+                if(nowPosition<=14){
+                  this.acceleration.x += this.getFriction(iceFriction, this.velocity).x; //add friction only X
+                } else{
+                this.acceleration.x += this.getFriction(groundFriction, this.velocity).x; //add friction only X
+              }
                 this.flying = false;
             }
 
@@ -212,21 +224,18 @@
             if (!(nowPosition == 0)) { // y impact check top
                 this.location.y = this.location.y+1;
                 this.velocity.y = 0;
-                this.flying = false;
             }
 
             var nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x + this.mass) / 32)];
             if (!(nowPositionX == 0)) { // x impact sheck right
                 this.location.x = this.location.x-1;
                 this.velocity.x=0;
-                this.flying = false;
             }
 
             nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x - this.mass) / 32)];
             if(!(nowPositionX ==0 )){ // x impact check left
                 this.location.x = this.location.x+1;
                 this.velocity.x=0;
-                this.flying = false;
             }
 
             if (this.location.x + this.mass > canvas.width) { //right wall
@@ -244,7 +253,7 @@
                 this.location.y = canvas.height - this.mass;
             }
             else if (this.location.y - this.mass-1 < 0) { // top
-                this.velocity.y *= -1;
+              //  this.velocity.y *= -1;
                 console.log('this.mass');
                 this.location.y = this.mass+1;
 
@@ -254,9 +263,30 @@
         }
 
         run() {
+            this.pressUpdate();
             this.update();
             this.checkEdge(this.location.x, this.location.y);
             this.draw();
+        }
+
+        pressUpdate(){ //65 left 84 top 68 right
+          if(press[65]){
+            var left = new Vector(-10, 0);
+            this.applyForth(left);
+          }
+
+          if(press[87]){
+            if(!(this.flying)){
+              this.applyForth(new Vector(0, -650));
+            }
+            this.flying = true;
+          }
+
+          if(press[68]){
+            var right = new Vector(10, 0);
+            this.applyForth(right);
+          }
+
         }
 
     }
@@ -266,7 +296,7 @@
     }
 
     var player = new Player(new Vector(50, 50), 32);
-    var gravity =  new Vector(0, 1);
+    var gravity =  new Vector(0, 2);
 
     function start() {
         setInterval('loop()', 10);
@@ -281,9 +311,12 @@
 
     function drawString() {
         ctx.fillStyle = "black";
-        ctx.font = "30px Arial";
+        ctx.font = "15px Arial";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        ctx.fillText(`${pointX}, ${pointY}`, 10, 50);
+        ctx.fillText(`${pointX}, ${pointY} X velocity ${Math.floor(player.velocity.x)} Y velocity ${Math.floor(player.velocity.y)}`, 10, 50);
+        ctx.fillStyle = "blue";
+        ctx.fillText(`X acceleration ${Math.floor(player.acceleration.x)} Y acceleration ${Math.floor(player.acceleration.y)}`, 10,75);
+
     }
 //}
