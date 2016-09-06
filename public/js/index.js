@@ -59,6 +59,26 @@
         }
     });
 
+    class spriteSheet{
+      constructor(img, numOfX, numOfY, w,h){
+        this.img = img;
+        this.numOfX = numOfX;
+        this.numOfY = numOfY;
+        this.width = w;
+        this.height = h;
+      }
+
+      getSheet(index){
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        canvas.width = this.width;
+        canvas.height = this.height;
+
+        ctx.drawImage(this.img, this.width * (index % this.numOfX), this.height * Math.floor(index / this.numOfX), this.width, this.height, 0, 0, canvas.width, canvas.height);
+        console.log(this.width * (index % this.numOfX)+", "+ this.height * Math.floor(index / this.numOfX));
+        return canvas;
+      }
+    }
 
     var mousePressed = false;
 
@@ -66,6 +86,7 @@
     canvas.height = 640;
     var skeletionImg = new Image();
     skeletionImg.src = "../public/image/skeleton.png"
+    var skeletonSheet = new spriteSheet(skeletionImg, 9,2,64,64);
 
     var mapImage = new Image();
     mapImage.addEventListener('load', pngLoaded, false);
@@ -174,7 +195,7 @@
             this.jumpHeight = 150;
             this.speed = 10;
             this.vLocation = this.location.copy(); // vLocation is only uesed for draw real info is just location
-
+            this.nowImageIndex = 0;
         }
 
         update() {
@@ -184,54 +205,67 @@
             this.applyForth(gravity);
             this.velocity.add(this.acceleration);
             this.location.add(this.velocity);
-
-            // vLocation left rught max sync
-            if(this.location.x-670<0){
-              this.vLocation.x = this.location.x;
-            } else if(this.location.x+670>3200){
-              this.vLocation.x = this.location.x-1860;
-            }
-
             this.acceleration.mult(0);
+        }
+
+        vLocationUpdate(){
+          // vLocation left rught max sync
+          if(this.location.x-670<0){
+            this.vLocation.x = this.location.x;
+          } else if(this.location.x+670>3200){
+            this.vLocation.x = this.location.x-1860;
+          } else{
+            this.vLocation.x = 670; // middle of canvas
+          }
+
         }
 
         draw() {
             ctx.save();
-            var state = "stop"
+            //vLocation is middle about vLocation;
+            ctx.drawImage(skeletonSheet.getSheet(this.nowImageIndex), this.vLocation.x-this.mass, this.location.y-this.mass);
+            ctx.restore();
+        }
 
-            //vLocation is middle
-            if(!(this.flying)&&(state == "stop")){
-              if(this.velocity.x>=0){
-                  ctx.drawImage(skeletionImg, 32*16, 0, 32*2, 32*2, this.vLocation.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
-              } else if(this.velocity.x<0) {
-                  ctx.drawImage(skeletionImg, 32*16, 64, 32*2, 32*2, this.vLocation.x-this.mass, this.location.y-this.mass, 32*2, 32*2);
-              }
-
+        checkImage(){
+          var state = "stop"
+          if(!(this.flying) && (state == "stop")){
+            console.log("sicbank"); // standing state
+            if(this.velocity.x>=0){
+              this.nowImageIndex = 8;
+            } else if(this.velocity.x<0) {
+              this.nowImageIndex = 17;
             }
-            if(this.flying){
-              if(this.velocity.x>=0){
-                ctx.drawImage(skeletionImg,0,0,64,64,this.vLocation.x-this.mass, this.location.y-this.mass,32*2, 32*2);
-              } else if(this.velocity.x<0) {
-                  ctx.drawImage(skeletionImg,0,64,64,64,this.vLocation.x-this.mass, this.location.y-this.mass,32*2, 32*2);
-              }
+          }
 
+          if(this.flying){ //flying state
+            if(this.velocity.x>=0){
+              this.nowImageIndex = 0;
+            } else if(this.velocity.x<0) {
+              this.nowImageIndex = 9;
             }
+          }
         }
 
         checkEdge() {
-            var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / 32)][Math.floor(this.location.x / 32)];
+
+            var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / this.mass)][Math.floor(this.location.x / this.mass)];
             if (!(nowPosition == 0)) { // y impact check bottom
-                this.location.y = Math.floor(this.location.y/32)*32;
-                this.velocity.y = -(this.velocity.y/5);
-                if(nowPosition<=14){
+                this.location.y = Math.floor(this.location.y/this.mass)*this.mass;
+                this.velocity.y = -(this.velocity.y/5); // 탄성 상수를 통해 정도를 조절가능
+                if(nowPosition <= 14){ // 얼음 조각들은 모두 id 14를 넘지 않음
                   this.acceleration.x += this.getFriction(iceFriction, this.velocity).x; //add friction only X
-                } else{
+                }
+                else{
                 this.acceleration.x += this.getFriction(groundFriction, this.velocity).x; //add friction only X
-              }
-                this.flying = false;
-            } else {
+                }
+                this.flying = false; // 땅에 닿았으므로 날고있지 않음
+            }
+
+            else {
               this.flying = true;
             }
+
 
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
             if (!(nowPosition == 0)) { // y impact check top
@@ -257,7 +291,9 @@
         run() {
             this.pressUpdate();
             this.update();
+            this.vLocationUpdate();
             this.checkEdge(this.location.x, this.location.y);
+            this.checkImage();
             this.draw();
         }
 
