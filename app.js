@@ -1,17 +1,34 @@
 var http = require('http');
 var fs = require('fs');
+var express = require('express');
+var app = express();
+var server          = http.createServer(app);
 
 
-var server = http.createServer(function(req, res) {
-    fs.readFile('./index.html', 'utf-8', function(error, content) {
+
+
+var io = require('socket.io').listen(server);
+
+app.get('/', function (req, res) {
+      fs.readFile('index.html', 'utf-8', function(error, content) {
         res.writeHead(200, {"Content-Type": "text/html"});
         res.end(content);
     });
 });
 
+app.get('/maps', function (req, res) {
+      fs.readFile('map.png', function(error, content) {
+        res.writeHead(200, {"Content-Type": "text/html"});
+        res.end(content);
+    });
+});
 
-var io = require('socket.io').listen(server);
-
+app.get('/skels', function (req, res) {
+      fs.readFile('skeleton.png', function(error, content) {
+        res.writeHead(200, {"Content-Type": "text/html"});
+        res.end(content);
+    });
+});
 
 io.sockets.on('connection', function (socket) {
     console.log('connected...' + socket.id);

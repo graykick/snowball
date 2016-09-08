@@ -114,12 +114,13 @@
     canvas.width = 1340;
     canvas.height = 640;
     var skeletionImg = new Image();
-    skeletionImg.src = "../public/image/skeleton.png";
+    skeletionImg.src = "/skels"
     var skeletonSheet = new spriteSheet(skeletionImg, 9,2,64,64);
 
     var mapImage = new Image();
     mapImage.addEventListener('load', pngLoaded, false);
-    mapImage.src = "../public/image/map.png";
+    mapImage.src = "/maps";
+    
 
     class Object {
     constructor() {
@@ -349,6 +350,7 @@
     }
 
     function pngLoaded() {
+    alert("aaa");
     start();
     }
 
