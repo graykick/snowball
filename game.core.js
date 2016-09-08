@@ -1,7 +1,3 @@
-/**
- * Created by ymr on 2016-09-08.
- */
-//window.onload = function() {
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
 var groundFriction = 0.1;
@@ -62,8 +58,8 @@ document.addEventListener('keyup', function (event) {
     }
 });
 
-class spriteSheet{
-    constructor(img, numOfX, numOfY, w,h){
+class spriteSheet {
+    constructor(img, numOfX, numOfY, w, h) {
         this.img = img;
         this.numOfX = numOfX;
         this.numOfY = numOfY;
@@ -71,14 +67,14 @@ class spriteSheet{
         this.height = h;
     }
 
-    getSheet(index){
+    getSheet(index) {
         let canvas = document.createElement('canvas');
         let ctx = canvas.getContext('2d');
         canvas.width = this.width;
         canvas.height = this.height;
 
         ctx.drawImage(this.img, this.width * (index % this.numOfX), this.height * Math.floor(index / this.numOfX), this.width, this.height, 0, 0, canvas.width, canvas.height);
-        console.log(this.width * (index % this.numOfX)+", "+ this.height * Math.floor(index / this.numOfX));
+        console.log(this.width * (index % this.numOfX) + ", " + this.height * Math.floor(index / this.numOfX));
         return canvas;
     }
 }
@@ -89,7 +85,7 @@ canvas.width = 1340;
 canvas.height = 640;
 var skeletionImg = new Image();
 skeletionImg.src = "../public/image/skeleton.png"
-var skeletonSheet = new spriteSheet(skeletionImg, 9,2,64,64);
+var skeletonSheet = new spriteSheet(skeletionImg, 9, 2, 64, 64);
 
 var mapImage = new Image();
 mapImage.addEventListener('load', pngLoaded, false);
@@ -202,8 +198,8 @@ class Player extends Object {
     }
 
     update() {
-        if(this.flying){
-            this.acceleration.x += this.getFriction(airFriction,this.velocity).x;
+        if (this.flying) {
+            this.acceleration.x += this.getFriction(airFriction, this.velocity).x;
         }
         this.applyForth(gravity);
         this.velocity.add(this.acceleration);
@@ -211,13 +207,13 @@ class Player extends Object {
         this.acceleration.mult(0);
     }
 
-    vLocationUpdate(){
+    vLocationUpdate() {
         // vLocation left rught max sync
-        if(this.location.x-670<0){
+        if (this.location.x - 670 < 0) {
             this.vLocation.x = this.location.x;
-        } else if(this.location.x+670>3200){
-            this.vLocation.x = this.location.x-1860;
-        } else{
+        } else if (this.location.x + 670 > 3200) {
+            this.vLocation.x = this.location.x - 1860;
+        } else {
             this.vLocation.x = 670; // middle of canvas
         }
 
@@ -226,25 +222,25 @@ class Player extends Object {
     draw() {
         ctx.save();
         //vLocation is middle about vLocation;
-        ctx.drawImage(skeletonSheet.getSheet(this.nowImageIndex), this.vLocation.x-this.mass, this.location.y-this.mass);
+        ctx.drawImage(skeletonSheet.getSheet(this.nowImageIndex), this.vLocation.x - this.mass, this.location.y - this.mass);
         ctx.restore();
     }
 
-    checkImage(){
+    checkImage() {
         var state = "stop"
-        if(!(this.flying) && (state == "stop")){
+        if (!(this.flying) && (state == "stop")) {
             console.log("sicbank"); // standing state
-            if(this.velocity.x>=0){
+            if (this.velocity.x >= 0) {
                 this.nowImageIndex = 8;
-            } else if(this.velocity.x<0) {
+            } else if (this.velocity.x < 0) {
                 this.nowImageIndex = 17;
             }
         }
 
-        if(this.flying){ //flying state
-            if(this.velocity.x>=0){
+        if (this.flying) { //flying state
+            if (this.velocity.x >= 0) {
                 this.nowImageIndex = 0;
-            } else if(this.velocity.x<0) {
+            } else if (this.velocity.x < 0) {
                 this.nowImageIndex = 9;
             }
         }
@@ -254,12 +250,12 @@ class Player extends Object {
 
         var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / this.mass)][Math.floor(this.location.x / this.mass)];
         if (!(nowPosition == 0)) { // y impact check bottom
-            this.location.y = Math.floor(this.location.y/this.mass)*this.mass;
-            this.velocity.y = -(this.velocity.y/5); // 탄성 상수를 통해 정도를 조절가능
-            if(nowPosition <= 14){ // 얼음 조각들은 모두 id 14를 넘지 않음
+            this.location.y = Math.floor(this.location.y / this.mass) * this.mass;
+            this.velocity.y = -(this.velocity.y / 5); // 탄성 상수를 통해 정도를 조절가능
+            if (nowPosition <= 14) { // 얼음 조각들은 모두 id 14를 넘지 않음
                 this.acceleration.x += this.getFriction(iceFriction, this.velocity).x; //add friction only X
             }
-            else{
+            else {
                 this.acceleration.x += this.getFriction(groundFriction, this.velocity).x; //add friction only X
             }
             this.flying = false; // 땅에 닿았으므로 날고있지 않음
@@ -272,20 +268,20 @@ class Player extends Object {
 
         nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
         if (!(nowPosition == 0)) { // y impact check top
-            this.location.y = this.location.y+1;
+            this.location.y = this.location.y + 1;
             this.velocity.y = 0;
         }
 
         var nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x + this.mass) / 32)];
         if (!(nowPositionX == 0)) { // x impact sheck right
-            this.location.x = this.location.x-1;
-            this.velocity.x=0;
+            this.location.x = this.location.x - 1;
+            this.velocity.x = 0;
         }
 
         nowPositionX = mapArr[Math.floor(this.location.y / 32)][Math.floor((this.location.x - this.mass) / 32)];
-        if(!(nowPositionX ==0 )){ // x impact check left
-            this.location.x = this.location.x+1;
-            this.velocity.x=0;
+        if (!(nowPositionX == 0 )) { // x impact check left
+            this.location.x = this.location.x + 1;
+            this.velocity.x = 0;
         }
 
     }
@@ -300,20 +296,20 @@ class Player extends Object {
         this.draw();
     }
 
-    pressUpdate(){ //65 left 84 top 68 right
-        if(press[65]){
+    pressUpdate() { //65 left 84 top 68 right
+        if (press[65]) {
             var left = new Vector(-(this.speed), 0);
             this.applyForth(left);
         }
 
-        if(press[87]){
-            if(!(this.flying)){
+        if (press[87]) {
+            if (!(this.flying)) {
                 this.applyForth(new Vector(0, -(this.jumpHeight)));
             }
             this.flying = true;
         }
 
-        if(press[68]){
+        if (press[68]) {
             var right = new Vector(this.speed, 0);
             this.applyForth(right);
         }
@@ -327,42 +323,25 @@ function pngLoaded() {
 }
 
 var player = new Player(new Vector(670, 50), 32);
-var gravity =  new Vector(0, 2);
+var gravity = new Vector(0, 2);
 
 function start() {
     setInterval('loop()', 10);
 }
 
 function loop() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // map move
-    if(player.location.x-670<0){ // if left max
-        ctx.drawImage(mapImage, 0, 0, 1340, 640, 0,0, canvas.width, canvas.height);
-    } else if(player.location.x+670>3200){ // if right max
+    if (player.location.x - 670 < 0) { // if left max
+        ctx.drawImage(mapImage, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+    } else if (player.location.x + 670 > 3200) { // if right max
         console.log("its over");
-        ctx.drawImage(mapImage, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        ctx.drawImage(mapImage, 3200 - canvas.width, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     } else { // middle
-        ctx.drawImage(mapImage, player.location.x-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        ctx.drawImage(mapImage, player.location.x - 670, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     }
 
     player.velocity.limit(5);
     player.run();
-    drawString();
 }
-
-function drawString() {
-    ctx.fillStyle = "black";
-    ctx.font = "15px Arial";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillText(`${pointX}, ${pointY} X velocity ${Math.floor(player.velocity.x)} Y velocity ${Math.floor(player.velocity.y)}`, 10, 50);
-    ctx.fillStyle = "blue";
-    ctx.fillText(`X acceleration ${Math.floor(player.acceleration.x)} Y acceleration ${Math.floor(player.acceleration.y)}`, 10,75);
-    ctx.fillStyle = "black"
-    ctx.fillText(`X location ${Math.floor(player.location.x)} Y location ${Math.floor(player.location.y)}`, 10,100);
-    ctx.fillText(`X Vlocation ${Math.floor(player.vLocation.x)} Y Vlocation ${Math.floor(player.vLocation.y)}`, 10,125);
-
-
-}
-//}
