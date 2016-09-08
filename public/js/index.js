@@ -75,7 +75,6 @@
         canvas.height = this.height;
 
         ctx.drawImage(this.img, this.width * (index % this.numOfX), this.height * Math.floor(index / this.numOfX), this.width, this.height, 0, 0, canvas.width, canvas.height);
-        console.log(this.width * (index % this.numOfX)+", "+ this.height * Math.floor(index / this.numOfX));
         return canvas;
       }
     }
@@ -196,6 +195,7 @@
             this.speed = 10;
             this.vLocation = this.location.copy(); // vLocation is only uesed for draw real info is just location
             this.nowImageIndex = 0;
+            this.walkStep=1;
         }
 
         update() {
@@ -217,7 +217,6 @@
           } else{
             this.vLocation.x = 670; // middle of canvas
           }
-
         }
 
         draw() {
@@ -228,14 +227,28 @@
         }
 
         checkImage(){
-          var state = "stop"
+          var state = "walk";
+
+          if(Math.abs(this.velocity.x)<0.2){
+            state = "stop"
+            console.log(`make it 1`);
+            this.walkStep=1;
+          }
+
           if(!(this.flying) && (state == "stop")){
-            console.log("sicbank"); // standing state
             if(this.velocity.x>=0){
               this.nowImageIndex = 8;
             } else if(this.velocity.x<0) {
               this.nowImageIndex = 17;
             }
+          }
+
+          if(!(this.flying) && (state == "walk")){
+            if(this.velocity.x<0){
+            this.nowImageIndex = this.walkStep+9;
+          } else {
+            this.nowImageIndex = this.walkStep;
+          }
           }
 
           if(this.flying){ //flying state
@@ -245,14 +258,22 @@
               this.nowImageIndex = 9;
             }
           }
+
+          if(this.walkStep>8){
+
+            this.walkStep=1;
+          }
+
+          console.log(`now image ${this.nowImageIndex}`);
+
+
         }
 
         checkEdge() {
-
             var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / this.mass)][Math.floor(this.location.x / this.mass)];
             if (!(nowPosition == 0)) { // y impact check bottom
                 this.location.y = Math.floor(this.location.y/this.mass)*this.mass;
-                this.velocity.y = -(this.velocity.y/5); // 탄성 상수를 통해 정도를 조절가능
+                this.velocity.y = -(this.velocity.y/5); // 탄성. 상수를 통해 정도를 조절가능
                 if(nowPosition <= 14){ // 얼음 조각들은 모두 id 14를 넘지 않음
                   this.acceleration.x += this.getFriction(iceFriction, this.velocity).x; //add friction only X
                 }
@@ -261,11 +282,9 @@
                 }
                 this.flying = false; // 땅에 닿았으므로 날고있지 않음
             }
-
             else {
               this.flying = true;
             }
-
 
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
             if (!(nowPosition == 0)) { // y impact check top
@@ -284,9 +303,7 @@
                 this.location.x = this.location.x+1;
                 this.velocity.x=0;
             }
-
         }
-
 
         run() {
             this.pressUpdate();
@@ -301,6 +318,14 @@
           if(press[65]){
             var left = new Vector(-(this.speed), 0);
             this.applyForth(left);
+            this.walkStep = this.walkStep+1;
+            console.log(`add walkStep ${this.walkStep}`);
+          }
+
+          if(press[68]){
+            var right = new Vector(this.speed, 0);
+            this.applyForth(right);
+            this.walkStep++;
           }
 
           if(press[87]){
@@ -308,11 +333,6 @@
               this.applyForth(new Vector(0, -(this.jumpHeight)));
             }
             this.flying = true;
-          }
-
-          if(press[68]){
-            var right = new Vector(this.speed, 0);
-            this.applyForth(right);
           }
 
         }
@@ -337,7 +357,6 @@
         if(player.location.x-670<0){ // if left max
           ctx.drawImage(mapImage, 0, 0, 1340, 640, 0,0, canvas.width, canvas.height);
         } else if(player.location.x+670>3200){ // if right max
-          console.log("its over");
           ctx.drawImage(mapImage, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
         } else { // middle
           ctx.drawImage(mapImage, player.location.x-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
@@ -355,10 +374,11 @@
         ctx.textBaseline = "top";
         ctx.fillText(`${pointX}, ${pointY} X velocity ${Math.floor(player.velocity.x)} Y velocity ${Math.floor(player.velocity.y)}`, 10, 50);
         ctx.fillStyle = "blue";
-        ctx.fillText(`X acceleration ${Math.floor(player.acceleration.x)} Y acceleration ${Math.floor(player.acceleration.y)}`, 10,75);
+        ctx.fillText(`X acceleration ${(player.acceleration.x)} Y acceleration ${Math.floor(player.acceleration.y)}`, 10,75);
+        ctx.fillText(`X velocity ${(player.velocity.x)} Y velocity ${Math.floor(player.velocity.y)}`, 10,100);
         ctx.fillStyle = "black"
-        ctx.fillText(`X location ${Math.floor(player.location.x)} Y location ${Math.floor(player.location.y)}`, 10,100);
-        ctx.fillText(`X Vlocation ${Math.floor(player.vLocation.x)} Y Vlocation ${Math.floor(player.vLocation.y)}`, 10,125);
+        ctx.fillText(`X location ${Math.floor(player.location.x)} Y location ${Math.floor(player.location.y)}`, 10,125);
+        ctx.fillText(`X Vlocation ${Math.floor(player.vLocation.x)} Y Vlocation ${Math.floor(player.vLocation.y)}`, 10,150);
 
 
     }
