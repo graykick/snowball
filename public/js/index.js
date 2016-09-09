@@ -42,6 +42,7 @@
 
     });
     canvas.addEventListener('mouseup', function (event) {
+      player.throwBall();
         mousePressed = false;
     });
 
@@ -182,6 +183,42 @@
         }
     }
 
+    class Ball extends Object{
+
+      constructor(x, y, power, mouse){
+        super();
+        this.acceleration = new Vector();
+        this.velocity = new Vector();
+        this.location = new Vector(x,y);
+        this.dir = new Vector();
+        this.mouse = mouse;
+        this.power = power;
+      }
+
+      update(){
+       this.dir = Vector.subStatic(this.mouse, this.location);
+       this.dir.nomalize();
+       this.dir.mult(this.power);
+       this.acceleration = this.dir;
+       this.velocity.add(this.acceleration);
+       this.velocity.limit(20);
+       this.location.add(this.velocity);
+      }
+
+      draw(){
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.location.x,this.location.y, 4, 0, Math.PI*2, true);
+        ctx.restore();
+      }
+
+      run(){
+        console.log("!1");
+        this.update();
+        this.draw();
+      }
+    }
+
     class Player extends Object {
         constructor(setVector, mass) {
             super();
@@ -231,7 +268,7 @@
 
           if(Math.abs(this.velocity.x)<0.2){
             state = "stop"
-            console.log(`make it 1`);
+            //console.log(`make it 1`);
             this.walkStep=1;
           }
 
@@ -264,12 +301,17 @@
             this.walkStep=1;
           }
 
-          console.log(`now image ${this.nowImageIndex}`);
+        //console.log(`now image ${this.nowImageIndex}`);
 
 
         }
 
         checkEdge() {
+          if(this.location.y-this.mass<3){
+            this.location.y = this.location.y;
+            this.velocity.y = 0.1;
+          }
+
             var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / this.mass)][Math.floor(this.location.x / this.mass)];
             if (!(nowPosition == 0)) { // y impact check bottom
                 this.location.y = Math.floor(this.location.y/this.mass)*this.mass;
@@ -286,6 +328,8 @@
               this.flying = true;
             }
 
+            console.log("adadadadad " + Math.floor(this.location.x / 32));
+            console.log("adadadadad~@~@~@~@~@ " + Math.floor((this.location.y - this.mass) / 32));
             nowPosition = mapArr[Math.floor((this.location.y - this.mass) / 32)][Math.floor(this.location.x / 32)];
             if (!(nowPosition == 0)) { // y impact check top
                 this.location.y = this.location.y+1;
@@ -303,6 +347,8 @@
                 this.location.x = this.location.x+1;
                 this.velocity.x=0;
             }
+
+
         }
 
         run() {
@@ -319,7 +365,6 @@
             var left = new Vector(-(this.speed), 0);
             this.applyForth(left);
             this.walkStep = this.walkStep+1;
-            console.log(`add walkStep ${this.walkStep}`);
           }
 
           if(press[68]){
@@ -334,7 +379,11 @@
             }
             this.flying = true;
           }
+        }
 
+        throwBall(){
+          var newBall = new Ball(this.location.x, this.location.y, 10, new Vector(pointX, pointY));
+          newBall.run();
         }
 
     }
