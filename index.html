@@ -3,30 +3,68 @@
 <head>
     <meta charset="utf-8"/>
     <title>Socket.io</title>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Modal -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 
 <body>
-<h1>Communication with socket.io !</h1>
-<p><input type="button" value="bother server" id="poke"/></p>
+<div class="container">
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">SNOW BALL</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="nickTitle" placeholder="Nick"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" backdrop="static" data-keyboard="false" data-dismiss="modal" id="guest">Play as guest</button>
+                    <button type="button" class="btn btn-warning" data-dismiss="modal" id="login">Login and play</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-
+<p><input type="button" value="massage to server" id="poke"/></p>
 <canvas id="myCanvas" style="background:  #FAEBD7"></canvas>
+
 <script>
     var socket = io.connect('http://localhost:3000');
-    console.log('socket connected.');
-    var nickname = prompt('nickname ?');
-    socket.emit('nickname', nickname);
-    socket.on('message', function (message) {
-        alert('The server has a message for you : ' + message);
-    })
-    $('#poke').click(function () {
-        socket.emit('message', 'server Hi');
-    })
-</script>
+    $('#myModal').modal('show');
 
+    $('#guest').click(function() {
+        var nickname = $('#nickTitle').val();
+        $('#myModal').modal('hide');
+        // 모달이 안 사라져서 임시로
+        // socket.emit('nickname', nickname);
+        // socket.emit('message', 'server Hi');
+    });
+
+    // var nickname = prompt('nickname ?');
+
+    socket.emit('nickname', nickname);
+/*    socket.on('message', function (message) {
+        alert('server : ' + message);
+    });
+*/
+
+    $('#poke').click(function () {
+        socket.emit('message', 'HP decrease');
+    });
+</script>
+<script type="text/javascript">
+    $(window).load(function () {
+        $('#myModal').modal('show');
+    });
+</script>
 <script>
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
@@ -258,7 +296,7 @@
         }
 
         checkImage() {
-            var state = "stop"
+            var state = "stop";
             if (!(this.flying) && (state == "stop")) {
                 console.log("sicbank"); // standing state
                 if (this.velocity.x >= 0) {
@@ -278,6 +316,10 @@
         }
 
         checkEdge() {
+            if(this.location.y-this.mass<3){
+                this.location.y = this.location.y;
+                this.velocity.y = 0.1;
+            }
 
             var nowPosition = mapArr[Math.floor((this.location.y + this.mass) / this.mass)][Math.floor(this.location.x / this.mass)];
             if (!(nowPosition == 0)) { // y impact check bottom
@@ -350,7 +392,6 @@
     }
 
     function pngLoaded() {
-        alert("aaa");
         start();
     }
 

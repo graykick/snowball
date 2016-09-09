@@ -32,7 +32,7 @@ app.get('/skels', function (req, res) {
 });
 
 io.sockets.on('connection', function (client) {
-    console.log('connected. ID: ' + client.id);
+    console.log("Client " + client.id + " connected");
 
     client.emit('message', 'Login success !');
     client.broadcast.emit('message', 'Another client login success! ');
@@ -42,9 +42,23 @@ io.sockets.on('connection', function (client) {
     });
 
     client.on('message', function (message) {
-        console.log(client.nickname + ' -- ' + client.id + '; tells me he said to me : ' + message);
+        console.log(client.nickname + ' --- ' + client.id + ' to server : ' + message);
+    });
+
+    return client.on("disconnect", function() {
+        return console.log("Client " + client.id + " disconnected");
     });
 });
 
 
-server.listen(port = Number(process.env.PORT || PORT));
+server.listen(port = Number(process.env.PORT || PORT), function() {
+    console.log("Server "+PORT+" listening");
+});
+
+/*Skull Class*/
+Skull = (function() {
+    function Skull(id) {
+        this.id = id;
+
+    }
+})

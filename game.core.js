@@ -227,7 +227,7 @@ class Player extends Object {
     }
 
     checkImage() {
-        var state = "stop"
+        var state = "stop";
         if (!(this.flying) && (state == "stop")) {
             console.log("sicbank"); // standing state
             if (this.velocity.x >= 0) {
