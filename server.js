@@ -7,7 +7,7 @@ var
     server = http.createServer(app),
     io = require('socket.io').listen(server),
 
-    PORT = 3000;
+    PORT = 3002;
 
 
 app.get('/', function (req, res) {
@@ -34,7 +34,7 @@ app.get('/skels', function (req, res) {
 io.sockets.on('connection', function (client) {
     console.log("Client " + client.id + " connected");
 
-    client.emit('message', 'Login success !');
+    client.emit('message', 'Client login success !');
     client.broadcast.emit('message', 'Another client login success! ');
 
     client.on('nickname', function (nickname) {
