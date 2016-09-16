@@ -33,7 +33,7 @@
 
   <script>
     // Socket connencting
-    var socket = io.connect('http://localhost:3002');    
+    var socket = io.connect('http://localhost:3002', {port: 3002, transports: ["websocket"]});    
 
     function modalFunction() {
       var modal = document.getElementById('myModal');
