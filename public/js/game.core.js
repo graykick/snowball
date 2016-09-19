@@ -296,10 +296,11 @@ class Player extends Object {
     this.draw();
   }
 
-  pressUpdate() { //65 left 84 top 68 right
+  pressUpdate() { //65 left a, 84 top w, 68 right d
     if (press[65]) {
       var left = new Vector(-(this.speed), 0);
       this.applyForth(left);
+      socket.emit('keyPress',{inputId:'left',state:true});
     }
 
     if (press[87]) {
@@ -312,6 +313,7 @@ class Player extends Object {
     if (press[68]) {
       var right = new Vector(this.speed, 0);
       this.applyForth(right);
+      socket.emit('keyPress',{inputId:'right',state:true});
     }
 
   }

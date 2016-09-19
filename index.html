@@ -34,7 +34,6 @@
   <script>
     // Socket connencting
     var socket = io.connect('http://localhost:3002', {port: 3002, transports: ["websocket"]});    
-
     function modalFunction() {
       var modal = document.getElementById('myModal');
       var nicBox = document.getElementById('nickBox');
@@ -42,7 +41,6 @@
       var toServer = document.getElementById('toServer');
       
       modal.style.display = 'block';
-
       // When the user press enter key, play as guest
       nickBox.addEventListener("keyup", function(event) {
         event.preventDefault();
@@ -51,26 +49,89 @@
             // Dispatch/Trigger/Fire the event
             return;
         }
-      });      
-
+      });
       guest.addEventListener('mousedown', function() {
         var nickname = nickBox.value;
         socket.emit('nickname', nickname);
         modal.style.display = 'none';
       });
-
-      // message to server
-      socket.on('message', function(message) {
-        alert('server : ' + message);
-      });
-
-      toServer.addEventListener('mousedown', function() {
-        socket.emit('message', 'HP decrease');
-      });
     }
+
+    // message to server
+    socket.on('message', function(message) {
+      alert('server : ' + message);
+    });
+
+    toServer.addEventListener('mousedown', function() {
+      socket.emit('message', 'HP decrease');
+    });
+
+    //game
+    socket.on('init',function(data){
+      //{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
+      for(var i = 0 ; i < data.player.length; i++){
+        new Player(data.player[i]);
+      }
+    });
+
+    socket.on('update',function(data){
+      //{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
+      for(var i = 0 ; i < data.player.length; i++){
+        var pack = data.player[i];
+        var p = Player.list[pack.id];
+        if(p){
+          if(pack.x !== undefined)
+            p.x = pack.x;
+          if(pack.y !== undefined)
+            p.y = pack.y;
+        }
+      }
+    });
+
+    socket.on('remove',function(data){
+      //{player:[12323],bullet:[12323,123123]}
+      for(var i = 0 ; i < data.player.length; i++){
+        delete Player.list[data.player[i]];
+      }
+    });
+
+/*
+    document.onkeydown = function(event){
+      if(event.keyCode === 68)	//d
+        socket.emit('keyPress',{inputId:'right',state:true});
+      else if(event.keyCode === 83)	//s
+        socket.emit('keyPress',{inputId:'down',state:true});
+      else if(event.keyCode === 65) //a
+        socket.emit('keyPress',{inputId:'left',state:true});
+      else if(event.keyCode === 87) // w
+        socket.emit('keyPress',{inputId:'up',state:true});
+
+    }
+    document.onkeyup = function(event){
+      if(event.keyCode === 68)	//d
+        socket.emit('keyPress',{inputId:'right',state:false});
+      else if(event.keyCode === 83)	//s
+        socket.emit('keyPress',{inputId:'down',state:false});
+      else if(event.keyCode === 65) //a
+        socket.emit('keyPress',{inputId:'left',state:false});
+      else if(event.keyCode === 87) // w
+        socket.emit('keyPress',{inputId:'up',state:false});
+    }
+
+    document.onmousedown = function(event){
+      socket.emit('keyPress',{inputId:'attack',state:true});
+    }
+    document.onmouseup = function(event){
+      socket.emit('keyPress',{inputId:'attack',state:false});
+    }
+    document.onmousemove = function(event){
+      var x = -250 + event.clientX - 8;
+      var y = -250 + event.clientY - 8;
+      var angle = Math.atan2(y,x) / Math.PI * 180;
+      socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
+    }*/
   </script>
 
-  <script type="text/javascript" src="/public/js/client.js"></script>
   <script type="text/javascript" src="/public/js/game.core.js"></script>
 </body>
 </html>
