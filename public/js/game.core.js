@@ -85,12 +85,12 @@ var mousePressed = false;
 canvas.width = 1340;
 canvas.height = 640;
 var skeletionImg = new Image();
-skeletionImg.src = "/public/image/skeleton.png";
+skeletionImg.src = "/client/img/skeleton.png";
 var skeletonSheet = new spriteSheet(skeletionImg, 9, 2, 64, 64);
 
 var mapImage = new Image();
 mapImage.addEventListener('load', pngLoaded, false);
-mapImage.src = "/public/image/map.png";
+mapImage.src = "/client/img/map.png";
 
 class Object {
   constructor() {
@@ -321,15 +321,11 @@ class Player extends Object {
 }
 
 function pngLoaded() {
-  start();
+  setInterval('loop()', 10); //start
 }
 
 var player = new Player(new Vector(670, 50), 32);
 var gravity = new Vector(0, 2);
-
-function start() {
-  setInterval('loop()', 10);
-}
 
 function loop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
