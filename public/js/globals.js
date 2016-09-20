@@ -259,6 +259,7 @@ class Player extends Object {
         ctx.save();
         //vLocation is middle about vLocation;
         ctx.drawImage(skeletonSheet.getSheet(this.nowImageIndex), this.vLocation.x-this.mass, this.location.y-this.mass);
+        ctx.drawImage(skeletonSheet.getSheet(this.nowImageIndex), this.location.x-this.mass, this.location.y-this.mass);
         for(var loop = 0; loop < this.balls.length; loop++){
       //    console.log("index "+loop);
       //console.log("fnkin length "+ this.balls.length);
