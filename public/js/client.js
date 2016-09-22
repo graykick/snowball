@@ -52,6 +52,6 @@ socket.on('newPosition',function(data){
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
 
     for (var i=0; i<data.length; i++){
-        ctx.drawImage(skeletonSheet.getSheet(0));
+        ctx.drawImage(skeletonSheet.getSheet(0), data[i].x, data[i].y);
     }
 });
