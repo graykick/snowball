@@ -3,6 +3,8 @@ var
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
+    Vector = require('./vector');
+    Player = require('./player');
 
     PORT = 3002;
 
@@ -18,6 +20,8 @@ server.listen(port = Number(process.env.PORT || PORT), function(){
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
+
+var player1 = new Player(new Vector(10,10), 10);
 
 var Player = function (id){
 	var self = {
