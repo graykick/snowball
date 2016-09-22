@@ -20,19 +20,6 @@ var mapArr = [
     [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 34, 35, 36, 37, 38, 39, 40, 41, 42],
     [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 50, 51, 52, 53, 54, 55, 56, 57, 58]
 ]; // 맵 충돌 검사
-var press = {65: false, 87: false, 68: false}; //65 left 84 top 68 right
-
-document.addEventListener('keydown', function (event) {
-    if (event.keyCode in press) {
-        press[event.keyCode] = true;
-    }
-});
-
-document.addEventListener('keyup', function (event) {
-    if (event.keyCode in press) {
-        press[event.keyCode] = false;
-    }
-});
 
 var Img = {};
 Img.player = new Image();
@@ -55,3 +42,21 @@ socket.on('newPosition',function(data){
         ctx.drawImage(skeletonSheet.getSheet(0), data[i].x, data[i].y);
     }
 });
+
+document.onkeydown = function(event){
+    if(event.keyCode === 68)	//d
+        socket.emit('keyPress',{inputId:'right',state:true});
+    else if(event.keyCode === 65) //a
+        socket.emit('keyPress',{inputId:'left',state:true});
+    else if(event.keyCode === 87) // w
+        socket.emit('keyPress',{inputId:'up',state:true});
+
+}
+document.onkeyup = function(event){
+    if(event.keyCode === 68)	//d
+        socket.emit('keyPress',{inputId:'right',state:false});
+    else if(event.keyCode === 65) //a
+        socket.emit('keyPress',{inputId:'left',state:false});
+    else if(event.keyCode === 87) // w
+        socket.emit('keyPress',{inputId:'up',state:false});
+}

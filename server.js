@@ -24,7 +24,20 @@ var Player = function (id){
 		x:250,
 		y:250,
 		id:id,
-		number:""+Math.floor(10*Math.random()) //왱
+		number:""+Math.floor(10*Math.random()), //왱
+		// 65 left, 87 top, 68 right
+		pressingLeft:false,
+		pressingRight:false,
+		pressingUp:false,
+		maxSpd:10 // 속도 제한
+	}
+	self.updatePosition = function(){
+		if(self.pressingLeft)
+			self.x -= self.maxSpd;
+		if(self.pressingRight)
+			self.x += self.maxSpd;
+		if(self.pressingUp)
+			self.y -= self.maxSpd;
 	}
 	return self;
 }
@@ -39,15 +52,23 @@ io.sockets.on('connection', function(socket){
 	socket.on('disconnect', function(){
 		delete SOCKET_LIST[socket.id];
 		delete PLAYER_LIST[socket.id];
-	})
+	});
+
+	socket.on('keyPress', function(data){
+		if(data.inputId === 'left')
+			player.pressingLeft = data.state; // index.html true or false
+		else if(data.inputId === 'right')
+			player.pressingRight = data.state;
+		else if(data.inputId === 'up')
+			player.pressingUp = data.state;
+	});
 });
 
 setInterval(function() {
 	var pack = [];
 	for (var i in PLAYER_LIST) {
 		var player = PLAYER_LIST[i];
-		player.x++;
-		player.y++;
+		player.updatePosition();
 		pack.push({
 			x: player.x,
 			y: player.y,
