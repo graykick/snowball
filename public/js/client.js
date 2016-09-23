@@ -1,4 +1,3 @@
-
 var Img = {};
 Img.player = new Image();
 Img.player.src = '/public/image/skeleton.png';

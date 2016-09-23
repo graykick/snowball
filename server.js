@@ -22,7 +22,6 @@ var SOCKET_LIST = {};
 var PLAYER_LIST = {};
 
 io.sockets.on('connection', function(socket){
-	socket.id = Math.random();
 	SOCKET_LIST[socket.id] = socket;
 
 	var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
@@ -54,7 +53,7 @@ function  start() {
 			pack.push({
 				locationX: player.location.x,
 				locationY: player.location.y,
-				ImageIndex: player.nowImageIndex
+				ImageIndex: player.nowImageIndex, // 해골 방향 index
 			});
 		}
 		for (var i in SOCKET_LIST) {
