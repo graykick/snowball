@@ -3,8 +3,12 @@ var
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-    Vector = require('./lib/vector');
-    Player = require('./lib/player');
+	Class = require('./lib/class'); // 클래스를 모아놓은 모듈
+var Player = Class.Player;
+var Vector = Class.Vector;
+
+	//Vector = require('./lib/vector'),
+    //Player = require('./lib/player');
 
     PORT = 3002;
 
@@ -53,7 +57,7 @@ function  start() {
 			pack.push({
 				locationX: player.location.x,
 				locationY: player.location.y,
-				ImageIndex: player.nowImageIndex, // 해골 방향 index
+				ImageIndex: player.nowImageIndex // 해골 방향 index
 			});
 		}
 		for (var i in SOCKET_LIST) {
