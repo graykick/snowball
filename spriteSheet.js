@@ -14,7 +14,6 @@ class spriteSheet {
     canvas.height = this.height;
 
     ctx.drawImage(this.img, this.width * (index % this.numOfX), this.height * Math.floor(index / this.numOfX), this.width, this.height, 0, 0, canvas.width, canvas.height);
-    // 콘솔보기 힘들어서 지움 console.log(this.width * (index % this.numOfX) + ", " + this.height * Math.floor(index / this.numOfX));
     return canvas;
   }
 }
