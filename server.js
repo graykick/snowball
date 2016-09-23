@@ -3,10 +3,10 @@ var
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-    Vector = require('./vector');
-    Player = require('./player');
+    Vector = require('./lib/vector');
+    Player = require('./lib/player');
 
-    PORT = 2000;
+    PORT = 3002;
 
 app.get('/',function(req, res){
 	res.sendFile(__dirname + '/index.html');
@@ -56,7 +56,6 @@ function  start() {
 				locationY: player.location.y,
 				ImageIndex: player.nowImageIndex
 			});
-
 		}
 		for (var i in SOCKET_LIST) {
 			var socket = SOCKET_LIST[i];
