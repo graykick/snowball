@@ -1,7 +1,7 @@
 {
-  "name": "snowball",
+  "name": "snowball-back2",
   "version": "1.0.0",
-  "description": "attack other tower",
+  "description": "",
   "main": "index.js",
   "dependencies": {
     "express": "^4.14.0",
@@ -11,14 +11,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/firepunch/SnowBall.git"
-  },
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/firepunch/SnowBall/issues"
-  },
-  "homepage": "https://github.com/firepunch/SnowBall#readme"
+  "license": "ISC"
 }
