@@ -3,12 +3,9 @@ var
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-	Class = require('./lib/class'); // 클래스를 모아놓은 모듈
-var Player = Class.Player;
-var Vector = Class.Vector;
 
-	//Vector = require('./lib/vector'),
-    //Player = require('./lib/player');
+	Vector = require('./lib/vector.js'),
+    Player = require('./lib/player.js'),
 
     PORT = 3002;
 

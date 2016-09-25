@@ -282,7 +282,7 @@ class Player extends Object {
     var state = "walk";
 
     if(Math.abs(this.velocity.x)<0.2){
-      state = "stop";
+      state = "stop"
       //console.log(`make it 1`);
       this.walkStep=1;
     }
