@@ -26,7 +26,10 @@ var BALL_LIST = {};
 
 Player.onConnect = function (socket) {
     var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
+    var ball = new Ball(5, 45, 50, new Vector(100, 100));
+
     PLAYER_LIST[socket.id] = player;
+    BALL_LIST[socket.id] = ball;
 
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
@@ -54,32 +57,14 @@ Player.update = function () {
     return pack;
 }
 
-var Ball = function(angle){
-    this.id = Math.random();
-    this.spdX = Math.cos(angle/180*Math.PI) * 10;
-    this.spdY = Math.sin(angle/180*Math.PI) * 10;
-
-    this.timer = 0;
-    this.toRemove = false;
-    this.update = function(){
-        if(this.timer++ > 100)
-            this.toRemove = true;
-    }
-    BALL_LIST[this.id] = this;
-    return this;
-}
 Ball.update = function () {
-    if(Math.random() < 0.1){
-        Ball(Math.random()*360);
-    }
-
     var pack = [];
     for (var i in BALL_LIST) {
         var ball = BALL_LIST[i];
         ball.update();
         pack.push({
-            x:ball.x,
-            y:ball.y
+            locationX: ball.location.x,
+            locationY: ball.location.y,
         });
     }
     return pack;

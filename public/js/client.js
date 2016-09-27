@@ -39,11 +39,11 @@ function hello() {
 socket.on('newPosition', function (data) {
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    for(var i = 0 ; i < data.player.length; i++)
+    for(var i = 0 ; i < data.player.length; i++) // 플레이어마다 해골 그림
         ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
 
-    for(var i = 0 ; i < data.ball.length; i++)
-        ctx.fillRect(data.ball[i].x-5,data.ball[i].y-5,10,10);
+    for(var i = 0 ; i < data.ball.length; i++) // 공 그림
+        ctx.fillRect(data.ball[i].locationX - 32, data.ball[i].locationY - 32-5,10,10);
 });
 
 document.onkeydown = function (event) {
