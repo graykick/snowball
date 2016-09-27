@@ -4,62 +4,109 @@ var
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
 
-	Vector = require('./lib/vector.js'),
+    Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
+    Ball = require('./lib/ball.js'),
 
     PORT = 3002;
 
-app.get('/',function(req, res){
-	res.sendFile(__dirname + '/index.html');
+app.get('/', function (req, res) {
+    res.sendFile(__dirname + '/index.html');
 });
 
 app.use('/public', express.static(__dirname + '/public'));
 
-server.listen(port = Number(process.env.PORT || PORT), function(){
-	console.log("Server "+PORT+" listening");
+server.listen(port = Number(process.env.PORT || PORT), function () {
+    console.log("Server " + PORT + " listening");
 });
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
+var BALL_LIST = {};
 
-io.sockets.on('connection', function(socket){
-	SOCKET_LIST[socket.id] = socket;
+Player.onConnect = function (socket) {
+    var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
+    PLAYER_LIST[socket.id] = player;
 
-	var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
-	PLAYER_LIST[socket.id] = player;
-	start();
+    socket.on('keyPress', function (data) {
+        if (data.inputId === 'left')
+            player.press[65] = data.state;
+        else if (data.inputId === 'right')
+            player.press[68] = data.state;
+        else if (data.inputId === 'up')
+            player.press[87] = data.state;
+    });
+}
+Player.onDisconnect = function (socket) {
+    delete PLAYER_LIST[socket.id];
+}
+Player.update = function () {
+    var pack = [];
+    for (var i in PLAYER_LIST) {
+        var player = PLAYER_LIST[i];
+        player.run();
+        pack.push({
+            locationX: player.location.x,
+            locationY: player.location.y,
+            ImageIndex: player.nowImageIndex // 해골 방향 index
+        });
+    }
+    return pack;
+}
 
-	socket.on('disconnect', function(){
-		delete SOCKET_LIST[socket.id];
-		delete PLAYER_LIST[socket.id];
-	});
+var Ball = function(angle){
+    this.id = Math.random();
+    this.spdX = Math.cos(angle/180*Math.PI) * 10;
+    this.spdY = Math.sin(angle/180*Math.PI) * 10;
 
-	socket.on('keyPress', function(data){
-		if(data.inputId === 'left')
-			player.press[65] = data.state;
-		else if(data.inputId === 'right')
-			player.press[68] = data.state;
-		else if(data.inputId === 'up')
-			player.press[87] = data.state;
-	});
+    this.timer = 0;
+    this.toRemove = false;
+    this.update = function(){
+        if(this.timer++ > 100)
+            this.toRemove = true;
+    }
+    BALL_LIST[this.id] = this;
+    return this;
+}
+Ball.update = function () {
+    if(Math.random() < 0.1){
+        Ball(Math.random()*360);
+    }
+
+    var pack = [];
+    for (var i in BALL_LIST) {
+        var ball = BALL_LIST[i];
+        ball.update();
+        pack.push({
+            x:ball.x,
+            y:ball.y
+        });
+    }
+    return pack;
+}
+
+io.sockets.on('connection', function (socket) {
+    SOCKET_LIST[socket.id] = socket;
+
+    Player.onConnect(socket);
+    start();
+
+    socket.on('disconnect', function () {
+        delete SOCKET_LIST[socket.id];
+        Player.onDisconnect(socket);
+    });
 });
 
 function  start() {
-	setInterval(function () {
-		var pack = [];
+    setInterval(function () {
+        var pack = {
+            player:Player.update(),
+            ball:Ball.update()
+        };
 
-		for (var i in PLAYER_LIST) {
-			var player = PLAYER_LIST[i];
-			player.run();
-			pack.push({
-				locationX: player.location.x,
-				locationY: player.location.y,
-				ImageIndex: player.nowImageIndex // 해골 방향 index
-			});
-		}
-		for (var i in SOCKET_LIST) {
-			var socket = SOCKET_LIST[i];
-			socket.emit('newPosition', pack);
-		}
-	}, 1000 / 25);
+        for (var i in SOCKET_LIST) {
+            var socket = SOCKET_LIST[i];
+            socket.emit('newPosition', pack);
+        }
+    }, 1000 / 25);
 }

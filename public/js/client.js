@@ -23,24 +23,27 @@ nickBox.addEventListener("keydown", function(event) {
     event.preventDefault();
     if (event.which == 13 || event.keyCode == 13) {
         // trigger / dispatch 로 바꾸기
-        console.log('enter');
+        // 글씨만 써지면 trigger 성공
         hello();
     }
 });
 
-guest.addEventListener('mousedown', function hello() {
-    console.log('in hello');
+guest.addEventListener('mousedown', hello);
+
+function hello() {
     var nickname = nickBox.value;
-    socket.emit('nickname', nickname);
+    socket.emit('nickname',  nickname);
     modal.style.display = 'none';
-});
+}
 
 socket.on('newPosition', function (data) {
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    for (var i = 0; i < data.length; i++) {
-        ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
-    }
+    for(var i = 0 ; i < data.player.length; i++)
+        ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
+
+    for(var i = 0 ; i < data.ball.length; i++)
+        ctx.fillRect(data.ball[i].x-5,data.ball[i].y-5,10,10);
 });
 
 document.onkeydown = function (event) {
@@ -50,7 +53,6 @@ document.onkeydown = function (event) {
         socket.emit('keyPress', {inputId: 'left', state: true});
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: true});
-
 }
 
 document.onkeyup = function (event) {
