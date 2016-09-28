@@ -61,10 +61,11 @@ Ball.update = function () {
     var pack = [];
     for (var i in BALL_LIST) {
         var ball = BALL_LIST[i];
-        ball.update();
+        ball.run();
         pack.push({
             locationX: ball.location.x,
             locationY: ball.location.y,
+            mass: ball.mass,
         });
     }
     return pack;

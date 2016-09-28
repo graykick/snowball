@@ -24,13 +24,13 @@ nickBox.addEventListener("keydown", function(event) {
     if (event.which == 13 || event.keyCode == 13) {
         // trigger / dispatch 로 바꾸기
         // 글씨만 써지면 trigger 성공
-        hello();
+        modalHello();
     }
 });
 
-guest.addEventListener('mousedown', hello);
+guest.addEventListener('mousedown', modalHello);
 
-function hello() {
+function modalHello() {
     var nickname = nickBox.value;
     socket.emit('nickname',  nickname);
     modal.style.display = 'none';
@@ -42,8 +42,9 @@ socket.on('newPosition', function (data) {
     for(var i = 0 ; i < data.player.length; i++) // 플레이어마다 해골 그림
         ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
 
-    for(var i = 0 ; i < data.ball.length; i++) // 공 그림
-        ctx.fillRect(data.ball[i].locationX - 32, data.ball[i].locationY - 32-5,10,10);
+    for(var i = 0 ; i < data.ball.length; i++) { // 공 그림
+        ctx.fillRect(data.ball[i].locationX - 32, data.ball[i].locationY - 32 - 5, 10, 10);
+    }
 });
 
 document.onkeydown = function (event) {
