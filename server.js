@@ -62,6 +62,10 @@ Ball.update = function () {
     for (var i in BALL_LIST) {
         var ball = BALL_LIST[i];
         ball.run();
+
+        //if(ball.live == false)
+        //    delete BALL_LIST[i];
+        console.log(ball.live+"   in server state");
         pack.push({
             locationX: ball.location.x,
             locationY: ball.location.y,
