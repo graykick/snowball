@@ -38,7 +38,6 @@ function modalHello() {
 var Player = function(initPack){
     var self = {};
     self.id = initPack.id;
-    self.number = initPack.number;
     self.x = initPack.x;
     self.y = initPack.y;
     PLAYER_LIST[self.id] = self;
@@ -46,7 +45,7 @@ var Player = function(initPack){
 }
 PLAYER_LIST = {};
 
-var Bullet = function(initPack){
+var Ball = function(initPack){
     var self = {};
     self.id = initPack.id;
     self.x = initPack.x;
@@ -61,31 +60,31 @@ socket.on('init',function(data){
     for(var i = 0 ; i < data.player.length; i++){
         new Player(data.player[i]);
     }
-    for(var i = 0 ; i < data.bullet.length; i++){
-        new Bullet(data.bullet[i]);
+    for(var i = 0 ; i < data.ball.length; i++){
+        new Ball(data.ball[i]);
     }
 });
 
 socket.on('update',function(data){
-    //{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
+    //{ player : [{locationX:0,locationY:0}, bullet: []}
     for(var i = 0 ; i < data.player.length; i++){
         var pack = data.player[i];
-        var p = PLAYER_LIST[pack.id];
+        var p = PLAYER_LIST[i];
         if(p){
-            if(pack.x !== undefined)
-                p.x = pack.x;
-            if(pack.y !== undefined)
-                p.y = pack.y;
+            if(pack.locationX !== undefined)
+                p.locationX = pack.locationX;
+            if(pack.locationY !== undefined)
+                p.locationY = pack.locationY;
         }
     }
     for(var i = 0 ; i < data.ball.length; i++){
         var pack = data.ball[i];
-        var b = BALL_LIST[data.ball[i].id];
+        var b = BALL_LIST[i];
         if(b){
-            if(pack.x !== undefined)
-                b.x = pack.x;
+            if(pack.locationX !== undefined)
+                b.locationX = pack.locationX;
             if(pack.y !== undefined)
-                b.y = pack.y;
+                b.locationY = pack.locationY;
         }
     }
 });
@@ -95,18 +94,23 @@ socket.on('remove',function(data){
         delete PLAYER_LIST[data.player[i]];
     }
     for(var i = 0 ; i < data.ball.length; i++){
-        delete BALL_LIST[data.bullet[i]];
+        delete BALL_LIST[data.ball[i]];
     }
 });
 
 setInterval(function(){
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    for(var i = 0 ; i < data.player.length; i++) // 플레이어마다 해골 그림
-        ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
 
-    for(var i = 0 ; i < data.ball.length; i++) { // 공 그림
-        ctx.fillRect(data.ball[i].locationX - 32, data.ball[i].locationY - 32 - 5, 10, 10);
+    for(var i = 0 ; i < PLAYER_LIST.length; i++) // 플레이어마다 해골 그림
+        ctx.drawImage(skeletonSheet.getSheet(PLAYER_LIST[i].ImageIndex), PLAYER_LIST[i].locationX - 32, PLAYER_LIST[i].locationY - 32);
+
+    for(var i = 0 ; i < BALL_LIST.length; i++) { // 공 그림
+        console.log(PLAYER_LIST[i]);
+        console.log(PLAYER_LIST[i].x - 32, PLAYER_LIST[i].y - 32+"      PLAYER");
+        console.log(BALL_LIST[i].x + 32, BALL_LIST[i].y + 32 - 5+"      BALL");
+
+        ctx.fillRect(BALL_LIST[i].locationX + 32, BALL_LIST[i].locationY + 32 - 5, 10, 10);
     }
 },40);
 

@@ -30,17 +30,16 @@ Player.onConnect = function (socket) {
 
     PLAYER_LIST[socket.id] = player;
     initPack.player.push({
-        id:self.id,
-        x:self.x,
-        y:self.y,
-        number:self.number,
+        id:socket.id,
+        locationX: player.location.x,
+        locationY: player.location.y
     });
 
     BALL_LIST[socket.id] = ball;
     initPack.ball.push({
-        id:self.id,
-        x:self.x,
-        y:self.y,
+        id:socket.id,
+        locationX: ball.location.x,
+        locationY: ball.location.y
     });
 
     socket.on('keyPress', function (data) {
@@ -66,6 +65,7 @@ Player.update = function () {
         var player = PLAYER_LIST[i];
         player.run();
         pack.push({
+            id: player.id,
             locationX: player.location.x,
             locationY: player.location.y,
             ImageIndex: player.nowImageIndex // 해골 방향 index
@@ -82,9 +82,10 @@ Ball.update = function () {
 
         if(ball.live == false) {
             delete BALL_LIST[i];
-            removePack.ball.push(socket.id);
+            removePack.ball.push(ball.id);
         } else
             pack.push({
+                id: ball.id,
                 locationX: ball.location.x,
                 locationY: ball.location.y,
                 mass: ball.mass,
@@ -123,9 +124,9 @@ function  start() {
             socket.emit('remove',removePack);
         }
         initPack.player = [];
-        initPack.bullet = [];
+        initPack.ball = [];
         removePack.player = [];
-        removePack.bullet = [];
+        removePack.ball = [];
 
     },1000/25);
 }
