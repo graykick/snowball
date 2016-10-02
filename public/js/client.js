@@ -38,8 +38,8 @@ function modalHello() {
 var Player = function(initPack){
     var self = {};
     self.id = initPack.id;
-    self.x = initPack.x;
-    self.y = initPack.y;
+    self.locationX = initPack.locationX;
+    self.locationY = initPack.locationY;
     PLAYER_LIST[self.id] = self;
     return self;
 }
@@ -48,8 +48,8 @@ PLAYER_LIST = {};
 var Ball = function(initPack){
     var self = {};
     self.id = initPack.id;
-    self.x = initPack.x;
-    self.y = initPack.y;
+    self.locationX = initPack.locationX;
+    self.locationY = initPack.locationY;
     BALL_LIST[self.id] = self;
     return self;
 }
@@ -101,12 +101,13 @@ socket.on('remove',function(data){
 setInterval(function(){
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+    console.log(BALL_LIST);
 
     for(var i = 0 ; i < PLAYER_LIST.length; i++) // 플레이어마다 해골 그림
         ctx.drawImage(skeletonSheet.getSheet(PLAYER_LIST[i].ImageIndex), PLAYER_LIST[i].locationX - 32, PLAYER_LIST[i].locationY - 32);
 
     for(var i = 0 ; i < BALL_LIST.length; i++) { // 공 그림
-        console.log(PLAYER_LIST[i]);
+        console.log("BALL ROOP in");
         console.log(PLAYER_LIST[i].x - 32, PLAYER_LIST[i].y - 32+"      PLAYER");
         console.log(BALL_LIST[i].x + 32, BALL_LIST[i].y + 32 - 5+"      BALL");
 
