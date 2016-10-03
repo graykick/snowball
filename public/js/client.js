@@ -1,3 +1,6 @@
+var pointX;
+var pointY;
+
 var Img = {};
 Img.player = new Image();
 Img.player.src = '/public/image/skeleton.png';
@@ -23,92 +26,45 @@ nickBox.addEventListener("keydown", function(event) {
     event.preventDefault();
     if (event.which == 13 || event.keyCode == 13) {
         // trigger / dispatch 로 바꾸기
-        // 글씨만 써지면 trigger 성공
-        modalHello();
+        console.log('enter');
+        hello();
     }
 });
 
-guest.addEventListener('mousedown', modalHello);
-
-function modalHello() {
+guest.addEventListener('mousedown', function hello() {
+    console.log('in hello');
     var nickname = nickBox.value;
-    socket.emit('nickname',  nickname);
+    socket.emit('nickname', nickname);
     modal.style.display = 'none';
-}
-var Player = function(initPack){
-    var self = {};
-    self.id = initPack.id;
-    self.number = initPack.number;
-    self.x = initPack.x;
-    self.y = initPack.y;
-    PLAYER_LIST[self.id] = self;
-    return self;
-}
-PLAYER_LIST = {};
-
-var Bullet = function(initPack){
-    var self = {};
-    self.id = initPack.id;
-    self.x = initPack.x;
-    self.y = initPack.y;
-    BALL_LIST[self.id] = self;
-    return self;
-}
-BALL_LIST = {};
-
-socket.on('init',function(data){
-    //{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
-    for(var i = 0 ; i < data.player.length; i++){
-        new Player(data.player[i]);
-    }
-    for(var i = 0 ; i < data.bullet.length; i++){
-        new Bullet(data.bullet[i]);
-    }
 });
 
-socket.on('update',function(data){
-    //{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
-    for(var i = 0 ; i < data.player.length; i++){
-        var pack = data.player[i];
-        var p = PLAYER_LIST[pack.id];
-        if(p){
-            if(pack.x !== undefined)
-                p.x = pack.x;
-            if(pack.y !== undefined)
-                p.y = pack.y;
-        }
-    }
-    for(var i = 0 ; i < data.ball.length; i++){
-        var pack = data.ball[i];
-        var b = BALL_LIST[data.ball[i].id];
-        if(b){
-            if(pack.x !== undefined)
-                b.x = pack.x;
-            if(pack.y !== undefined)
-                b.y = pack.y;
-        }
-    }
+//------add mouse listen
+canvas.addEventListener('mousemove', function (event) {
+    pointX = event.offsetX;
+    pointY = event.offsetY;
 });
 
-socket.on('remove',function(data){
-    for(var i = 0 ; i < data.player.length; i++){
-        delete PLAYER_LIST[data.player[i]];
-    }
-    for(var i = 0 ; i < data.ball.length; i++){
-        delete BALL_LIST[data.bullet[i]];
-    }
+canvas.addEventListener('mouseup', function (event) {
+    var ballData = {
+        mouseX : pointX,
+        mouseY : pointY
+    };
+    socket.emit('throwBall', ballData);
+    console.log("fire");
 });
 
-setInterval(function(){
+socket.on('newPosition', function (data, ball) {
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    for(var i = 0 ; i < data.player.length; i++) // 플레이어마다 해골 그림
-        ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
-
-    for(var i = 0 ; i < data.ball.length; i++) { // 공 그림
-        ctx.fillRect(data.ball[i].locationX - 32, data.ball[i].locationY - 32 - 5, 10, 10);
+    for (var i = 0; i < data.length; i++) {
+        ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
     }
-},40);
+    for(var loop = 0; loop < ball.length; loop++){
+        ctx.beginPath();
+        ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
+        ctx.fill();
+    }
+});
 
 document.onkeydown = function (event) {
     if (event.keyCode === 68) //d
@@ -117,7 +73,9 @@ document.onkeydown = function (event) {
         socket.emit('keyPress', {inputId: 'left', state: true});
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: true});
+
 }
+
 document.onkeyup = function (event) {
     if (event.keyCode === 68)	//d
         socket.emit('keyPress', {inputId: 'right', state: false});
@@ -125,17 +83,4 @@ document.onkeyup = function (event) {
         socket.emit('keyPress', {inputId: 'left', state: false});
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: false});
-}
-
-document.onmousedown = function(event){
-    socket.emit('keyPress',{inputId:'attack',state:true});
-}
-document.onmouseup = function(event){
-    socket.emit('keyPress',{inputId:'attack',state:false});
-}
-document.onmousemove = function(event){
-    var x = -250 + event.clientX - 8;
-    var y = -250 + event.clientY - 8;
-    var angle = Math.atan2(y,x) / Math.PI * 180;
-    socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
 }
