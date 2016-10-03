@@ -1,3 +1,6 @@
+var pointX;
+var pointY;
+
 var Img = {};
 Img.player = new Image();
 Img.player.src = '/public/image/skeleton.png';
@@ -35,11 +38,31 @@ guest.addEventListener('mousedown', function hello() {
     modal.style.display = 'none';
 });
 
-socket.on('newPosition', function (data) {
+//------add mouse listen
+canvas.addEventListener('mousemove', function (event) {
+        pointX = event.offsetX;
+        pointY = event.offsetY;
+});
+
+canvas.addEventListener('mouseup', function (event) {
+        var ballData = {
+          mouseX : pointX,
+          mouseY : pointY
+        };
+        socket.emit('throwBall', ballData);
+        console.log("fire");
+});
+
+socket.on('newPosition', function (data, ball) {
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     for (var i = 0; i < data.length; i++) {
         ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
+    }
+    for(var loop = 0; loop < ball.length; loop++){
+      ctx.beginPath();
+      ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
+      ctx.fill();
     }
 });
 
