@@ -40,6 +40,7 @@ var Player = function(initPack){
     self.id = initPack.id;
     self.locationX = initPack.locationX;
     self.locationY = initPack.locationY;
+    self.ImageIndex = initPack.ImageIndex;
     PLAYER_LIST[self.id] = self;
     return self;
 }
@@ -107,7 +108,8 @@ setInterval(function(){
         ctx.drawImage(skeletonSheet.getSheet(PLAYER_LIST[i].ImageIndex), PLAYER_LIST[i].locationX - 32, PLAYER_LIST[i].locationY - 32);
     
     for (var i in BALL_LIST) 
-        ctx.fillRect(BALL_LIST[i].locationX + 32, BALL_LIST[i].locationY + 32 - 5, 10, 10);
+    	ctx.fillRect(BALL_LIST[i].locationX+50,BALL_LIST[i].locationY-5,10,10);
+        //ctx.fillRect(BALL_LIST[i].locationX + 32, BALL_LIST[i].locationY + 32 - 5, 10, 10);
 },40);
 
 document.onkeydown = function (event) {

@@ -32,7 +32,8 @@ Player.onConnect = function (socket) {
     initPack.player.push({
         id:socket.id,
         locationX: player.location.x,
-        locationY: player.location.y
+        locationY: player.location.y,
+        ImageIndex: player.nowImageIndex
     });
 
     BALL_LIST[socket.id] = ball;
@@ -91,8 +92,9 @@ Ball.update = function () {
                 locationY: ball.location.y,
                 mass: ball.mass,
             });
-        console.log(ball.live+"   in server state");
+        console.log(ball.live+"   in server");
     }
+    console.log(pack);
     return pack;
 }
 
