@@ -29,20 +29,10 @@ Player.onConnect = function (socket) {
     var ball = new Ball(5, 45, 50, new Vector(100, 100));
 
     PLAYER_LIST[socket.id] = player;
-    initPack.player.push({
-        id:socket.id,
-        locationX: player.location.x,
-        locationY: player.location.y,
-        ImageIndex: player.nowImageIndex
-    });
-
     BALL_LIST[socket.id] = ball;
-    initPack.ball.push({
-        id:socket.id,
-        locationX: ball.location.x,
-        locationY: ball.location.y,
-        mass: ball.mass
-    });
+
+    player.id = socket.id;
+    ball.id = socket.id;
 
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
@@ -59,7 +49,6 @@ Player.onConnect = function (socket) {
 }
 Player.onDisconnect = function (socket) {
     delete PLAYER_LIST[socket.id];
-    removePack.player.push(socket.id);
 }
 Player.update = function () {
     var pack = [];
@@ -67,7 +56,6 @@ Player.update = function () {
         var player = PLAYER_LIST[i];
         player.run();
         pack.push({
-            id: player.id,
             locationX: player.location.x,
             locationY: player.location.y,
             ImageIndex: player.nowImageIndex // 해골 방향 index
@@ -81,20 +69,15 @@ Ball.update = function () {
     for (var i in BALL_LIST) {
         var ball = BALL_LIST[i];
         ball.run();
-
-        if(ball.live == false) {
+        if(ball.live == false)
             delete BALL_LIST[i];
-            removePack.ball.push(ball.id);
-        } else
+        else
             pack.push({
-                id: ball.id,
                 locationX: ball.location.x,
                 locationY: ball.location.y,
                 mass: ball.mass,
             });
-        console.log(ball.live+"   in server");
     }
-    console.log(pack);
     return pack;
 }
 
@@ -110,26 +93,16 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
-var initPack = {player:[],ball:[]};
-var removePack = {player:[],ball:[]};
-
 function  start() {
-    setInterval(function(){
+    setInterval(function () {
         var pack = {
             player:Player.update(),
             ball:Ball.update()
-        }
+        };
 
-        for(var i in SOCKET_LIST){
+        for (var i in SOCKET_LIST) {
             var socket = SOCKET_LIST[i];
-            socket.emit('init',initPack);
-            socket.emit('update',pack);
-            socket.emit('remove',removePack);
+            socket.emit('newPosition', pack);
         }
-        initPack.player = [];
-        initPack.ball = [];
-        removePack.player = [];
-        removePack.ball = [];
-
-    },1000/25);
+    }, 1000 / 25);
 }

@@ -16,7 +16,7 @@ var socket = io();
 var modal = document.getElementById('myModal');
 var nickBox = document.getElementById('nickBox');
 var guest = document.getElementById('guest');
-modal.style.display = 'block';
+//modal.style.display = 'block';
 
 // When the user press enter key, play as guest
 nickBox.addEventListener("keydown", function(event) {
@@ -35,82 +35,17 @@ function modalHello() {
     socket.emit('nickname',  nickname);
     modal.style.display = 'none';
 }
-var Player = function(initPack){
-    var self = {};
-    self.id = initPack.id;
-    self.locationX = initPack.locationX;
-    self.locationY = initPack.locationY;
-    self.ImageIndex = initPack.ImageIndex;
-    PLAYER_LIST[self.id] = self;
-    return self;
-}
-PLAYER_LIST = {};
 
-var Ball = function(initPack){
-    var self = {};
-    self.id = initPack.id;
-    self.locationX = initPack.locationX;
-    self.locationY = initPack.locationY;
-    self.mass = initPack.mass;
-    BALL_LIST[self.id] = self;
-    return self;
-}
-BALL_LIST = {};
-
-socket.on('init',function(data){
-    //{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
-    for(var i = 0 ; i < data.player.length; i++){
-        new Player(data.player[i]);
-    }
-    for(var i = 0 ; i < data.ball.length; i++){
-        new Ball(data.ball[i]);
-    }
-});
-
-socket.on('update',function(data){
-    //{ player : [{locationX:0,locationY:0}, bullet: []}
-    for(var i = 0 ; i < data.player.length; i++){
-        var pack = data.player[i];
-        var p = PLAYER_LIST[i];
-        if(p){
-            if(pack.locationX !== undefined)
-                p.locationX = pack.locationX;
-            if(pack.locationY !== undefined)
-                p.locationY = pack.locationY;
-        }
-    }
-    for(var i = 0 ; i < data.ball.length; i++){
-        var pack = data.ball[i];
-        var b = BALL_LIST[i];
-        if(b){
-            if(pack.locationX !== undefined)
-                b.locationX = pack.locationX;
-            if(pack.y !== undefined)
-                b.locationY = pack.locationY;
-        }
-    }
-});
-
-socket.on('remove',function(data){
-    for(var i = 0 ; i < data.player.length; i++){
-        delete PLAYER_LIST[data.player[i]];
-    }
-    for(var i = 0 ; i < data.ball.length; i++){
-        delete BALL_LIST[data.ball[i]];
-    }
-});
-
-setInterval(function(){
+socket.on('newPosition', function (data) {
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+    for(var i = 0 ; i < data.player.length; i++) // 플레이어마다 해골 그림
+        ctx.drawImage(skeletonSheet.getSheet(data.player[i].ImageIndex), data.player[i].locationX - 32, data.player[i].locationY - 32);
 
-    for (var i in PLAYER_LIST)
-        ctx.drawImage(skeletonSheet.getSheet(PLAYER_LIST[i].ImageIndex), PLAYER_LIST[i].locationX - 32, PLAYER_LIST[i].locationY - 32);
-    
-    for (var i in BALL_LIST) 
-    	ctx.fillRect(BALL_LIST[i].locationX+50,BALL_LIST[i].locationY-5,10,10);
-        //ctx.fillRect(BALL_LIST[i].locationX + 32, BALL_LIST[i].locationY + 32 - 5, 10, 10);
-},40);
+    for(var i = 0 ; i < data.ball.length; i++) { // 공 그림
+        ctx.fillRect(data.ball[i].locationX - 5, data.ball[i].locationY - 5, 10, 10);
+    }
+});
 
 document.onkeydown = function (event) {
     if (event.keyCode === 68) //d
@@ -120,6 +55,7 @@ document.onkeydown = function (event) {
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: true});
 }
+
 document.onkeyup = function (event) {
     if (event.keyCode === 68)	//d
         socket.emit('keyPress', {inputId: 'right', state: false});
@@ -132,7 +68,7 @@ document.onkeyup = function (event) {
 document.onmousedown = function(event){
     socket.emit('keyPress',{inputId:'attack',state:true});
 }
-document.onmouseup = function(event){
+document.onmousedown = function(event){
     socket.emit('keyPress',{inputId:'attack',state:false});
 }
 document.onmousemove = function(event){
