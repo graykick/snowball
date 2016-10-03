@@ -50,6 +50,7 @@ var Ball = function(initPack){
     self.id = initPack.id;
     self.locationX = initPack.locationX;
     self.locationY = initPack.locationY;
+    self.mass = initPack.mass;
     BALL_LIST[self.id] = self;
     return self;
 }
@@ -101,18 +102,12 @@ socket.on('remove',function(data){
 setInterval(function(){
     ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    console.log(BALL_LIST);
 
-    for(var i = 0 ; i < PLAYER_LIST.length; i++) // 플레이어마다 해골 그림
+    for (var i in PLAYER_LIST)
         ctx.drawImage(skeletonSheet.getSheet(PLAYER_LIST[i].ImageIndex), PLAYER_LIST[i].locationX - 32, PLAYER_LIST[i].locationY - 32);
-
-    for(var i = 0 ; i < BALL_LIST.length; i++) { // 공 그림
-        console.log("BALL ROOP in");
-        console.log(PLAYER_LIST[i].x - 32, PLAYER_LIST[i].y - 32+"      PLAYER");
-        console.log(BALL_LIST[i].x + 32, BALL_LIST[i].y + 32 - 5+"      BALL");
-
+    
+    for (var i in BALL_LIST) 
         ctx.fillRect(BALL_LIST[i].locationX + 32, BALL_LIST[i].locationY + 32 - 5, 10, 10);
-    }
 },40);
 
 document.onkeydown = function (event) {

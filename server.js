@@ -39,7 +39,8 @@ Player.onConnect = function (socket) {
     initPack.ball.push({
         id:socket.id,
         locationX: ball.location.x,
-        locationY: ball.location.y
+        locationY: ball.location.y,
+        mass: ball.mass
     });
 
     socket.on('keyPress', function (data) {
