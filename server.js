@@ -1,14 +1,7 @@
-var
-    express = require('express'),
-    app = express(),
-    server = require('http').createServer(app),
-    io = require('socket.io').listen(server),
-
-    Vector = require('./lib/vector.js'),
-    Player = require('./lib/player.js'),
-    Ball = require('./lib/ball.js'),
-
-    PORT = 3002;
+var express = require('express');
+var app = express();
+var serv = require('http').Server(app);
+var PORT = 3002;
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -16,116 +9,198 @@ app.get('/', function (req, res) {
 
 app.use('/public', express.static(__dirname + '/public'));
 
-server.listen(port = Number(process.env.PORT || PORT), function () {
+serv.listen(port = Number(process.env.PORT || PORT), function () {
     console.log("Server " + PORT + " listening");
 });
-
+ 
 var SOCKET_LIST = {};
-var PLAYER_LIST = {};
-var BALL_LIST = {};
-
-Player.onConnect = function (socket) {
-    var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
-    var ball = new Ball(5, 45, 50, new Vector(100, 100));
-
-    PLAYER_LIST[socket.id] = player;
-    initPack.player.push({
-        id:self.id,
-        x:self.x,
-        y:self.y,
-        number:self.number,
-    });
-
-    BALL_LIST[socket.id] = ball;
-    initPack.ball.push({
-        id:self.id,
-        x:self.x,
-        y:self.y,
-    });
-
-    socket.on('keyPress', function (data) {
-        if (data.inputId === 'left')
-            player.press[65] = data.state;
-        else if (data.inputId === 'right')
-            player.press[68] = data.state;
-        else if (data.inputId === 'up')
-            player.press[87] = data.state;
+ 
+var Entity = function(){
+    var self = {
+        x:250,
+        y:250,
+        spdX:0,
+        spdY:0,
+        id:"",
+    }
+    self.update = function(){
+        self.updatePosition();
+    }
+    self.updatePosition = function(){
+        self.x += self.spdX;
+        self.y += self.spdY;
+    }
+    self.getDistance = function(pt){
+        return Math.sqrt(Math.pow(self.x-pt.x,2) + Math.pow(self.y-pt.y,2));
+    }
+    return self;
+}
+ 
+var Player = function(id){
+    var self = Entity();
+    self.id = id;
+    self.number = "" + Math.floor(10 * Math.random());
+    self.pressingRight = false;
+    self.pressingLeft = false;
+    self.pressingUp = false;
+    self.pressingDown = false;
+    self.pressingAttack = false;
+    self.mouseAngle = 0;
+    self.maxSpd = 10;
+   
+    var super_update = self.update;
+    self.update = function(){
+        self.updateSpd();
+        super_update();
+       
+        if(self.pressingAttack){
+            self.shootBullet(self.mouseAngle);
+        }
+    }
+    self.shootBullet = function(angle){
+        var b = Bullet(self.id,angle);
+        b.x = self.x;
+        b.y = self.y;
+    }
+   
+   
+    self.updateSpd = function(){
+        if(self.pressingRight)
+            self.spdX = self.maxSpd;
+        else if(self.pressingLeft)
+            self.spdX = -self.maxSpd;
+        else
+            self.spdX = 0;
+       
+        if(self.pressingUp)
+            self.spdY = -self.maxSpd;
+        else if(self.pressingDown)
+            self.spdY = self.maxSpd;
+        else
+            self.spdY = 0;     
+    }
+    Player.list[id] = self;
+    return self;
+}
+Player.list = {};
+Player.onConnect = function(socket){
+    var player = Player(socket.id);
+    socket.on('keyPress',function(data){
+        if(data.inputId === 'left')
+            player.pressingLeft = data.state;
+        else if(data.inputId === 'right')
+            player.pressingRight = data.state;
+        else if(data.inputId === 'up')
+            player.pressingUp = data.state;
+        else if(data.inputId === 'down')
+            player.pressingDown = data.state;
         else if(data.inputId === 'attack')
             player.pressingAttack = data.state;
         else if(data.inputId === 'mouseAngle')
             player.mouseAngle = data.state;
     });
 }
-Player.onDisconnect = function (socket) {
-    delete PLAYER_LIST[socket.id];
-    removePack.player.push(socket.id);
+Player.onDisconnect = function(socket){
+    delete Player.list[socket.id];
 }
-Player.update = function () {
+Player.update = function(){
     var pack = [];
-    for (var i in PLAYER_LIST) {
-        var player = PLAYER_LIST[i];
-        player.run();
+    for(var i in Player.list){
+        var player = Player.list[i];
+        player.update();
         pack.push({
-            locationX: player.location.x,
-            locationY: player.location.y,
-            ImageIndex: player.nowImageIndex // 해골 방향 index
-        });
+            x:player.x,
+            y:player.y,
+            number:player.number
+        });    
     }
     return pack;
 }
-
-Ball.update = function () {
+ 
+ 
+var Bullet = function(parent,angle){
+    var self = Entity();
+    self.id = Math.random();
+    self.spdX = Math.cos(angle/180*Math.PI) * 10;
+    self.spdY = Math.sin(angle/180*Math.PI) * 10;
+    self.parent = parent;
+    self.timer = 0;
+    self.toRemove = false;
+    var super_update = self.update;
+    self.update = function(){
+        if(self.timer++ > 100)
+            self.toRemove = true;
+        super_update();
+       
+        for(var i in Player.list){
+            var p = Player.list[i];
+            if(self.getDistance(p) < 32 && self.parent !== p.id){
+                //handle collision. ex: hp--;
+                self.toRemove = true;
+            }
+        }
+    }
+    Bullet.list[self.id] = self;
+    return self;
+}
+Bullet.list = {};
+ 
+Bullet.update = function(){
     var pack = [];
-    for (var i in BALL_LIST) {
-        var ball = BALL_LIST[i];
-        ball.run();
-
-        if(ball.live == false) {
-            delete BALL_LIST[i];
-            removePack.ball.push(socket.id);
-        } else
+    for(var i in Bullet.list){
+        var bullet = Bullet.list[i];
+        bullet.update();
+        if(bullet.toRemove)
+            delete Bullet.list[i];
+        else
             pack.push({
-                locationX: ball.location.x,
-                locationY: ball.location.y,
-                mass: ball.mass,
-            });
-        console.log(ball.live+"   in server state");
+                x:bullet.x,
+                y:bullet.y,
+            });    
     }
     return pack;
 }
-
-io.sockets.on('connection', function (socket) {
+ 
+var DEBUG = true;
+ 
+var io = require('socket.io')(serv,{});
+io.sockets.on('connection', function(socket){
+    socket.id = Math.random();
     SOCKET_LIST[socket.id] = socket;
-
+   
     Player.onConnect(socket);
-    start();
-
-    socket.on('disconnect', function () {
+   
+    socket.on('disconnect',function(){
         delete SOCKET_LIST[socket.id];
         Player.onDisconnect(socket);
     });
-});
-
-var initPack = {player:[],ball:[]};
-var removePack = {player:[],ball:[]};
-
-function  start() {
-    setInterval(function(){
-        var pack = {
-            player:Player.update(),
-            ball:Ball.update()
-        }
-
+    socket.on('sendMsgToServer',function(data){
+        var playerName = ("" + socket.id).slice(2,7);
         for(var i in SOCKET_LIST){
-            var socket = SOCKET_LIST[i];
-            socket.emit('init',initPack);
-            socket.emit('update',pack);
-            socket.emit('remove',removePack);
+            SOCKET_LIST[i].emit('addToChat',playerName + ': ' + data);
         }
-        initPack.player = [];
-        initPack.bullet = [];
-        removePack.player = [];
-        removePack.bullet = [];
-
-    },1000/25);
-}
+    });
+   
+    socket.on('evalServer',function(data){
+        if(!DEBUG)
+            return;
+        var res = eval(data);
+        socket.emit('evalAnswer',res);     
+    });
+   
+   
+   
+});
+ 
+setInterval(function(){
+    var pack = {
+        player:Player.update(),
+        bullet:Bullet.update(),
+    }
+   
+    for(var i in SOCKET_LIST){
+        var socket = SOCKET_LIST[i];
+        socket.emit('newPositions',pack);
+    }
+},1000/25);
+ 
