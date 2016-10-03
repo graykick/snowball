@@ -3,7 +3,7 @@ var
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-	Vector = require('./lib/vector.js'),
+  	Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
 
@@ -29,6 +29,8 @@ io.sockets.on('connection', function(socket){
 	SOCKET_LIST[socket.id] = socket;
 
 	var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
+  player.id = socket;
+  player.socketId = socket.id;
 	PLAYER_LIST[socket.id] = player;
   if(!startBool){
     start();
@@ -64,18 +66,36 @@ function  start() {
     var ball = [];
 		for (var i in PLAYER_LIST) {
 			var player = PLAYER_LIST[i];
-			player.run();
+      if(player.hp<=0){
+        console.log("die");
+        delete SOCKET_LIST[player.socketId];
+    		delete PLAYER_LIST[player.socketId];
+      }
+			player.run(ballArr);
 			pack.push({
 				locationX: player.location.x,
 				locationY: player.location.y,
-				ImageIndex: player.nowImageIndex, // 해골 방향 index
+				ImageIndex: player.nowImageIndex,
+        hp : player.hp // 해골 방향 index
 			});
 		}
-    for(var loop = 0; loop < ballArr.length; loop++ ){
+    main : for(var loop = 0; loop < ballArr.length; loop++ ){
+      for (var i in PLAYER_LIST) {
+  			var player = PLAYER_LIST[i];
+        if((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location,ballArr[loop].location).mag() < player.mass+ballArr[loop].mass){
+          var radius = player.mass+ballArr[loop].mass;
+          console.log("boom");
+          player.hp -= 10;
+          ballArr.splice(loop, 1);
+          continue main;
+          //ballArr[loop].live = false;
+        }
+  		}
+
       ballArr[loop].run();
       if(!(ballArr[loop].live)){
         console.log("dead");
-        ballArr.splice(loop,1);
+        ballArr.splice(loop, 1);
         continue;
       }
       ball.push({
@@ -83,6 +103,7 @@ function  start() {
         locationY : ballArr[loop].location.y
       })
     }
+
 		for (var i in SOCKET_LIST) {
 			var socket = SOCKET_LIST[i];
 			socket.emit('newPosition', pack, ball);

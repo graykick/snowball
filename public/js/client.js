@@ -54,16 +54,27 @@ canvas.addEventListener('mouseup', function (event) {
 });
 
 socket.on('newPosition', function (data, ball) {
-    ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
+  //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     for (var i = 0; i < data.length; i++) {
-        ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
+    //  ctx.save();
+      ctx.fillStyle = "red";
+      ctx.fillRect(data[i].locationX-42, data[i].locationY-42, data[i].hp, 10);
+  //    ctx.fill();
+    //  ctx.restore();
+      ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
     }
+  //  ctx.fill();
+  //  ctx.clearRect();
     for(var loop = 0; loop < ball.length; loop++){
+  //    ctx.save();
       ctx.beginPath();
       ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
       ctx.fill();
+    //  ctx.restore();
     }
+
+  //  ctx.clearRect();
 });
 
 document.onkeydown = function (event) {
