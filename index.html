@@ -2,31 +2,41 @@
 <html>
 
 <head>
-  <meta charset="utf-8" />
-  <title>SNOW BALL</title>
-  <script src="/socket.io/socket.io.js"></script>
-  <link rel="stylesheet" href="/public/style.css">
+    <meta charset="utf-8"/>
+    <title>SNOW BALL</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/public/style.css">
 </head>
 
 <!--onload="modalFunction()"-->
 <body>
-  <div id="myModal" class="modal">
+<div id="myModal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>SNOW BALL</h2>
-      </div>
-      <div class="modal-body">
-        <input type="text" placeholder="Nick" id="nickBox"/>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-dismiss="modal" id="guest">Play as guest</button>
-        <button type="button" class="btn btn-warning" data-dismiss="modal" id="login">Login and play</button>
-      </div>
+        <div class="modal-header">
+            <h2>SNOW BALL</h2>
+        </div>
+        <div class="modal-body">
+            <input type="text" placeholder="Nick" id="nickBox"/>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal" id="guest">Play as guest</button>
+            <button type="button" class="btn btn-warning" data-dismiss="modal" id="login">Login and play</button>
+        </div>
     </div>
-  </div>
+</div>
 
+<div id="container">
     <canvas id="myCanvas" width="500" height="500" style="background:  #FAEBD7"></canvas>
-    <script text="text/javascript" src="public/js/spriteSheet.js"></script>
-    <script text="text/javascript" src="public/js/client.js"></script>
+    <div id=chat_overlay>
+        <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll"></div>
+        <form id="chat-form">
+            <input id="chat-input" type="text" style="width:500px"></input>
+        </form>
+    </div>
+</div>
+
+
+<script text="text/javascript" src="public/js/spriteSheet.js"></script>
+<script text="text/javascript" src="public/js/client.js"></script>
 </body>
 </html>

@@ -23,20 +23,39 @@ modal.style.display = 'block';
 
 // When the user press enter key, play as guest
 nickBox.addEventListener("keydown", function(event) {
-    event.preventDefault();
     if (event.which == 13 || event.keyCode == 13) {
-        // trigger / dispatch 로 바꾸기
-        console.log('enter');
-        hello();
+        var nickname = nickBox.value;
+        socket.emit('nickname', nickname);
+        modal.style.display = 'none';
     }
 });
 
-guest.addEventListener('mousedown', function hello() {
-    console.log('in hello');
+guest.addEventListener('mousedown', function helloModal() {
     var nickname = nickBox.value;
     socket.emit('nickname', nickname);
     modal.style.display = 'none';
 });
+
+//chat
+var chatText = document.getElementById('chat-text');
+var chatInput = document.getElementById('chat-input');
+var chatForm = document.getElementById('chat-form');
+
+socket.on('addToChat',function(data){
+    chatText.innerHTML += '<div>' + data + '</div>';
+});
+socket.on('evalAnswer',function(data){
+    console.log(data);
+});
+
+chatForm.onsubmit = function(e){
+    e.preventDefault();
+    if(chatInput.value[0] === '/')
+        socket.emit('evalServer',chatInput.value.slice(1));
+    else
+        socket.emit('sendMsgToServer',chatInput.value);
+    chatInput.value = '';
+}
 
 //------add mouse listen
 canvas.addEventListener('mousemove', function (event) {
