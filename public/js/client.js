@@ -41,9 +41,14 @@ var chatText = document.getElementById('chat-text');
 var chatInput = document.getElementById('chat-input');
 var chatForm = document.getElementById('chat-form');
 
-socket.on('addToChat',function(data){
-    chatText.innerHTML += '<div>' + data + '</div>';
+socket.on('receiveToChat',function(data){
+    chatText.innerHTML += '<div class="receiveMes">' + data + '</div>';
 });
+
+socket.on('sendToChat',function(data){
+    chatText.innerHTML += '<div class="sendMes">' + data + '</div>';
+});
+
 socket.on('evalAnswer',function(data){
     console.log(data);
 });
@@ -59,17 +64,17 @@ chatForm.onsubmit = function(e){
 
 //------add mouse listen
 canvas.addEventListener('mousemove', function (event) {
-        pointX = event.offsetX;
-        pointY = event.offsetY;
+    pointX = event.offsetX;
+    pointY = event.offsetY;
 });
 
 canvas.addEventListener('mouseup', function (event) {
-        var ballData = {
-          mouseX : pointX,
-          mouseY : pointY
-        };
-        socket.emit('throwBall', ballData);
-        console.log("fire");
+    var ballData = {
+        mouseX : pointX,
+        mouseY : pointY
+    };
+    socket.emit('throwBall', ballData);
+    console.log("fire");
 });
 
 socket.on('newPosition', function (data, ball) {
@@ -88,11 +93,17 @@ socket.on('newPosition', function (data, ball) {
   //  ctx.fill();
   //  ctx.clearRect();
     for(var loop = 0; loop < ball.length; loop++){
+//<<<<<<< HEAD
   //    ctx.save();
       ctx.beginPath();
       ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
       ctx.fill();
     //  ctx.restore();
+//=======
+        // ctx.beginPath();
+        // ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
+        // ctx.fill();
+//>>>>>>> origin/front
     }
 
   //  ctx.clearRect();
