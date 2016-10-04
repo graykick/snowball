@@ -1,6 +1,12 @@
-/* The Modal (background) */
+#container {
+    position: relative;
+}
 
-  .modal {
+#myCanvas, #chat_overlay {
+    position: absolute;
+}
+
+.modal {
     display: none;
     /* Hidden by default */
     position: fixed;
@@ -21,10 +27,11 @@
     /* Fallback color */
     background-color: rgba(0, 0, 0, 0.4);
     /* Black w/ opacity */
-  }
-  /* Modal Content */
-  
-  .modal-content {
+}
+
+/* Modal Content */
+
+.modal-content {
     position: relative;
     background-color: #fefefe;
     margin: auto;
@@ -36,76 +43,79 @@
     -webkit-animation-duration: 0.4s;
     animation-name: animatetop;
     animation-duration: 0.4s
-  }
-  /* Add Animation */
-  
-  @-webkit-keyframes animatetop {
+}
+
+/* Add Animation */
+
+@-webkit-keyframes animatetop {
     from {
-      top: -300px;
-      opacity: 0
+        top: -300px;
+        opacity: 0
     }
     to {
-      top: 0;
-      opacity: 1
+        top: 0;
+        opacity: 1
     }
-  }
-  
-  @keyframes animatetop {
+}
+
+@keyframes animatetop {
     from {
-      top: -300px;
-      opacity: 0
+        top: -300px;
+        opacity: 0
     }
     to {
-      top: 0;
-      opacity: 1
+        top: 0;
+        opacity: 1
     }
-  }
-  /* The Close Button */
-  
-  .close {
+}
+
+/* The Close Button */
+
+.close {
     color: white;
     float: right;
     font-size: 28px;
     font-weight: bold;
-  }
-  
-  .close:hover,
-  .close:focus {
+}
+
+.close:hover,
+.close:focus {
     color: #000;
     text-decoration: none;
     cursor: pointer;
-  }
-  
-  .modal-header {
+}
+
+.modal-header {
     padding: 2px 16px;
     background-color: #5cb85c;
     color: white;
-  }
-  
-  .modal-body {
+}
+
+.modal-body {
     padding: 2px 16px;
-  }
-  
-  .modal-footer {
+}
+
+.modal-footer {
     padding: 2px 16px;
     background-color: #5cb85c;
     color: white;
-  }
-  /* Modal Footer Buttons --> need hover, focus */
-  
-  .btn-warning {
+}
+
+/* Modal Footer Buttons --> need hover, focus */
+
+.btn-warning {
     color: #fff;
     background-color: #f0ad4e;
     border-color: #eea236;
-  }
-  
-  .btn-primary {
+}
+
+.btn-primary {
     color: #fff;
     background-color: #337ab7;
     border-color: #2e6da4;
-  }
-  
-  .btn {
+}
+
+.btn {
     display: inline-block;
     padding: 6px 12px;
     margin-bottom: 0;
@@ -115,14 +125,10 @@
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
-    -ms-touch-action: manipulation;
     touch-action: manipulation;
     cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     background-image: none;
     border: 1px solid transparent;
     border-radius: 4px;
-  }
+}

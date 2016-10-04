@@ -1,3 +1,5 @@
+var Vector = require('../lib/vector.js');
+
 class Object {
   constructor() {
 
