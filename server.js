@@ -45,9 +45,8 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('sendMsgToServer', function (data) {
-        for (var i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('addToChat', data + '<br />' + player.nickname);
-        }
+        this.emit('sendToChat', data + '<br />' + player.nickname);
+        this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
     });
 
     socket.on('evalServer', function (data) {
