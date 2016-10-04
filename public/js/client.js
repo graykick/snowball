@@ -22,7 +22,7 @@ var guest = document.getElementById('guest');
 modal.style.display = 'block';
 
 // When the user press enter key, play as guest
-nickBox.addEventListener("keydown", function(event) {
+nickBox.addEventListener("keydown", function (event) {
     if (event.which == 13 || event.keyCode == 13) {
         var nickname = nickBox.value;
         socket.emit('nickname', nickname);
@@ -41,24 +41,24 @@ var chatText = document.getElementById('chat-text');
 var chatInput = document.getElementById('chat-input');
 var chatForm = document.getElementById('chat-form');
 
-socket.on('receiveToChat',function(data){
+socket.on('receiveToChat', function (data) {
     chatText.innerHTML += '<div class="receiveMes">' + data + '</div>';
 });
 
-socket.on('sendToChat',function(data){
+socket.on('sendToChat', function (data) {
     chatText.innerHTML += '<div class="sendMes">' + data + '</div>';
 });
 
-socket.on('evalAnswer',function(data){
+socket.on('evalAnswer', function (data) {
     console.log(data);
 });
 
-chatForm.onsubmit = function(e){
+chatForm.onsubmit = function (e) {
     e.preventDefault();
-    if(chatInput.value[0] === '/')
-        socket.emit('evalServer',chatInput.value.slice(1));
+    if (chatInput.value[0] === '/')
+        socket.emit('evalServer', chatInput.value.slice(1));
     else
-        socket.emit('sendMsgToServer',chatInput.value);
+        socket.emit('sendMsgToServer', chatInput.value);
     chatInput.value = '';
 }
 
@@ -70,51 +70,38 @@ canvas.addEventListener('mousemove', function (event) {
 
 canvas.addEventListener('mouseup', function (event) {
     var ballData = {
-        mouseX : pointX,
-        mouseY : pointY
+        mouseX: pointX,
+        mouseY: pointY
     };
     socket.emit('throwBall', ballData);
     console.log("fire");
 });
 
 socket.on('newPosition', function (data, ball) {
-  //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
+    //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     for (var i = 0; i < data.length; i++) {
-    //  ctx.save();
-      ctx.fillStyle = "red";
-      ctx.fillRect(data[i].locationX-42, data[i].locationY-42, data[i].hp, 10);
-      ctx.fillStyle = "black"
-      ctx.fillText(data[i].score,data[i].locationX-52,data[i].locationY-52);
-  //    ctx.fill();
-    //  ctx.restore();
-      ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
+        ctx.fillStyle = "red";
+        ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
+        ctx.fillStyle = "black";
+        ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
+        ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
     }
-  //  ctx.fill();
-  //  ctx.clearRect();
-    for(var loop = 0; loop < ball.length; loop++){
-//<<<<<<< HEAD
-  //    ctx.save();
-      ctx.beginPath();
-      ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
-      ctx.fill();
-    //  ctx.restore();
-//=======
-        // ctx.beginPath();
-        // ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI*2);
-        // ctx.fill();
-//>>>>>>> origin/front
+    for (var loop = 0; loop < ball.length; loop++) {
+        ctx.beginPath();
+        ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
+        ctx.fill();
+
     }
 
-  //  ctx.clearRect();
 });
 
 socket.on('dead', () => {
-  chatText.innerHTML += '<div>' + "you die____" + '</div>';
-  var modalHead = document.getElementById("modal-header2");
-  modalHead.innerHTML = "hahahahaha you dead";
-  modal.style.display = 'block';
-})
+    chatText.innerHTML += '<div>' + "you die____" + '</div>';
+    var modalHead = document.getElementById("modal-header2");
+    modalHead.innerHTML = "hahahahaha you dead";
+    modal.style.display = 'block';
+});
 
 document.onkeydown = function (event) {
     if (event.keyCode === 68) //d
