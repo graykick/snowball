@@ -16,12 +16,12 @@ canvas.height = 640;
 
 var socket = io();
 
+// modal
 var modal = document.getElementById('myModal');
 var nickBox = document.getElementById('nickBox');
 var guest = document.getElementById('guest');
 modal.style.display = 'block';
 
-// When the user press enter key, play as guest
 nickBox.addEventListener("keydown", function (event) {
     if (event.which == 13 || event.keyCode == 13) {
         var nickname = nickBox.value;
@@ -36,7 +36,7 @@ guest.addEventListener('mousedown', function helloModal() {
     modal.style.display = 'none';
 });
 
-//chat
+// chat
 var chatText = document.getElementById('chat-text');
 var chatInput = document.getElementById('chat-input');
 var chatForm = document.getElementById('chat-form');
@@ -62,21 +62,7 @@ chatForm.onsubmit = function (e) {
     chatInput.value = '';
 }
 
-//------add mouse listen
-canvas.addEventListener('mousemove', function (event) {
-    pointX = event.offsetX;
-    pointY = event.offsetY;
-});
-
-canvas.addEventListener('mouseup', function (event) {
-    var ballData = {
-        mouseX: pointX,
-        mouseY: pointY
-    };
-    socket.emit('throwBall', ballData);
-    console.log("fire");
-});
-
+// game
 socket.on('newPosition', function (data, ball) {
     //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
@@ -111,7 +97,6 @@ document.onkeydown = function (event) {
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: true});
 }
-
 document.onkeyup = function (event) {
     if (event.keyCode === 68)	//d
         socket.emit('keyPress', {inputId: 'right', state: false});
@@ -120,3 +105,14 @@ document.onkeyup = function (event) {
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: false});
 }
+canvas.addEventListener('mousemove', function (event) {
+    pointX = event.offsetX;
+    pointY = event.offsetY;
+});
+canvas.addEventListener('mouseup', function (event) {
+    var ballData = {
+        mouseX: pointX,
+        mouseY: pointY
+    };
+    socket.emit('throwBall', ballData);
+});
