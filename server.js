@@ -85,9 +85,9 @@ io.sockets.on('connection', function (socket) {
         //   ballArr.push(player.balls[loop]);
         // }
         if(data.mouseX>player.location.x){
-          player.applyForth(new Vector(-1,0));
+          player.applyForth(new Vector(-100,0));
         } else {
-          player.applyForth(new Vector(1,0));
+          player.applyForth(new Vector(100,0));
         }
         ballArr.push(newBall);
     });
@@ -128,17 +128,15 @@ function  start() {
           PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
 
           if(ballArr[loop].location.x>player.location.x){
-            player.applyForth(new Vector(-1,0));
+            player.applyForth(new Vector(-100,0));
           } else {
-            player.applyForth(new Vector(1,0));
+            player.applyForth(new Vector(100,0));
           }
 
           ballArr.splice(loop, 1);
           continue main;
-          //ballArr[loop].live = false;
         }
   		}
-
       ballArr[loop].run();
       if(!(ballArr[loop].live)){
         console.log("dead");
