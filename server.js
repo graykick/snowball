@@ -8,7 +8,7 @@ var
     Ball = require('./lib/ball.js'),
     Object = require('./lib/object.js');
 
-PORT = 3002;
+    PORT = 3002;
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -62,6 +62,25 @@ Player.onDisconnect = function (socket) {
     delete SOCKET_LIST[socket.id];
     delete PLAYER_LIST[socket.id];
 }
+Ball.update = function () {
+    var pack = [];
+    for (var i in ballArr) {
+        var ball = ballArr[i];
+        ball.update();
+        if (ball.toRemove) {
+            delete ballArr[i];
+            removePack.ball.push(ball.ownerSocketId);
+        } else
+            pack.push(ball.getUpdatePack());
+    }
+    return pack;
+}
+Ball.getAllInitPack = function () {
+    var balls = [];
+    for (var i in ballArr)
+        balls.push(ballArr[i].getInitPack());
+    return balls;
+}
 
 io.sockets.on('connection', function (socket) {
     SOCKET_LIST[socket.id] = socket;
@@ -82,15 +101,35 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
+var initPack = {player: [], ball: []};
+var removePack = {player: [], ball: []};
+
 function start() {
     startBool = true;
     setInterval(function () {
-        var pack = [];
+        var pack = {
+            player: Player.update(),
+            ball: Ball.update(),
+        }
+
+        for (var i in SOCKET_LIST) {
+            var socket = SOCKET_LIST[i];
+            socket.emit('init', initPack);
+            socket.emit('update', pack);
+            socket.emit('remove', removePack);
+        }
+        initPack.player = [];
+        initPack.ball = [];
+        removePack.player = [];
+        removePack.ball = [];
+    }, 1000 / 25);
+}
+
+/*        var pack = [];
         var ball = [];
         for (var i in PLAYER_LIST) {
             var player = PLAYER_LIST[i];
             if (player.hp <= 0) {
-                console.log("die");
                 SOCKET_LIST[player.socketId].emit('dead');
                 delete PLAYER_LIST[player.socketId];
             }
@@ -139,5 +178,5 @@ function start() {
             var socket = SOCKET_LIST[i];
             socket.emit('newPosition', pack, ball);
         }
-    }, 1000 / 80);
+    }, 1000 / 80);*/
 }
