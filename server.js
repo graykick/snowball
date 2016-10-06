@@ -8,7 +8,7 @@ var
     Ball = require('./lib/ball.js'),
     Object = require('./lib/object.js');
 
-    PORT = 3002;
+PORT = 3002;
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -22,28 +22,25 @@ server.listen(port = Number(process.env.PORT || PORT), function () {
 
 var startBool = false;
 var SOCKET_LIST = {};
-var PLAYER_LIST = {};
-var ballArr = new Array();
 
 start();
 
+Player.list = {};
 Player.onConnect = function (socket) {
     var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
-    player.id = socket;
-    player.socketId = socket.id;
-    PLAYER_LIST[socket.id] = player;
+    player.id = socket.id;
+    Player.list[socket.id] = player;
 
     socket.on('nickname', function (nickname) {
         player.nickname = nickname;
     });
     socket.on('throwBall', function (data) {
         var newBall = player.throwBall(data.mouseX, data.mouseY);
-        if (data.mouseX > player.location.x) {
+        if (data.mouseX > player.location.x)
             player.applyForth(new Vector(-1, 0));
-        } else {
+        else
             player.applyForth(new Vector(1, 0));
-        }
-        ballArr.push(newBall);
+        newBall.list[socket.id] = newBall;
     });
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
@@ -58,17 +55,37 @@ Player.onConnect = function (socket) {
         this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
     });
 }
+Player.getAllInitPack = function () {
+    var players = [];
+    for (var i in Player.list)
+        players.push(Player.list[i].getInitPack());
+    initPack.player.push(this.getInitPack()); // this가 나오려나?
+    console.log("++++++++++++++++++players GetAllinitPack");
+    console.log(players);
+    return players;
+}
+Player.update = function () {
+    var pack = [];
+    for (var i in Player.list) {
+        Player.list[i].update();
+        pack.push(Player.list[i].getUpdatePack());
+    }
+    return pack;
+}
 Player.onDisconnect = function (socket) {
     delete SOCKET_LIST[socket.id];
-    delete PLAYER_LIST[socket.id];
+    delete Player.list[socket.id];
+    removePack.player.push(socket.id);
 }
+
+Ball.list = {};
 Ball.update = function () {
     var pack = [];
-    for (var i in ballArr) {
-        var ball = ballArr[i];
+    for (var i in Ball.list) {
+        var ball = Ball.list[i];
         ball.update();
         if (ball.toRemove) {
-            delete ballArr[i];
+            delete Ball.list[i];
             removePack.ball.push(ball.ownerSocketId);
         } else
             pack.push(ball.getUpdatePack());
@@ -77,8 +94,9 @@ Ball.update = function () {
 }
 Ball.getAllInitPack = function () {
     var balls = [];
-    for (var i in ballArr)
-        balls.push(ballArr[i].getInitPack());
+    for (var i in Ball.list)
+        balls.push(Ball.list[i].getInitPack());
+    initPack.ball.push(this.getInitPack());
     return balls;
 }
 
@@ -125,58 +143,60 @@ function start() {
     }, 1000 / 25);
 }
 
-/*        var pack = [];
-        var ball = [];
-        for (var i in PLAYER_LIST) {
-            var player = PLAYER_LIST[i];
-            if (player.hp <= 0) {
-                SOCKET_LIST[player.socketId].emit('dead');
-                delete PLAYER_LIST[player.socketId];
-            }
-            player.run(ballArr);
-            pack.push({
-                locationX: player.location.x,
-                locationY: player.location.y,
-                vLocationX: player.vLocation.x,
-                vLocationY: player.vLocation.y,
-                ImageIndex: player.nowImageIndex,
-                hp: player.hp, // 해골 방향 index
-                score: player.score
-            });
-        }
-        main : for (var loop = 0; loop < ballArr.length; loop++) {
-            for (var i in PLAYER_LIST) {
-                var player = PLAYER_LIST[i];
-                if ((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location, ballArr[loop].location).mag() < player.mass + ballArr[loop].mass) {
-                    var radius = player.mass + ballArr[loop].mass;
-                    console.log("boom");
-                    player.hp -= 10;
-                    PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
-                    if (ballArr[loop].location.x > player.location.x) {
-                        player.applyForth(new Vector(-1, 0));
-                    } else {
-                        player.applyForth(new Vector(1, 0));
-                    }
+/*
+ var pack = [];
+ var ball = [];
+ for (var i in PLAYER_LIST) {
+ var player = PLAYER_LIST[i];
+ if (player.hp <= 0) {
+ SOCKET_LIST[player.socketId].emit('dead');
+ delete PLAYER_LIST[player.socketId];
+ }
+ player.run(ballArr);
+ pack.push({
+ locationX: player.location.x,
+ locationY: player.location.y,
+ vLocationX: player.vLocation.x,
+ vLocationY: player.vLocation.y,
+ ImageIndex: player.nowImageIndex,
+ hp: player.hp, // 해골 방향 index
+ score: player.score
+ });
+ }
+ main : for (var loop = 0; loop < ballArr.length; loop++) {
+ for (var i in PLAYER_LIST) {
+ var player = PLAYER_LIST[i];
+ if ((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location, ballArr[loop].location).mag() < player.mass + ballArr[loop].mass) {
+ var radius = player.mass + ballArr[loop].mass;
+ console.log("boom");
+ player.hp -= 10;
+ PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
+ if (ballArr[loop].location.x > player.location.x) {
+ player.applyForth(new Vector(-1, 0));
+ } else {
+ player.applyForth(new Vector(1, 0));
+ }
 
-                    ballArr.splice(loop, 1);
-                    continue main;
-                }
-            }
+ ballArr.splice(loop, 1);
+ continue main;
+ }
+ }
 
-            ballArr[loop].run();
-            if (!(ballArr[loop].live)) {
-                ballArr.splice(loop, 1);
-                continue;
-            }
-            ball.push({
-                locationX: ballArr[loop].location.x,
-                locationY: ballArr[loop].location.y
-            })
-        }
+ ballArr[loop].run();
+ if (!(ballArr[loop].live)) {
+ ballArr.splice(loop, 1);
+ continue;
+ }
+ ball.push({
+ locationX: ballArr[loop].location.x,
+ locationY: ballArr[loop].location.y
+ })
+ }
 
-        for (var i in SOCKET_LIST) {
-            var socket = SOCKET_LIST[i];
-            socket.emit('newPosition', pack, ball);
-        }
-    }, 1000 / 80);*/
-}
+ for (var i in SOCKET_LIST) {
+ var socket = SOCKET_LIST[i];
+ socket.emit('newPosition', pack, ball);
+ }
+ }, 1000 / 80);
+ }
+ */

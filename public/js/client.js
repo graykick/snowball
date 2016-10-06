@@ -63,24 +63,97 @@ chatForm.onsubmit = function (e) {
 }
 
 // game
-socket.on('newPosition', function (data, ball) {
-    //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
+socket.on('init', function (data) { // initPack
+    console.log('init');
+    console.log(data);
+    //{ player : [{locationX:x, locationY:x, vLocationX:x, vLocationY: x,
+    // ImageIndex: x, hp:x, score:x}], ball: [locationX:x,locationY: x]}
+    for (var i = 0; i < data.player.length; i++) {
+        new Player(data.player[i]);
+    }
+    for (var i = 0; i < data.ball.length; i++) {
+        new Ball(data.ball[i]);
+    }
+});
+
+socket.on('update', function (data) { // pack
+    console.log('update');
+    console.log(data);
+    for (var i = 0; i < data.player.length; i++) {
+        var pack = data.player[i];
+        var p = Player.list[pack.id];
+        if (p) {
+            if (pack.x !== undefined)
+                p.x = pack.x;
+            if (pack.y !== undefined)
+                p.y = pack.y;
+            if (pack.hp !== undefined)
+                p.hp = pack.hp;
+            if (pack.score !== undefined)
+                p.score = pack.score;
+        }
+    }
+    for (var i = 0; i < data.ball.length; i++) {
+        var pack = Ball.list[i];
+        var b = Ball.list[data.Ball.list[i].id];
+        if (b) {
+            if (pack.x !== undefined)
+                b.x = pack.x;
+            if (pack.y !== undefined)
+                b.y = pack.y;
+        }
+    }
+});
+
+socket.on('remove', function (data) {
+    console.log('remove');
+    console.log(data);
+    for (var i = 0; i < data.player.length; i++) {
+        delete Player.list[data.player[i]];
+    }
+    for (var i = 0; i < data.bullet.length; i++) {
+        delete Ball.list[data.ball[i]];
+    }
+});
+
+setInterval(function () {
     ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
-    for (var i = 0; i < data.length; i++) {
+
+    ctx.clearRect(0, 0, 500, 500);
+    for (var i in PLAYER_LIST) {
         ctx.fillStyle = "red";
         ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
         ctx.fillStyle = "black";
         ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
         ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
     }
-    for (var loop = 0; loop < ball.length; loop++) {
+    for (var i in Ball.list) {
         ctx.beginPath();
         ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
         ctx.fill();
-
     }
+}, 40);
 
-});
+/*
+ socket.on('newPosition', function (data, ball) {
+ //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
+ ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+ for (var i = 0; i < data.length; i++) {
+ ctx.fillStyle = "red";
+ ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
+ ctx.fillStyle = "black";
+ ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
+ ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
+ }
+ for (var loop = 0; loop < ball.length; loop++) {
+ ctx.beginPath();
+ ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
+ ctx.fill();
+
+ }
+
+ });
+ */
 
 socket.on('dead', () => {
     chatText.innerHTML += '<div>' + "you die____" + '</div>';
