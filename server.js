@@ -10,6 +10,7 @@ var
 
 PORT = 3002;
 
+var startBool = false;
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
@@ -20,28 +21,49 @@ server.listen(port = Number(process.env.PORT || PORT), function () {
     console.log("Server " + PORT + " listening");
 });
 
-var startBool = false;
 var SOCKET_LIST = {};
+var PLAYER_LIST = {};
+var ballArr = new Array();
 
 start();
 
-Player.list = {};
-Player.onConnect = function (socket) {
+io.sockets.on('connection', function (socket) {
+    SOCKET_LIST[socket.id] = socket;
+
     var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
-    player.id = socket.id;
-    Player.list[socket.id] = player;
+    PLAYER_LIST[socket.id] = player;
+    if (!startBool) {
+        start();
+    }
+
+    socket.on('disconnect', function () {
+        delete SOCKET_LIST[socket.id];
+        delete PLAYER_LIST[socket.id];
+    });
 
     socket.on('nickname', function (nickname) {
         player.nickname = nickname;
     });
-    socket.on('throwBall', function (data) {
-        var newBall = player.throwBall(data.mouseX, data.mouseY);
-        if (data.mouseX > player.location.x)
-            player.applyForth(new Vector(-1, 0));
-        else
-            player.applyForth(new Vector(1, 0));
-        newBall.list[socket.id] = newBall;
+
+    var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
+    player.id = socket;
+    player.socketId = socket.id;
+    PLAYER_LIST[socket.id] = player;
+    if (!startBool) {
+        start();
+    }
+    socket.on('sendMsgToServer', function (data) {
+        this.emit('sendToChat', data + '<br />' + player.nickname);
+        this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
     });
+
+    socket.on('evalServer', function (data) {
+        if (!DEBUG)
+            return;
+        var res = eval(data);
+        socket.emit('evalAnswer', res);
+    });
+
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
             player.press[65] = data.state;
@@ -50,153 +72,163 @@ Player.onConnect = function (socket) {
         else if (data.inputId === 'up')
             player.press[87] = data.state;
     });
-    socket.on('sendMsgToServer', function (data) {
-        this.emit('sendToChat', data + '<br />' + player.nickname);
-        this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
-    });
-}
-Player.getAllInitPack = function () {
-    var players = [];
-    for (var i in Player.list)
-        players.push(Player.list[i].getInitPack());
-    initPack.player.push(this.getInitPack()); // this가 나오려나?
-    console.log("++++++++++++++++++players GetAllinitPack");
-    console.log(players);
-    return players;
-}
-Player.update = function () {
-    var pack = [];
-    for (var i in Player.list) {
-        Player.list[i].update();
-        pack.push(Player.list[i].getUpdatePack());
-    }
-    return pack;
-}
-Player.onDisconnect = function (socket) {
-    delete SOCKET_LIST[socket.id];
-    delete Player.list[socket.id];
-    removePack.player.push(socket.id);
-}
 
-Ball.list = {};
-Ball.update = function () {
-    var pack = [];
-    for (var i in Ball.list) {
-        var ball = Ball.list[i];
-        ball.update();
-        if (ball.toRemove) {
-            delete Ball.list[i];
-            removePack.ball.push(ball.ownerSocketId);
-        } else
-            pack.push(ball.getUpdatePack());
-    }
-    return pack;
-}
-Ball.getAllInitPack = function () {
-    var balls = [];
-    for (var i in Ball.list)
-        balls.push(Ball.list[i].getInitPack());
-    initPack.ball.push(this.getInitPack());
-    return balls;
-}
-
-io.sockets.on('connection', function (socket) {
-    SOCKET_LIST[socket.id] = socket;
-    Player.onConnect(socket);
-    if (!startBool) {
-        start();
-    }
-
-    socket.on('disconnect', function () {
-        delete SOCKET_LIST[socket.id];
-        Player.onDisconnect(socket);
-    });
-    socket.on('evalServer', function (data) {
-        if (!DEBUG)
-            return;
-        var res = eval(data);
-        socket.emit('evalAnswer', res);
+    socket.on('throwBall', function (data) {
+        var newBall = player.throwBall(data.mouseX, data.mouseY);
+//<<<<<<< HEAD
+        // for(var loop = 0; loop < player.balls.length; loop++){
+        //   ballArr.push(player.balls[loop]);
+        // }
+        if(data.mouseX>player.location.x){
+          player.applyForth(new Vector(-100,0));
+        } else {
+          player.applyForth(new Vector(100,0));
+        }
+//=======
+        if (data.mouseX > player.location.x) {
+            player.applyForth(new Vector(-1, 0));
+        } else {
+            player.applyForth(new Vector(1, 0));
+//>>>>>>> origin/front
+        }
+        ballArr.push(newBall);
     });
 });
 
-var initPack = {player: [], ball: []};
-var removePack = {player: [], ball: []};
-
+//<<<<<<< HEAD
+//<<<<<<< HEAD
+// function  start() {
+//   startBool = true;
+// 	setInterval(function () {
+// 		var pack = [];
+//     var ball = [];
+// 		for (var i in PLAYER_LIST) {
+// 			var player = PLAYER_LIST[i];
+//       if(player.hp<=0){
+//         console.log("die");
+//         SOCKET_LIST[player.socketId].emit('dead');
+//       //  delete SOCKET_LIST[player.socketId];
+//     		delete PLAYER_LIST[player.socketId];
+//       }
+// 			player.run(ballArr);
+// 			pack.push({
+// 				locationX: player.location.x,
+// 				locationY: player.location.y,
+//         vLocationX: player.vLocation.x,
+// 				vLocationY: player.vLocation.y,
+// 				ImageIndex: player.nowImageIndex,
+//         hp : player.hp, // 해골 방향 index
+//         score : player.score
+// 			});
+// 		}
+//     main : for(var loop = 0; loop < ballArr.length; loop++ ){
+//       for (var i in PLAYER_LIST) {
+//   			var player = PLAYER_LIST[i];
+//         if((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location,ballArr[loop].location).mag() < player.mass+ballArr[loop].mass){
+//           var radius = player.mass+ballArr[loop].mass;
+//           console.log("boom");
+//           player.hp -= 10;
+//           PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
+//
+//           if(ballArr[loop].location.x>player.location.x){
+//             player.applyForth(new Vector(-100,0));
+//           } else {
+//             player.applyForth(new Vector(100,0));
+//           }
+//
+//           ballArr.splice(loop, 1);
+//           continue main;
+//         }
+//   		}
+//       ballArr[loop].run();
+//       if(!(ballArr[loop].live)){
+//         console.log("dead");
+//         ballArr.splice(loop, 1);
+//         continue;
+//       }
+//       ball.push({
+//         locationX : ballArr[loop].location.x,
+//         locationY : ballArr[loop].location.y
+//       })
+//     }
+// //=======
 function start() {
     startBool = true;
     setInterval(function () {
-        var pack = {
-            player: Player.update(),
-            ball: Ball.update(),
+        var pack = [];
+        var ball = [];
+        for (var i in PLAYER_LIST) {
+            var player = PLAYER_LIST[i];
+            if (player.hp <= 0) {
+                console.log("die");
+                SOCKET_LIST[player.socketId].emit('dead');
+                delete PLAYER_LIST[player.socketId];
+                delete SOCKET_LIST[player.socketId];
+            }
+            player.run(ballArr);
+            pack.push({
+                locationX: player.location.x,
+                locationY: player.location.y,
+                vLocationX: player.vLocation.x,
+                vLocationY: player.vLocation.y,
+                ImageIndex: player.nowImageIndex,
+                hp: player.hp, // 해골 방향 index
+                score: player.score,
+                name : player.nickname
+            });
         }
+        main : for (var loop = 0; loop < ballArr.length; loop++) {
+            for (var i in PLAYER_LIST) {
+                var player = PLAYER_LIST[i];
+                if ((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location, ballArr[loop].location).mag() < player.mass + ballArr[loop].mass) {
+                    var radius = player.mass + ballArr[loop].mass;
+                    console.log("boom");
+                    player.hp -= 10;
+
+                    try{
+                      PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
+                    } catch(e){
+
+                    }
+
+                    if (ballArr[loop].location.x > player.location.x) {
+                        player.applyForth(new Vector(-1, 0));
+                    } else {
+                        player.applyForth(new Vector(1, 0));
+                    }
+
+                    ballArr.splice(loop, 1);
+                    continue main;
+                }
+            }
+
+            ballArr[loop].run();
+            if (!(ballArr[loop].live)) {
+                console.log("dead");
+                ballArr.splice(loop, 1);
+                continue;
+            }
+            ball.push({
+                locationX: ballArr[loop].location.x,
+                locationY: ballArr[loop].location.y
+            })
+        }
+//>>>>>>> origin/front
 
         for (var i in SOCKET_LIST) {
             var socket = SOCKET_LIST[i];
-            socket.emit('init', initPack);
-            socket.emit('update', pack);
-            socket.emit('remove', removePack);
+            var me={};
+            me = {
+                locationX: PLAYER_LIST[socket.id].location.x,
+                locationY: PLAYER_LIST[socket.id].location.y,
+                vLocationX: PLAYER_LIST[socket.id].vLocation.x,
+                vLocationY: PLAYER_LIST[socket.id].vLocation.y,
+                ImageIndex: PLAYER_LIST[socket.id].nowImageIndex,
+                hp: PLAYER_LIST[socket.id].hp, // 해골 방향 index
+                score: PLAYER_LIST[socket.id].score,
+                name : PLAYER_LIST[socket.id].nickname
+            };
+            socket.emit('newPosition', pack, ball, me);
         }
-        initPack.player = [];
-        initPack.ball = [];
-        removePack.player = [];
-        removePack.ball = [];
-    }, 1000 / 25);
+    }, 1000 / 80);
 }
-
-/*
- var pack = [];
- var ball = [];
- for (var i in PLAYER_LIST) {
- var player = PLAYER_LIST[i];
- if (player.hp <= 0) {
- SOCKET_LIST[player.socketId].emit('dead');
- delete PLAYER_LIST[player.socketId];
- }
- player.run(ballArr);
- pack.push({
- locationX: player.location.x,
- locationY: player.location.y,
- vLocationX: player.vLocation.x,
- vLocationY: player.vLocation.y,
- ImageIndex: player.nowImageIndex,
- hp: player.hp, // 해골 방향 index
- score: player.score
- });
- }
- main : for (var loop = 0; loop < ballArr.length; loop++) {
- for (var i in PLAYER_LIST) {
- var player = PLAYER_LIST[i];
- if ((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location, ballArr[loop].location).mag() < player.mass + ballArr[loop].mass) {
- var radius = player.mass + ballArr[loop].mass;
- console.log("boom");
- player.hp -= 10;
- PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
- if (ballArr[loop].location.x > player.location.x) {
- player.applyForth(new Vector(-1, 0));
- } else {
- player.applyForth(new Vector(1, 0));
- }
-
- ballArr.splice(loop, 1);
- continue main;
- }
- }
-
- ballArr[loop].run();
- if (!(ballArr[loop].live)) {
- ballArr.splice(loop, 1);
- continue;
- }
- ball.push({
- locationX: ballArr[loop].location.x,
- locationY: ballArr[loop].location.y
- })
- }
-
- for (var i in SOCKET_LIST) {
- var socket = SOCKET_LIST[i];
- socket.emit('newPosition', pack, ball);
- }
- }, 1000 / 80);
- }
- */

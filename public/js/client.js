@@ -1,5 +1,8 @@
 var pointX;
 var pointY;
+var shotOffsetX;
+var gameStart = false;
+var mapState;
 
 var Img = {};
 Img.player = new Image();
@@ -16,12 +19,12 @@ canvas.height = 640;
 
 var socket = io();
 
-// modal
 var modal = document.getElementById('myModal');
 var nickBox = document.getElementById('nickBox');
 var guest = document.getElementById('guest');
 modal.style.display = 'block';
 
+// When the user press enter key, play as guest
 nickBox.addEventListener("keydown", function (event) {
     if (event.which == 13 || event.keyCode == 13) {
         var nickname = nickBox.value;
@@ -36,7 +39,7 @@ guest.addEventListener('mousedown', function helloModal() {
     modal.style.display = 'none';
 });
 
-// chat
+//chat
 var chatText = document.getElementById('chat-text');
 var chatInput = document.getElementById('chat-input');
 var chatForm = document.getElementById('chat-form');
@@ -62,98 +65,93 @@ chatForm.onsubmit = function (e) {
     chatInput.value = '';
 }
 
-// game
-socket.on('init', function (data) { // initPack
-    console.log('init');
-    console.log(data);
-    //{ player : [{locationX:x, locationY:x, vLocationX:x, vLocationY: x,
-    // ImageIndex: x, hp:x, score:x}], ball: [locationX:x,locationY: x]}
-    for (var i = 0; i < data.player.length; i++) {
-        new Player(data.player[i]);
-    }
-    for (var i = 0; i < data.ball.length; i++) {
-        new Ball(data.ball[i]);
-    }
+//------add mouse listen
+canvas.addEventListener('mousemove', function (event) {
+    pointX = event.offsetX;
+    pointY = event.offsetY;
 });
 
-socket.on('update', function (data) { // pack
-    console.log('update');
-    console.log(data);
-    for (var i = 0; i < data.player.length; i++) {
-        var pack = data.player[i];
-        var p = Player.list[pack.id];
-        if (p) {
-            if (pack.x !== undefined)
-                p.x = pack.x;
-            if (pack.y !== undefined)
-                p.y = pack.y;
-            if (pack.hp !== undefined)
-                p.hp = pack.hp;
-            if (pack.score !== undefined)
-                p.score = pack.score;
-        }
-    }
-    for (var i = 0; i < data.ball.length; i++) {
-        var pack = Ball.list[i];
-        var b = Ball.list[data.Ball.list[i].id];
-        if (b) {
-            if (pack.x !== undefined)
-                b.x = pack.x;
-            if (pack.y !== undefined)
-                b.y = pack.y;
-        }
-    }
+canvas.addEventListener('mouseup', function (event) {
+    var ballData = {
+        mouseX: pointX + shotOffsetX,
+        mouseY: pointY
+    };
+    socket.emit('throwBall', ballData);
+    console.log("fire");
 });
 
-socket.on('remove', function (data) {
-    console.log('remove');
-    console.log(data);
-    for (var i = 0; i < data.player.length; i++) {
-        delete Player.list[data.player[i]];
-    }
-    for (var i = 0; i < data.bullet.length; i++) {
-        delete Ball.list[data.ball[i]];
-    }
-});
+//<<<<<<< HEAD
+  //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
+//=======
+  socket.on('newPosition', function (data, ball, me) {
+      //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
 
-setInterval(function () {
-    ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+  //>>>>>>> origin/front
+  if(me.locationX-670<0){ // if left max4
+      mapState = "left";
+        shotOffsetX = 0;
+      ctx.drawImage(Img.map, 0, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+    } else if(me.locationX+670>3200){ // if right max
+      mapState = "right";
+      ctx.drawImage(Img.map, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+    } else { // middle
+      mapState = "middle";
+        shotOffsetX = (me.locationX) - (canvas.width/2);
+      ctx.drawImage(Img.map, me.locationX-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+    }
+    //  ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
 
-    ctx.clearRect(0, 0, 500, 500);
-    for (var i in PLAYER_LIST) {
+      for (var i = 0; i < data.length; i++) {
         ctx.fillStyle = "red";
-        ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
+        ctx.fillRect(me.vLocationX - 42, me.vLocationY - 42, me.hp, 10);
         ctx.fillStyle = "black";
-        ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
-        ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
-    }
-    for (var i in Ball.list) {
-        ctx.beginPath();
-        ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}, 40);
+        ctx.fillText(me.score, me.vLocationX - 52, me.locationY - 52);
+        ctx.fillText(me.name, me.vLocationX - 32, me.locationY - 52);
+        ctx.drawImage(skeletonSheet.getSheet(me.ImageIndex), me.vLocationX - 32, me.vLocationY - 32);
 
-/*
- socket.on('newPosition', function (data, ball) {
- //  ctx.clearRect(0, 0, 500, 500); // 캔버스를 깨끗이
- ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
- for (var i = 0; i < data.length; i++) {
- ctx.fillStyle = "red";
- ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
- ctx.fillStyle = "black";
- ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
- ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), data[i].locationX - 32, data[i].locationY - 32);
- }
- for (var loop = 0; loop < ball.length; loop++) {
- ctx.beginPath();
- ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
- ctx.fill();
+        if(me.name != data[i].name){
+          if(me.locationX-670<0){ // if left max
+            ctx.fillStyle = "red";
+            ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
+            ctx.fillStyle = "black";
+            ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
+            ctx.fillText(data[i].name, data[i].locationX - 32, data[i].locationY - 52);
+            ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32), data[i].locationY - 32);
+           } else if(me.locationX+670>3200){ // if right max
+             ctx.fillStyle = "red";
+             ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
+             ctx.fillStyle = "black";
+             ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
+             ctx.fillText(data[i].name, data[i].locationX - 32, data[i].locationY - 52);
+            ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width/2) , data[i].locationY - 32);
+           } else { // middle
+             ctx.fillStyle = "red";
+             ctx.fillRect((data[i].locationX - 42) - me.locationX + (canvas.width/2), data[i].locationY - 42, data[i].hp, 10);
+             ctx.fillStyle = "black";
+             ctx.fillText(data[i].score, (data[i].locationX - 52) - me.locationX + (canvas.width/2), data[i].locationY - 52);
+             ctx.fillText(data[i].name, (data[i].locationX - 32) - me.locationX + (canvas.width/2), data[i].locationY - 52);
+             ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width/2) , data[i].locationY - 32);
+           }
 
- }
 
- });
- */
+          // if(me.locationX-670<0){
+          //   ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width/2) , data[i].locationY - 32);
+          // }
+        }
+      }
+      for (var loop = 0; loop < ball.length; loop++) {
+          ctx.beginPath();
+          if(me.locationX-670<0){ // if left max
+            ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
+           } else if(me.locationX+670>3200){ // if right max
+             ctx.arc(ball[loop].locationX - me.locationX + (canvas.width/2), ball[loop].locationY, 10, 0, Math.PI * 2);
+           } else { // middle
+             ctx.arc(ball[loop].locationX - me.locationX + (canvas.width/2), ball[loop].locationY, 10, 0, Math.PI * 2);
+           }
+          ctx.fill();
+      }
+  });
+
 
 socket.on('dead', () => {
     chatText.innerHTML += '<div>' + "you die____" + '</div>';
@@ -170,6 +168,7 @@ document.onkeydown = function (event) {
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: true});
 }
+
 document.onkeyup = function (event) {
     if (event.keyCode === 68)	//d
         socket.emit('keyPress', {inputId: 'right', state: false});
@@ -178,14 +177,3 @@ document.onkeyup = function (event) {
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', {inputId: 'up', state: false});
 }
-canvas.addEventListener('mousemove', function (event) {
-    pointX = event.offsetX;
-    pointY = event.offsetY;
-});
-canvas.addEventListener('mouseup', function (event) {
-    var ballData = {
-        mouseX: pointX,
-        mouseY: pointY
-    };
-    socket.emit('throwBall', ballData);
-});
