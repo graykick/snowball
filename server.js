@@ -75,83 +75,20 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('throwBall', function (data) {
         var newBall = player.throwBall(data.mouseX, data.mouseY);
-//<<<<<<< HEAD
-        // for(var loop = 0; loop < player.balls.length; loop++){
-        //   ballArr.push(player.balls[loop]);
-        // }
         if(data.mouseX>player.location.x){
           player.applyForth(new Vector(-100,0));
         } else {
           player.applyForth(new Vector(100,0));
         }
-//=======
         if (data.mouseX > player.location.x) {
             player.applyForth(new Vector(-1, 0));
         } else {
             player.applyForth(new Vector(1, 0));
-//>>>>>>> origin/front
         }
         ballArr.push(newBall);
     });
 });
 
-//<<<<<<< HEAD
-//<<<<<<< HEAD
-// function  start() {
-//   startBool = true;
-// 	setInterval(function () {
-// 		var pack = [];
-//     var ball = [];
-// 		for (var i in PLAYER_LIST) {
-// 			var player = PLAYER_LIST[i];
-//       if(player.hp<=0){
-//         console.log("die");
-//         SOCKET_LIST[player.socketId].emit('dead');
-//       //  delete SOCKET_LIST[player.socketId];
-//     		delete PLAYER_LIST[player.socketId];
-//       }
-// 			player.run(ballArr);
-// 			pack.push({
-// 				locationX: player.location.x,
-// 				locationY: player.location.y,
-//         vLocationX: player.vLocation.x,
-// 				vLocationY: player.vLocation.y,
-// 				ImageIndex: player.nowImageIndex,
-//         hp : player.hp, // 해골 방향 index
-//         score : player.score
-// 			});
-// 		}
-//     main : for(var loop = 0; loop < ballArr.length; loop++ ){
-//       for (var i in PLAYER_LIST) {
-//   			var player = PLAYER_LIST[i];
-//         if((ballArr[loop].ownerId != player.id) && Vector.subStatic(player.location,ballArr[loop].location).mag() < player.mass+ballArr[loop].mass){
-//           var radius = player.mass+ballArr[loop].mass;
-//           console.log("boom");
-//           player.hp -= 10;
-//           PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
-//
-//           if(ballArr[loop].location.x>player.location.x){
-//             player.applyForth(new Vector(-100,0));
-//           } else {
-//             player.applyForth(new Vector(100,0));
-//           }
-//
-//           ballArr.splice(loop, 1);
-//           continue main;
-//         }
-//   		}
-//       ballArr[loop].run();
-//       if(!(ballArr[loop].live)){
-//         console.log("dead");
-//         ballArr.splice(loop, 1);
-//         continue;
-//       }
-//       ball.push({
-//         locationX : ballArr[loop].location.x,
-//         locationY : ballArr[loop].location.y
-//       })
-//     }
-// //=======
 function start() {
     startBool = true;
     setInterval(function () {
@@ -213,7 +150,6 @@ function start() {
                 locationY: ballArr[loop].location.y
             })
         }
-//>>>>>>> origin/front
 
         for (var i in SOCKET_LIST) {
             var socket = SOCKET_LIST[i];
