@@ -6,9 +6,9 @@ var
     Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
-    Object = require('./lib/object.js');
+    Object = require('./lib/object.js'),
 
-PORT = 3002;
+    PORT = 3002;
 
 var startBool = false;
 app.get('/', function (req, res) {
@@ -27,42 +27,10 @@ var ballArr = new Array();
 
 start();
 
-io.sockets.on('connection', function (socket) {
-    SOCKET_LIST[socket.id] = socket;
-
+Player.onConnect = function (socket) {
     var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
+    player.id = socket.id;
     PLAYER_LIST[socket.id] = player;
-    if (!startBool) {
-        start();
-    }
-
-    socket.on('disconnect', function () {
-        delete SOCKET_LIST[socket.id];
-        delete PLAYER_LIST[socket.id];
-    });
-
-    socket.on('nickname', function (nickname) {
-        player.nickname = nickname;
-    });
-
-    var player = new Player(new Vector(10, 50), 32); // 플레이어 객체 생성
-    player.id = socket;
-    player.socketId = socket.id;
-    PLAYER_LIST[socket.id] = player;
-    if (!startBool) {
-        start();
-    }
-    socket.on('sendMsgToServer', function (data) {
-        this.emit('sendToChat', data + '<br />' + player.nickname);
-        this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
-    });
-
-    socket.on('evalServer', function (data) {
-        if (!DEBUG)
-            return;
-        var res = eval(data);
-        socket.emit('evalAnswer', res);
-    });
 
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
@@ -72,13 +40,15 @@ io.sockets.on('connection', function (socket) {
         else if (data.inputId === 'up')
             player.press[87] = data.state;
     });
-
+    socket.on('nickname', function (nickname) {
+        player.nickname = nickname;
+    });
     socket.on('throwBall', function (data) {
         var newBall = player.throwBall(data.mouseX, data.mouseY);
-        if(data.mouseX>player.location.x){
-          player.applyForth(new Vector(-100,0));
+        if (data.mouseX > player.location.x) {
+            player.applyForth(new Vector(-100, 0));
         } else {
-          player.applyForth(new Vector(100,0));
+            player.applyForth(new Vector(100, 0));
         }
         if (data.mouseX > player.location.x) {
             player.applyForth(new Vector(-1, 0));
@@ -86,6 +56,25 @@ io.sockets.on('connection', function (socket) {
             player.applyForth(new Vector(1, 0));
         }
         ballArr.push(newBall);
+    });
+}
+
+io.sockets.on('connection', function (socket) {
+    SOCKET_LIST[socket.id] = socket;
+    Player.onConnect(socket);
+
+    if (!startBool) {
+        start();
+    }
+    socket.on('disconnect', function () {
+        delete SOCKET_LIST[socket.id];
+        delete PLAYER_LIST[socket.id];
+    });
+
+    // chat
+    socket.on('sendMsgToServer', function (data) {
+        this.emit('sendToChat', data + '<br />' + player.nickname);
+        this.broadcast.emit('receiveToChat', data + '<br />' + player.nickname); //나를제외하고 파란색으로 보냄
     });
 });
 
@@ -98,9 +87,9 @@ function start() {
             var player = PLAYER_LIST[i];
             if (player.hp <= 0) {
                 console.log("die");
-                SOCKET_LIST[player.socketId].emit('dead');
-                delete PLAYER_LIST[player.socketId];
-                delete SOCKET_LIST[player.socketId];
+                SOCKET_LIST[player.id].emit('dead');
+                delete PLAYER_LIST[player.id];
+                delete SOCKET_LIST[player.id];
             }
             player.run(ballArr);
             pack.push({
@@ -111,7 +100,7 @@ function start() {
                 ImageIndex: player.nowImageIndex,
                 hp: player.hp, // 해골 방향 index
                 score: player.score,
-                name : player.nickname
+                name: player.nickname
             });
         }
         main : for (var loop = 0; loop < ballArr.length; loop++) {
@@ -122,9 +111,9 @@ function start() {
                     console.log("boom");
                     player.hp -= 10;
 
-                    try{
-                      PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
-                    } catch(e){
+                    try {
+                        PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
+                    } catch (e) {
 
                     }
 
@@ -153,7 +142,7 @@ function start() {
 
         for (var i in SOCKET_LIST) {
             var socket = SOCKET_LIST[i];
-            var me={};
+            var me = {};
             me = {
                 locationX: PLAYER_LIST[socket.id].location.x,
                 locationY: PLAYER_LIST[socket.id].location.y,
@@ -162,7 +151,7 @@ function start() {
                 ImageIndex: PLAYER_LIST[socket.id].nowImageIndex,
                 hp: PLAYER_LIST[socket.id].hp, // 해골 방향 index
                 score: PLAYER_LIST[socket.id].score,
-                name : PLAYER_LIST[socket.id].nickname
+                name: PLAYER_LIST[socket.id].nickname
             };
             socket.emit('newPosition', pack, ball, me);
         }
