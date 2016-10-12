@@ -22,6 +22,7 @@ var socket = io();
 var modal = document.getElementById('myModal');
 var nickBox = document.getElementById('nickBox');
 var guest = document.getElementById('guest');
+var login = document.getElementById('login');
 modal.style.display = 'block';
 
 nickBox.addEventListener("keydown", function (event) {
@@ -32,10 +33,13 @@ nickBox.addEventListener("keydown", function (event) {
     }
 });
 
-guest.addEventListener('mousedown', function helloModal() {
+guest.addEventListener('mousedown', function () {
     var nickname = nickBox.value;
     socket.emit('nickname', nickname);
     modal.style.display = 'none';
+});
+login.addEventListener('mousedown', function () {
+    alert("로그인은 준비중>,<");
 });
 
 //chat
@@ -67,17 +71,17 @@ chatForm.onsubmit = function (e) {
 
 // game
 socket.on('newPosition', function (data, ball, me) {
-    if(me.locationX-670<0){ // if left max4
+    if (me.locationX - 670 < 0) { // if left max4
         mapState = "left";
         shotOffsetX = 0;
-        ctx.drawImage(Img.map, 0, 0, 1340, 640, 0,0, canvas.width, canvas.height);
-    } else if(me.locationX+670>3200){ // if right max
+        ctx.drawImage(Img.map, 0, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
+    } else if (me.locationX + 670 > 3200) { // if right max
         mapState = "right";
-        ctx.drawImage(Img.map, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        ctx.drawImage(Img.map, 3200 - canvas.width, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     } else { // middle
         mapState = "middle";
-        shotOffsetX = (me.locationX) - (canvas.width/2);
-        ctx.drawImage(Img.map, me.locationX-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
+        shotOffsetX = (me.locationX) - (canvas.width / 2);
+        ctx.drawImage(Img.map, me.locationX - 670, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     }
     for (var i = 0; i < data.length; i++) {
         ctx.fillStyle = "red";
@@ -87,39 +91,39 @@ socket.on('newPosition', function (data, ball, me) {
         ctx.fillText(me.name, me.vLocationX - 32, me.locationY - 52);
         ctx.drawImage(skeletonSheet.getSheet(me.ImageIndex), me.vLocationX - 32, me.vLocationY - 32);
 
-        if(me.name != data[i].name){
-            if(me.locationX-670<0){ // if left max
+        if (me.name != data[i].name) {
+            if (me.locationX - 670 < 0) { // if left max
                 ctx.fillStyle = "red";
                 ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
                 ctx.fillStyle = "black";
                 ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
                 ctx.fillText(data[i].name, data[i].locationX - 32, data[i].locationY - 52);
                 ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32), data[i].locationY - 32);
-            } else if(me.locationX+670>3200){ // if right max
+            } else if (me.locationX + 670 > 3200) { // if right max
                 ctx.fillStyle = "red";
                 ctx.fillRect(data[i].locationX - 42, data[i].locationY - 42, data[i].hp, 10);
                 ctx.fillStyle = "black";
                 ctx.fillText(data[i].score, data[i].locationX - 52, data[i].locationY - 52);
                 ctx.fillText(data[i].name, data[i].locationX - 32, data[i].locationY - 52);
-                ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width/2) , data[i].locationY - 32);
+                ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width / 2), data[i].locationY - 32);
             } else { // middle
                 ctx.fillStyle = "red";
-                ctx.fillRect((data[i].locationX - 42) - me.locationX + (canvas.width/2), data[i].locationY - 42, data[i].hp, 10);
+                ctx.fillRect((data[i].locationX - 42) - me.locationX + (canvas.width / 2), data[i].locationY - 42, data[i].hp, 10);
                 ctx.fillStyle = "black";
-                ctx.fillText(data[i].score, (data[i].locationX - 52) - me.locationX + (canvas.width/2), data[i].locationY - 52);
-                ctx.fillText(data[i].name, (data[i].locationX - 32) - me.locationX + (canvas.width/2), data[i].locationY - 52);
-                ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width/2) , data[i].locationY - 32);
+                ctx.fillText(data[i].score, (data[i].locationX - 52) - me.locationX + (canvas.width / 2), data[i].locationY - 52);
+                ctx.fillText(data[i].name, (data[i].locationX - 32) - me.locationX + (canvas.width / 2), data[i].locationY - 52);
+                ctx.drawImage(skeletonSheet.getSheet(data[i].ImageIndex), (data[i].locationX - 32) - me.locationX + (canvas.width / 2), data[i].locationY - 32);
             }
         }
     }
     for (var loop = 0; loop < ball.length; loop++) {
         ctx.beginPath();
-        if(me.locationX-670<0){ // if left max
+        if (me.locationX - 670 < 0) { // if left max
             ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
-        } else if(me.locationX+670>3200){ // if right max
-            ctx.arc(ball[loop].locationX - me.locationX + (canvas.width/2), ball[loop].locationY, 10, 0, Math.PI * 2);
+        } else if (me.locationX + 670 > 3200) { // if right max
+            ctx.arc(ball[loop].locationX - me.locationX + (canvas.width / 2), ball[loop].locationY, 10, 0, Math.PI * 2);
         } else { // middle
-            ctx.arc(ball[loop].locationX - me.locationX + (canvas.width/2), ball[loop].locationY, 10, 0, Math.PI * 2);
+            ctx.arc(ball[loop].locationX - me.locationX + (canvas.width / 2), ball[loop].locationY, 10, 0, Math.PI * 2);
         }
         ctx.fill();
     }
