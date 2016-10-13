@@ -1,3 +1,4 @@
+"use strict";
 class spriteSheet{
     constructor(img, numOfX, numOfY, w,h){
         this.img = img;
