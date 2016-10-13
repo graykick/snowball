@@ -84,7 +84,7 @@ socket.on('newPosition', function (data, ball, me) {
         ctx.drawImage(Img.map, me.locationX - 670, 0, 1340, 640, 0, 0, canvas.width, canvas.height);
     }
     for (var i = 0; i < data.length; i++) {
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "green";
         ctx.fillRect(me.vLocationX - 42, me.vLocationY - 42, me.hp, 10);
         ctx.fillStyle = "black";
         ctx.fillText(me.score, me.vLocationX - 52, me.locationY - 52);
@@ -117,6 +117,7 @@ socket.on('newPosition', function (data, ball, me) {
         }
     }
     for (var loop = 0; loop < ball.length; loop++) {
+        ctx.fillStyle = "white";
         ctx.beginPath();
         if (me.locationX - 670 < 0) { // if left max
             ctx.arc(ball[loop].locationX, ball[loop].locationY, 10, 0, Math.PI * 2);
