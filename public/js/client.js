@@ -17,7 +17,7 @@ var ctx = canvas.getContext('2d');
 canvas.width = 1340;
 canvas.height = 640;
 
-var socket = io();
+var socket;
 
 var modal = document.getElementById('myModal');
 var nickBox = document.getElementById('nickBox');
@@ -97,8 +97,13 @@ var gameHanddler;
 
 
 function startSocket(){
+  socket = io();
+
+  console.log("start socket");
   socket.on("connected", () => {
+    console.log("iam connected");
     socket.emit("nickName", nickBox.value);
+    console.log("i sent nickname");
   });
 
   socket.on("gameStart", (me, players) => {
@@ -122,6 +127,7 @@ function startSocket(){
   // })
 
   socket.on("update", (me, enemys, balls) => {
+    console.log("i got update");
     player = me;
     players = enemys;
     this.balls = balls;
@@ -138,9 +144,13 @@ function startSocket(){
       console.log("player value check = "+player.locationX);
       drawMap(player);
       drawMyPlayer(player);
+
+      //loop for draw player
       for(var loop = 0; loop < players.length; loop++){
         drawPlayer(players[loop]);
       }
+
+      //loop for draw ball
       for(var loop = 0; loop > balls.length; loop++){
         drawBall(balls[loop]);
       }
@@ -149,27 +159,26 @@ function startSocket(){
 
 }
 
-function gameStart(){
-  console.log("in game start");
-  startEvent();
-  gameHanddler = setInterval(() => {
-    drawMap(player);
-    drawMyPlayer(player);
-    for(var loop = 0; loop < players.length; loop++){
-      drawPlayer(players[loop]);
-    }
-    for(var loop = 0; loop > balls.length; loop++){
-      drawBall(balls[loop]);
-    }
-  },30);
-}
+// function gameStart(){
+//   console.log("in game start");
+//   startEvent();
+//   gameHanddler = setInterval(() => {
+//     drawMap(player);
+//     drawMyPlayer(player);
+//     for(var loop = 0; loop < players.length; loop++){
+//       drawPlayer(players[loop]);
+//     }
+//     for(var loop = 0; loop > balls.length; loop++){
+//       drawBall(balls[loop]);
+//     }
+//   },30);
+// }
 
 function startEvent(){
   canvas.addEventListener('mousemove', function (event) {
     pointX = event.offsetX;
     pointY = event.offsetY;
-    console.log("mouseY = "+pointY);
-  });
+});
 
   canvas.addEventListener('mouseup', function (event) {
     var ballData = {
@@ -177,7 +186,6 @@ function startEvent(){
         mouseX : pointX + shotOffsetX
       };
       socket.emit('throwBall', ballData);
-      console.log("fire");
   });
 }
 
@@ -192,6 +200,7 @@ function drawMyPlayer(player){
 
 function drawPlayer(player){
 
+  //location check
     if(me.locationX-670<0){ // if left max
       ctx.fillStyle = "red";
       ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
@@ -217,6 +226,7 @@ function drawPlayer(player){
 }
 
 function drawMap(me){
+  //location check
   if(me.locationX-670<0){ // if left max4
     mapState = "left";
     shotOffsetX = 0;
@@ -234,6 +244,8 @@ function drawMap(me){
 function drawBall(ball){
     ctx.fillStyle = "white";
     ctx.beginPath();
+
+    //location check
     if(me.locationX-670<0){ // if left max
       ctx.arc(ball.locationX, ball.locationY, 10, 0, Math.PI * 2);
      } else if(me.locationX+670>3200){ // if right max

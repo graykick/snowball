@@ -53,8 +53,6 @@ var ballArr = new Array();
 var players = [];
 
 
-
-
 io.sockets.on('connection', function (socket) {
   console.log("someone connected");
   var player = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
@@ -108,6 +106,9 @@ setInterval(gameLoop, 1000/60);
 setInterval(update, 1000/40);
 
 function gameLoop(){
+
+  console.log("subal loop");
+  //run each player's run method
   for(var loop = 0; loop > PLAYER_LIST.length; loop++){
     PLAYER_LIST[loop].run();
   }
@@ -118,6 +119,7 @@ function gameLoop(){
 }
 
 function update(){
+  console.log("sibal update");
   for(var loop = 0; loop > SOCKET_LIST.length; loop++){
     var enemys = PLAYER_LIST.filter((player) => {
       return player.socketId != SOCKET_LIST[player.socketId];
@@ -129,7 +131,6 @@ function update(){
         makeBallObject(ball);
       });
     }
-
     SOCKET_LIST[loop].emit("update", makeObject(PLAYER_LIST[SOCKET_LIST[loop]]), enemys, balls);
 
   }
