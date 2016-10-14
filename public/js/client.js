@@ -106,13 +106,14 @@ function startSocket(){
     console.log("i sent nickname");
   });
 
-  socket.on("gameStart", (me, players) => {
+  socket.on("gameStart", (me) => {
     console.log("gkgkgk");
 
     this.player = me;
     console.log(this.player.locationX);
-    this.players = players;
+  //  this.players = players;
     console.log("in gamestart socket");
+    console.log(this.player.locationY);
     gameStart();
     //start game
   });
@@ -131,28 +132,33 @@ function startSocket(){
     player = me;
     players = enemys;
     this.balls = balls;
+    console.log("ball num = "+this.balls.length);
   })
 
   socket.on("die", () => {
     clearInterval(gameHanddler);
   })
 
+  socket.on("update2", () => {
+    console.log("i get update2");
+  })
+
   function gameStart(){
     console.log("in game start");
     startEvent();
     gameHanddler = setInterval(() => {
-      console.log("player value check = "+player.locationX);
+      console.log("player value check = "+player.locationY);
       drawMap(player);
-      drawMyPlayer(player);
 
       //loop for draw player
       for(var loop = 0; loop < players.length; loop++){
         drawPlayer(players[loop]);
       }
+      drawMyPlayer(player);
 
       //loop for draw ball
-      for(var loop = 0; loop > balls.length; loop++){
-        drawBall(balls[loop]);
+      for(var loop = 0; loop < this.balls.length; loop++){
+        drawBall(this.balls[loop]);
       }
     },30);
   }
@@ -185,8 +191,27 @@ function startEvent(){
         mouseY : pointY,
         mouseX : pointX + shotOffsetX
       };
+      console.log("throw!!!!");
       socket.emit('throwBall', ballData);
   });
+
+  document.onkeydown = function (event) {
+      if (event.keyCode === 68) //d
+          socket.emit('keyPress', {inputId: 'right', state: true});
+      else if (event.keyCode === 65) //a
+          socket.emit('keyPress', {inputId: 'left', state: true});
+      else if (event.keyCode === 87) // w
+          socket.emit('keyPress', {inputId: 'up', state: true});
+  }
+
+  document.onkeyup = function (event) {
+      if (event.keyCode === 68)	//d
+          socket.emit('keyPress', {inputId: 'right', state: false});
+      else if (event.keyCode === 65) //a
+          socket.emit('keyPress', {inputId: 'left', state: false});
+      else if (event.keyCode === 87) // w
+          socket.emit('keyPress', {inputId: 'up', state: false});
+  }
 }
 
 function drawMyPlayer(player){
@@ -199,16 +224,16 @@ function drawMyPlayer(player){
 }
 
 function drawPlayer(player){
-
   //location check
-    if(me.locationX-670<0){ // if left max
+//  console.log("differ = "+this.player.locationX+" vs "+player.locationX);
+    if(this.player.locationX-670<0){ // if left max
       ctx.fillStyle = "red";
       ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
       ctx.fillStyle = "black";
       ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
       ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
       ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
-     } else if(me.locationX+670>3200){ // if right max
+     } else if(this.player.locationX+670>3200){ // if right max
        ctx.fillStyle = "red";
        ctx.fillRect(player.locationX + this.player.locationX - (canvas.width/2)- 42, player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
@@ -217,7 +242,7 @@ function drawPlayer(player){
       ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width/2) , player.locationY - 32);
      } else { // middle
        ctx.fillStyle = "red";
-       ctx.fillRect((player.locationX - 42) - mthis.playere.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
+       ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
        ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
        ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width/2), player.locationY - 52);
@@ -245,10 +270,11 @@ function drawBall(ball){
     ctx.fillStyle = "white";
     ctx.beginPath();
 
+    console.log("ball's location = "+ball.locationX);
     //location check
-    if(me.locationX-670<0){ // if left max
+    if(this.player.locationX-670<0){ // if left max
       ctx.arc(ball.locationX, ball.locationY, 10, 0, Math.PI * 2);
-     } else if(me.locationX+670>3200){ // if right max
+     } else if(this.player.locationX+670>3200){ // if right max
        ctx.arc(ball.locationX + player.locationX - (canvas.width/2), ball.locationY, 10, 0, Math.PI * 2);
      } else { // middle
        ctx.arc(ball.locationX - player.locationX + (canvas.width/2), ball.locationY, 10, 0, Math.PI * 2);
