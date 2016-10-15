@@ -31,7 +31,7 @@ function makePlayerObject(player){
     ImageIndex: player.nowImageIndex,
     hp: player.hp, // 해골 방향 index
     score: player.score,
-    name : player.nickname
+    name : player.nickName
   };
 
   return ObjPlayer;
@@ -76,18 +76,16 @@ io.sockets.on('connection', function (socket) {
   var player = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
   player.id = socket;
   player.socketId = socket.id;
-  console.log("so id = "+socket.id);
-  console.log("in socke test = "+player.location.x);
-  console.log("player list size = "+getObjLength(PLAYER_LIST));
+  console.log("player's id in out = " +socket.id);
   PLAYER_LIST[socket.id] = player;
-  console.log("no obj in sock= "+PLAYER_LIST[socket.id].location.x);
-  console.log("after = player list size = "+getObjLength(PLAYER_LIST));
   SOCKET_LIST[socket.id] = socket;
   players.push(makePlayerObject(player));
 
   socket.emit("connected");
   socket.on("nickName", (nickName) => {
-    console.log("i got nickName");
+    console.log("i got nickName = "+nickName);
+    console.log("player's id = "+player.socketId);
+  //  PLAYER_LIST[socket.id].nickName = nickName;
     player.nickName = nickName;
     socket.emit("gameStart", makePlayerObject(player));
 

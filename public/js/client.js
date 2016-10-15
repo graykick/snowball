@@ -31,6 +31,8 @@ modal.style.display = 'block';
 nickBox.addEventListener("keydown", function (event) {
     if (event.which == 13 || event.keyCode == 13) {
         var nickname = nickBox.value;
+        console.log(nickBox.value);
+
         startSocket();
         //socket.emit('nickname', nickname);
         modal.style.display = 'none';
@@ -39,6 +41,7 @@ nickBox.addEventListener("keydown", function (event) {
 
 guest.addEventListener('mousedown', function helloModal() {
     var nickname = nickBox.value;
+    console.log(nickBox.value);
     startSocket();
   //  socket.emit('nickname', nickname);
     modal.style.display = 'none';
@@ -104,17 +107,16 @@ function startSocket(){
   console.log("start socket");
   socket.on("connected", () => {
     console.log("iam connected");
+    console.log(nickBox.value);
     socket.emit("nickName", nickBox.value);
     console.log("i sent nickname");
   });
 
   socket.on("gameStart", (me) => {
-    console.log("gkgkgk");
 
     this.player = me;
     console.log(this.player.locationX);
   //  this.players = players;
-    console.log("in gamestart socket");
     console.log(this.player.locationY);
     gameStart();
     //start game
@@ -130,28 +132,21 @@ function startSocket(){
   // })
 
   socket.on("update", (me, enemys, balls) => {
-    console.log("i got update");
     player = me;
     players = enemys;
     this.balls = balls;
-    console.log("ball num = "+this.balls.length);
   })
 
   socket.on("die", () => {
     clearInterval(gameHanddler);
   })
 
-  socket.on("update2", () => {
-    console.log("i get update2");
-  })
 
 
 
   function gameStart(){
-    console.log("in game start");
     startEvent();
     gameHanddler = setInterval(() => {
-      console.log("player value check = "+player.locationY);
       drawMap(player);
 
       //loop for draw player
@@ -195,7 +190,6 @@ function startEvent(){
         mouseY : pointY,
         mouseX : pointX + shotOffsetX
       };
-      console.log("throw!!!!");
       socket.emit('throwBall', ballData);
   });
 
@@ -276,7 +270,6 @@ function drawBall(ball){
     ctx.fillStyle = "white";
     ctx.beginPath();
 
-    console.log("ball's location = "+ball.locationX);
     //location check
     if(this.player.locationX-670<0){ // if left max
       ctx.arc(ball.locationX, ball.locationY, 10, 0, Math.PI * 2);
