@@ -13,9 +13,15 @@ var
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
     Object = require('./lib/object.js');
+    cluster = require('cluster');
+
     var  PORT = 3002;
     var canvasWidth = 1340;
     var getNicname = false;
+
+var numCPUs = require('os').cpus().length;
+
+
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -126,22 +132,25 @@ io.sockets.on('connection', function (socket) {
     //공을 던진 player클래스에 정의되어있는 throwBall메소드를 호출하여, 클라이언트 측으로 부터 받은
     //공의 목적지 좌표를 인자로 준다. 공을 던진 플레이어의 좌표를 이용하는 이유는 공이 해당 플레이어의 위치좌표에서
     //시작하여야 하며, 차후에, 공을 던지는 파워라던가 속성들이 player클래스에 정의되어 있기 때문이다.
-    var newBall = player.throwBall(data.mouseX, data.mouseY);
+    if(player.maxBallCount >= player.nowBallCount){
+      player.nowBallCount++;
+      var newBall = player.throwBall(data.mouseX, data.mouseY);
 
-// 반동을 어떤 방향으로 줄지에 대한 if문이다.
-// 공을 오른쪽으로 던지면, 반동은 왼쪽으로 반대의 경우엔, 오른쪽으로 applyForth를 한다.
-    if(data.mouseX>player.location.x){
-      player.applyForth(new Vector(-10,0));
-    } else {
-      player.applyForth(new Vector(10,0));
+  // 반동을 어떤 방향으로 줄지에 대한 if문이다.
+  // 공을 오른쪽으로 던지면, 반동은 왼쪽으로 반대의 경우엔, 오른쪽으로 applyForth를 한다.
+      if(data.mouseX>player.location.x){
+        player.applyForth(new Vector(-10,0));
+      } else {
+        player.applyForth(new Vector(10,0));
+      }
+    //  player.applyForth(10,0);
+
+    //  var reaction = Vector.multStatic(Vector.subStatic(new Vector(data.mouseX, data.mouseY), player.location), (newBall.power*0.00000001*-1));
+    //  player.applyForth(reaction);
+
+    //ball객체에대한 setting이 완료 되었으므로, ballArr에 추가한다.
+      ballArr.push(newBall);
     }
-  //  player.applyForth(10,0);
-
-  //  var reaction = Vector.multStatic(Vector.subStatic(new Vector(data.mouseX, data.mouseY), player.location), (newBall.power*0.00000001*-1));
-  //  player.applyForth(reaction);
-
-  //ball객체에대한 setting이 완료 되었으므로, ballArr에 추가한다.
-    ballArr.push(newBall);
   })
 
 // 클라이언트측에서 움직임에대한, 이벤트를 감지하면, 서버측으로 emit을 준다.
@@ -188,6 +197,7 @@ function start(){
     startFlag = false;
     setInterval(gameLoop, 1000/60);
     setInterval(update, 30);
+  //  setInterval(checkBallImpact, 100);
   }
 }
 
@@ -213,22 +223,32 @@ function gameLoop(){
   //모든 ball객체에 대해 run메소드를 실행 시키고,
   //만약 ball이가 사망 상태라면, ballArr배열에서 해당 ball를 삭제한다.
   //이 사망판정은 player클래스 자체적으로 한다.
-  console.log("ballArr.length in player check" + ballArr.length);
   for(var ballLoopa = 0; ballLoopa < ballArr.length; ballLoopa++){
-    ballArr[ballLoopa].run();
-    if(!(ballArr[ballLoopa].live)){
-      //배열에서 삭제하는 메소드이다.
-      ballArr.splice(ballLoopa,1);
+    try {
+      ballArr[ballLoopa].run();
+      if(!(ballArr[ballLoopa].live)){
+
+       PLAYER_LIST[ballArr[ballLoopa].ownerSocketId].nowBallCount--;
+    //배열에서 삭제하는 메소드이다.
+        ballArr.splice(ballLoopa,1);
+      }
+    } catch (e) {
+
+    } finally {
+
     }
+
+
   }
   //checkBallImpact함수는 플레이어와 ball간의 충돌검사를 하는 함수이다.
   //이 함수에서 플레이어가 공에 맞을 시, 해당 플레이어의 hp를 갂는다.
   //또한 그 공은 배열에서 삭제한다.
-  checkBallImpact();
+//  checkBallImpact();
 
   //checkImpact함수는 공과 공의충돌을 검사하기위한 함수이다.
   // 공끼리 부딛히면 삭제한다.
   // 그러나 아직 작동하지 않는다.
+  checkBallImpact();
   checkImpact();
 }
 
@@ -284,6 +304,7 @@ function checkImpact() {
       //또한 자신이 던진 공에 자신의 피가 깍이는 것을 방지하기위해 if조건절에서
       //(ballArr[inLoop].ownerId != PLAYER_LIST[outLoop].id)
       //를 사용하여 검사함.
+
       if ((ballArr[inLoop].ownerId != PLAYER_LIST[outLoop].id) && Vector.subStatic(PLAYER_LIST[outLoop].location, ballArr[inLoop].location).mag() < PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass) {
           var radius = PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass;
 
@@ -305,6 +326,7 @@ function checkImpact() {
           }
 
           // 맞은 공을  배열에서 삭제한다.
+         PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
           ballArr.splice(inLoop, 1);
           continue;
       }
@@ -315,19 +337,19 @@ function checkImpact() {
 //아직 수정중이다.
 function checkBallImpact(){
   var outLoopLength = ballArr.length;
-  console.log("in ball imapactCheck"+ballArr.length );
   for(var outLoop = 0; outLoop < outLoopLength; outLoop++){
     for(var inLoop = 0; inLoop < outLoopLength; inLoop++){
       try{
-        console.log("it' work!");
-        console.log(ballArr[inLoop].location.x+", "+ inLoop);
+
         if(ballArr[outLoop].ownerSocketId != ballArr[inLoop].ownerSocketId && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
           console.log("impact");
+          PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
+          PLAYER_LIST[ballArr[outLoop].ownerSocketId].nowBallCount--;
+
           ballArr.splice(inLoop, 1);
           ballArr.splice(outLoop, 1);
         }
       } catch(e){
-
       }
     }
   }
