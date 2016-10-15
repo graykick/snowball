@@ -213,6 +213,7 @@ function gameLoop(){
   //모든 ball객체에 대해 run메소드를 실행 시키고,
   //만약 ball이가 사망 상태라면, ballArr배열에서 해당 ball를 삭제한다.
   //이 사망판정은 player클래스 자체적으로 한다.
+  console.log("ballArr.length in player check" + ballArr.length);
   for(var ballLoopa = 0; ballLoopa < ballArr.length; ballLoopa++){
     ballArr[ballLoopa].run();
     if(!(ballArr[ballLoopa].live)){
@@ -313,13 +314,20 @@ function checkImpact() {
 
 //아직 수정중이다.
 function checkBallImpact(){
-  var outLoopLength = ballArr.lenght;
+  var outLoopLength = ballArr.length;
+  console.log("in ball imapactCheck"+ballArr.length );
   for(var outLoop = 0; outLoop < outLoopLength; outLoop++){
     for(var inLoop = 0; inLoop < outLoopLength; inLoop++){
-      if(Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
-        console.log("impact");
-        ballArr.splice(inLoop, 1);
-        ballArr.splice(outLoop, 1);
+      try{
+        console.log("it' work!");
+        console.log(ballArr[inLoop].location.x+", "+ inLoop);
+        if(ballArr[outLoop].ownerSocketId != ballArr[inLoop].ownerSocketId && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
+          console.log("impact");
+          ballArr.splice(inLoop, 1);
+          ballArr.splice(outLoop, 1);
+        }
+      } catch(e){
+
       }
     }
   }
