@@ -3,6 +3,8 @@ var pointY;
 var shotOffsetX;
 var gameStart = false;
 var mapState;
+var mapWidth = 3200;
+
 
 var Img = {};
 Img.player = new Image();
@@ -143,6 +145,8 @@ function startSocket(){
     console.log("i get update2");
   })
 
+
+
   function gameStart(){
     console.log("in game start");
     startEvent();
@@ -160,9 +164,9 @@ function startSocket(){
       for(var loop = 0; loop < this.balls.length; loop++){
         drawBall(this.balls[loop]);
       }
-    },30);
-  }
+  });
 
+  }
 }
 
 // function gameStart(){
@@ -224,6 +228,8 @@ function drawMyPlayer(player){
 }
 
 function drawPlayer(player){
+  // map width = 3200
+  // canvas width = 1340
   //location check
 //  console.log("differ = "+this.player.locationX+" vs "+player.locationX);
     if(this.player.locationX-670<0){ // if left max
@@ -235,11 +241,11 @@ function drawPlayer(player){
       ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
      } else if(this.player.locationX+670>3200){ // if right max
        ctx.fillStyle = "red";
-       ctx.fillRect(player.locationX + this.player.locationX - (canvas.width/2)- 42, player.locationY - 42, player.hp, 10);
+       ctx.fillRect(player.locationX- 42 -mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
-       ctx.fillText(player.score, player.locationX + this.player.locationX - (canvas.width/2)  - 52, player.locationY - 52);
-       ctx.fillText(player.name, player.locationX + this.player.locationX - (canvas.width/2) - 32, player.locationY - 52);
-      ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width/2) , player.locationY - 32);
+       ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
+       ctx.fillText(player.name, player.locationX-mapWidth + canvas.width - 32, player.locationY - 52);
+      ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) -mapWidth + canvas.width , player.locationY - 32);
      } else { // middle
        ctx.fillStyle = "red";
        ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
@@ -275,7 +281,7 @@ function drawBall(ball){
     if(this.player.locationX-670<0){ // if left max
       ctx.arc(ball.locationX, ball.locationY, 10, 0, Math.PI * 2);
      } else if(this.player.locationX+670>3200){ // if right max
-       ctx.arc(ball.locationX + player.locationX - (canvas.width/2), ball.locationY, 10, 0, Math.PI * 2);
+       ctx.arc(ball.locationX -mapWidth + canvas.width, ball.locationY, 10, 0, Math.PI * 2);
      } else { // middle
        ctx.arc(ball.locationX - player.locationX + (canvas.width/2), ball.locationY, 10, 0, Math.PI * 2);
      }
