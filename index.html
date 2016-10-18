@@ -5,33 +5,56 @@
     <meta charset="utf-8"/>
     <title>SNOW BALL</title>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.4.4/randomColor.js" type="text/javascript"></script>
     <link rel="stylesheet" href="/public/style.css">
+    <style>
+      #loginCanvas {
+          position: absolute;
+          top: 30%;
+          left: 25%;
+          width: 850px;
+          height: 150px;
+          margin: -100px 0 0 -100px;
+      }
+
+      #nick {
+          position: fixed;
+          top: 50%;
+          left: 33%;
+          width: 440px;
+          height: 50px;
+          font-size: 30px;
+      }
+
+      #play {
+          position: fixed;
+          top: 65%;
+          left: 47%;
+          color: black;
+          border: 2px solid #fff;
+          font-size: 45px;
+          border-radius: 4px;
+      }
+  </style>
 </head>
 
-<body>
-<div id="myModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modal-header2">SNOW BALL HAHA</h2>
-        </div>
-        <div class="modal-body">
-            <input type="text" placeholder="Nick" id="nickBox"/>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal" id="guest">Play as guest</button>
-            <button type="button" class="btn btn-warning" data-dismiss="modal" id="login">Login and play</button>
-        </div>
+<body style="background-image: url('public/image/background.jpg'); width: 95%; height: 685px; background-size: 100% 100%;">
+  <div id="loginDiv">
+        <canvas id="loginCanvas" width="850" height="150"></canvas>
+        <input id="nick" autofocus="autofocus" placeholder="Nickname" maxlength="24" onkeypress="return searchKeyPress(event);">
+        <input type='submit' id="play" value="Play" onclick="submitNick();"></input>
     </div>
-</div>
+
 
 <div id="container">
+  <div id = "gameAreaWrapper" style="display:none;">
     <canvas id="myCanvas" width="500" height="500" style="background:#FAEBD7"></canvas>
-    <div id=chat_overlay>
-        <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll"></div>
-        <form id="chat-form">
-            <input id="chat-input" type="text" style="width:500px"></input>
-        </form>
     </div>
+  </div>
+
+  <div id = "menuWrapper">
+
+  </div>
 </div>
 
 <script text="text/javascript" src="public/js/spriteSheet.js"></script>

@@ -6,21 +6,46 @@
 
 var
     express = require('express'),
-    app = express(),
-    server = require('http').createServer(app),
-    io = require('socket.io').listen(server),
     Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
     Object = require('./lib/object.js');
     cluster = require('cluster');
-
+    var sio = require('socket.io');
     var  PORT = 3002;
     var canvasWidth = 1340;
     var getNicname = false;
+    var redis = require('socket.io-redis');
+    var randomColor = require('randomcolor');
+
+
+
+
+    // 공유해야할 변수들
+    // SOCKET_LIST
+    // PLAYER_LIST
+    // ballArr
+
 
 var numCPUs = require('os').cpus().length;
 
+var testNum = 0;
+
+if (cluster.isMaster) {
+  for (var i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+} else {
+  var app = express();
+  var server = require('http').createServer(app);
+  var io = require('socket.io').listen(server);
+  io.adapter(redis({ host: 'localhost', port: 6379 }));
+
+  io.on('connection', (socket) => {
+    testNum++;
+    console.log("global connected id = "+ socket.id + " testNum = "+testNum + " pid = "+ process.pid);
+    //  console.log("global connected id = "+ socket.id);
+  })
 
 
 app.get('/', function (req, res) {
@@ -30,7 +55,7 @@ app.get('/', function (req, res) {
 app.use('/public', express.static(__dirname + '/public'));
 
 server.listen(port = Number(process.env.PORT || PORT), function () {
-    console.log("Server " + PORT + " listening");
+    console.log("Server " + PORT + " listening pid = "+process.pid);
 });
 
 // 클라이언트에 필요한 정보만을 담고있는 객체를 만들기 위한 함수이다.
@@ -86,6 +111,7 @@ var SOCKET_LIST = {};
 var PLAYER_LIST = {};
 var ballArr = [];
 var players = [];
+var corpseArr = [];
 
 //서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag이다.
 //이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성된다.
@@ -93,7 +119,7 @@ var startFlag = true;
 
 
 io.sockets.on('connection', function (socket) {
-  console.log("someone connected");
+  console.log("someone connected "+process.pid);
   var player = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
   player.id = socket;
   player.socketId = socket.id;
@@ -196,16 +222,24 @@ function start(){
   if(startFlag){
     startFlag = false;
     setInterval(gameLoop, 1000/60);
-    setInterval(update, 30);
+    setInterval(update, 10);
   //  setInterval(checkBallImpact, 100);
   }
+  corpseImpact();
 }
+
+
+
+
+
+
 
 
 // gameloop는 정말로 게임을 진행하는 루프이다.
 // player들과 ball객체들의 run메소드를 주기적으로 실행시키고,
 // 충돌검사를 실행하고, 충돌일 경우 삭제하는 역할도 담당한다.
 function gameLoop(){
+  var nStart = new Date().getTime();
   //run each player's run method
 
   //모든 player객체에 대해 run메소드를 실행 시키고,
@@ -214,6 +248,8 @@ function gameLoop(){
   for(var loop in PLAYER_LIST){
     PLAYER_LIST[loop].run();
     if(!(PLAYER_LIST[loop].live)){
+      SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die');
+      SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('otherDie', makePlayerObject(PLAYER_LIST[loop]), makeDeathBall(PLAYER_LIST[loop]));
       delete PLAYER_LIST[loop];
     }
   }
@@ -250,6 +286,13 @@ function gameLoop(){
   // 그러나 아직 작동하지 않는다.
   checkBallImpact();
   checkImpact();
+//  if(this.corpseArr.length != 0){
+  //}
+
+  var nEnd =  new Date().getTime();      //end time check(Units ms)
+
+  var nDiff = nEnd - nStart;      //time difference between the two calculations (Units ms)
+  //console.log("gameloop time = "+nDiff + "ms");
 }
 
 // updateloop는 모든 클라이언트측에 렌더딩에 필요한 정보들을 emit하는 loop이다.
@@ -257,6 +300,7 @@ function gameLoop(){
 // 새로운 자체 배열을 구성하고 클라이언트 측에 emit한다.
 // 이 과정에서 플레이어 자신과, 자신아 아닌 적들을 구분한다.
 function update(){
+  var nStart = new Date().getTime();
   //loop for all sockets
   for(var loop in SOCKET_LIST){
     //깊은복사를 위한 함수를 사용하였다.
@@ -280,12 +324,20 @@ function update(){
     //위의 gameloop에서 삭제된 경우 가끔 오류가 발생하여 예외처리함.
     //그러나 게임 진행에 지장 X
     try{
+      SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
       SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
     } catch(e){
-
+    //  SOCKET_LIST[loop].emit("update", , enemysArr, balls);
     }
+
   }
 
+  //if(corpseArr.length != 0){
+    io.emit("corpses", corpseArr);
+  //}
+  var nEnd = new Date().getTime();
+  var nDiff = nEnd - nStart;
+  //console.log("updateloop time = "+nDiff+"ms");
 }
 
 //player와 ball간의 충돌검사하는 함수
@@ -297,6 +349,7 @@ function update(){
 function checkImpact() {
 
   //loop for imapactCheck players and balls
+  var nStart = new Date().getTime();
   for(var outLoop in PLAYER_LIST){
     for(var inLoop=0; inLoop < ballArr.length; inLoop++){
 
@@ -312,11 +365,7 @@ function checkImpact() {
           PLAYER_LIST[outLoop].hp -= 10;
 
           // 점수 증가
-          try{
-            PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
-          } catch(e){
-
-          }
+          PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
 
           //공에 맞았음으로 반동을 적용한다.
           if (ballArr[inLoop].location.x > PLAYER_LIST[outLoop].location.x) {
@@ -332,17 +381,19 @@ function checkImpact() {
       }
     }
   }
+  var nEnd = new Date().getTime();
+  //console.log("checkImpact time = "+(nEnd-nStart));
 }
 
 //아직 수정중이다.
 function checkBallImpact(){
+  var nStartc = new Date().getTime();
   var outLoopLength = ballArr.length;
   for(var outLoop = 0; outLoop < outLoopLength; outLoop++){
     for(var inLoop = 0; inLoop < outLoopLength; inLoop++){
       try{
 
         if(ballArr[outLoop].ownerSocketId != ballArr[inLoop].ownerSocketId && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
-          console.log("impact");
           PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
           PLAYER_LIST[ballArr[outLoop].ownerSocketId].nowBallCount--;
 
@@ -353,4 +404,58 @@ function checkBallImpact(){
       }
     }
   }
+  var nEndc = new Date().getTime();
+  //console.log("ballImpact time = "+(nEndc-nStartc));
+}
+
+//플레이어가 사망시, 호출된다.
+//사망한 플레이어의 점수에따라 영혼이 만들어 지는 갯수가 달라진다.
+//또한 각각의 영혼이 다르지만, 비슷한 색을 가지게 하였다. randomColor()
+//이렇게 각각의 영혼을 만들면, 배열에 넣고, 충돌검사를 하는 함수에 보낸다.
+function makeDeathBall(player){
+  var circleNum = Math.round(player.score/5) +1;
+  var colorArr =  randomColor({
+    count: circleNum,
+    hue: 'red'
+  });
+
+  for(var loop = 0; loop < circleNum; loop++){
+    console.log("makle!");
+    var data = {
+      locationX : player.location.x - Math.random()*1 + Math.random()*1,
+      locationY : player.location.y - Math.random()*1 + Math.random()*1,
+      color : colorArr[loop]
+    }
+    corpseArr.push(data);
+    console.log("push test = "+corpseArr.length);
+  }
+}
+
+//영혼들과, 플레이어의 충돌검사를 한다.
+//즉 플레이어가 영혼을 먹었는지를 판별한다.
+//충돌했다면, 해당 영혼을 배열에서 삭제하고, 플레이어의 점수를 추가한다.
+//또한 모두먹어 배열의 length가 0이면 해당 interval을 종료한다.
+//매 루프마다, 영혼의 위치를 변화 시키기위해 -0.9 ~ 0.9의 값을 더하고 뺀다.
+function corpseImpact(){
+  var corpseImpactHanddler = setInterval(() => {
+    if(corpseArr.length != 0){
+    try{
+      for(var outLoop in PLAYER_LIST){
+        for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
+          corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
+          corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
+          if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
+            PLAYER_LIST[outLoop].score += 10;
+            corpseArr.splice(inLoop);
+          }
+        }
+      }
+    } catch(e){
+
+    }
+    io.emit("corpsesData", corpseArr);
+    }
+  }, 100);
+}
+
 }

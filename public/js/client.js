@@ -3,6 +3,358 @@
 // 2. 접속완료 받으면 닉네임 전송
 // 3. 게임시작 emit을 받으면, 게임시작
 
+function searchKeyPress(e) { // trigger
+  e = e || window.event;
+  if (e.keyCode == 13) {
+    document.getElementById('play').click();
+    return false;
+  }
+  return true;
+}
+function submitNick() {
+  document.getElementById('loginDiv').style.display = 'none';
+  document.getElementById('gameAreaWrapper').style.display = 'inline-block';
+  startSocket();
+}
+
+window.requestAnimFrame = (function (callback) {
+  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+    function (callback) {
+      window.setTimeout(callback, 1000 / 60);
+    };
+})();
+
+function initballs_intro() {
+  balls_intro = [];
+
+  var blue = '#13073A';
+  var grey = '#4E4E4F';
+
+  // Snowball.io
+  balls_intro.push(new Ball(64, 12, 0, 0, blue));
+  balls_intro.push(new Ball(76, 12, 0, 0, blue));
+  balls_intro.push(new Ball(88, 12, 0, 0, blue));
+  balls_intro.push(new Ball(412, 12, 0, 0, blue));
+  balls_intro.push(new Ball(580, 12, 0, 0, blue));
+  balls_intro.push(new Ball(616, 12, 0, 0, blue));
+  balls_intro.push(new Ball(688, 12, 0, 0, grey));
+  balls_intro.push(new Ball(40, 24, 0, 0, blue));
+  balls_intro.push(new Ball(52, 24, 0, 0, blue));
+  balls_intro.push(new Ball(88, 24, 0, 0, blue));
+  balls_intro.push(new Ball(412, 24, 0, 0, blue));
+  balls_intro.push(new Ball(580, 24, 0, 0, blue));
+  balls_intro.push(new Ball(616, 36, 0, 0, blue));
+  balls_intro.push(new Ball(40, 48, 0, 0, blue));
+  balls_intro.push(new Ball(124, 48, 0, 0, blue));
+  balls_intro.push(new Ball(136, 48, 0, 0, blue));
+  balls_intro.push(new Ball(148, 48, 0, 0, blue));
+  balls_intro.push(new Ball(160, 48, 0, 0, blue));
+  balls_intro.push(new Ball(172, 48, 0, 0, blue));
+  balls_intro.push(new Ball(220, 48, 0, 0, blue));
+  balls_intro.push(new Ball(232, 48, 0, 0, blue));
+  balls_intro.push(new Ball(244, 48, 0, 0, blue));
+  balls_intro.push(new Ball(258, 48, 0, 0, blue));
+  balls_intro.push(new Ball(292, 48, 0, 0, blue));
+  balls_intro.push(new Ball(340, 48, 0, 0, blue));
+  balls_intro.push(new Ball(388, 48, 0, 0, blue));
+  balls_intro.push(new Ball(412, 48, 0, 0, blue));
+  balls_intro.push(new Ball(424, 48, 0, 0, blue));
+  balls_intro.push(new Ball(436, 48, 0, 0, blue));
+  balls_intro.push(new Ball(448, 48, 0, 0, blue));
+  balls_intro.push(new Ball(460, 48, 0, 0, blue));
+  balls_intro.push(new Ball(496, 48, 0, 0, blue));
+  balls_intro.push(new Ball(508, 48, 0, 0, blue));
+  balls_intro.push(new Ball(520, 48, 0, 0, blue));
+  balls_intro.push(new Ball(532, 48, 0, 0, blue));
+  balls_intro.push(new Ball(580, 48, 0, 0, blue));
+  balls_intro.push(new Ball(616, 48, 0, 0, blue));
+  balls_intro.push(new Ball(688, 48, 0, 0, grey));
+  balls_intro.push(new Ball(736, 48, 0, 0, grey));
+  balls_intro.push(new Ball(748, 48, 0, 0, grey));
+  balls_intro.push(new Ball(760, 48, 0, 0, grey));
+  balls_intro.push(new Ball(772, 48, 0, 0, grey));
+  balls_intro.push(new Ball(52, 60, 0, 0, blue));
+  balls_intro.push(new Ball(64, 60, 0, 0, blue));
+  balls_intro.push(new Ball(124, 60, 0, 0, blue));
+  balls_intro.push(new Ball(172, 60, 0, 0, blue));
+  balls_intro.push(new Ball(208, 60, 0, 0, blue));
+  balls_intro.push(new Ball(268, 60, 0, 0, blue));
+  balls_intro.push(new Ball(292, 60, 0, 0, blue));
+  balls_intro.push(new Ball(328, 60, 0, 0, blue));
+  balls_intro.push(new Ball(340, 60, 0, 0, blue));
+  balls_intro.push(new Ball(376, 60, 0, 0, blue));
+  balls_intro.push(new Ball(412, 60, 0, 0, blue));
+  balls_intro.push(new Ball(460, 60, 0, 0, blue));
+  balls_intro.push(new Ball(472, 60, 0, 0, blue));
+  balls_intro.push(new Ball(544, 60, 0, 0, blue));
+  balls_intro.push(new Ball(580, 60, 0, 0, blue));
+  balls_intro.push(new Ball(616, 60, 0, 0, blue));
+  balls_intro.push(new Ball(688, 60, 0, 0, grey));
+  balls_intro.push(new Ball(724, 60, 0, 0, blue));
+  balls_intro.push(new Ball(772, 60, 0, 0, blue));
+  balls_intro.push(new Ball(64, 72, 0, 0, blue));
+  balls_intro.push(new Ball(616, 60, 0, 0, blue));
+  balls_intro.push(new Ball(724, 60, 0, 0, grey));
+  balls_intro.push(new Ball(772, 60, 0, 0, grey));
+  balls_intro.push(new Ball(64, 72, 0, 0, blue));
+  balls_intro.push(new Ball(76, 72, 0, 0, blue));
+  balls_intro.push(new Ball(88, 72, 0, 0, blue));
+  balls_intro.push(new Ball(124, 72, 0, 0, blue));
+  balls_intro.push(new Ball(172, 72, 0, 0, blue));
+  balls_intro.push(new Ball(208, 72, 0, 0, blue));
+  balls_intro.push(new Ball(268, 72, 0, 0, blue));
+  balls_intro.push(new Ball(292, 72, 0, 0, blue));
+  balls_intro.push(new Ball(304, 72, 0, 0, blue));
+  balls_intro.push(new Ball(328, 72, 0, 0, blue));
+  balls_intro.push(new Ball(352, 72, 0, 0, blue));
+  balls_intro.push(new Ball(376, 72, 0, 0, blue));
+  balls_intro.push(new Ball(412, 72, 0, 0, blue));
+  balls_intro.push(new Ball(472, 72, 0, 0, blue));
+  balls_intro.push(new Ball(532, 72, 0, 0, blue));
+  balls_intro.push(new Ball(544, 72, 0, 0, blue));
+  balls_intro.push(new Ball(580, 72, 0, 0, blue));
+  balls_intro.push(new Ball(616, 72, 0, 0, blue));
+  balls_intro.push(new Ball(688, 72, 0, 0, grey));
+  balls_intro.push(new Ball(712, 72, 0, 0, grey));
+  balls_intro.push(new Ball(724, 72, 0, 0, grey));
+  balls_intro.push(new Ball(784, 72, 0, 0, grey));
+  balls_intro.push(new Ball(88, 84, 0, 0, grey));
+  balls_intro.push(new Ball(124, 84, 0, 0, blue));
+  balls_intro.push(new Ball(172, 84, 0, 0, blue));
+  balls_intro.push(new Ball(208, 84, 0, 0, blue));
+  balls_intro.push(new Ball(268, 84, 0, 0, blue));
+  balls_intro.push(new Ball(304, 84, 0, 0, blue));
+  balls_intro.push(new Ball(328, 84, 0, 0, blue));
+  balls_intro.push(new Ball(352, 84, 0, 0, blue));
+  balls_intro.push(new Ball(376, 84, 0, 0, blue));
+  balls_intro.push(new Ball(412, 84, 0, 0, blue));
+  balls_intro.push(new Ball(472, 84, 0, 0, blue));
+  balls_intro.push(new Ball(496, 84, 0, 0, blue));
+  balls_intro.push(new Ball(508, 84, 0, 0, blue));
+  balls_intro.push(new Ball(544, 84, 0, 0, blue));
+  balls_intro.push(new Ball(580, 84, 0, 0, blue));
+  balls_intro.push(new Ball(616, 84, 0, 0, blue));
+  balls_intro.push(new Ball(688, 84, 0, 0, grey));
+  balls_intro.push(new Ball(712, 84, 0, 0, grey));
+  balls_intro.push(new Ball(784, 84, 0, 0, grey));
+  balls_intro.push(new Ball(88, 84, 0, 0, blue));
+  balls_intro.push(new Ball(124, 84, 0, 0, blue));
+  balls_intro.push(new Ball(172, 84, 0, 0, blue));
+  balls_intro.push(new Ball(208, 84, 0, 0, blue));
+  balls_intro.push(new Ball(268, 84, 0, 0, blue));
+  balls_intro.push(new Ball(304, 96, 0, 0, blue));
+  balls_intro.push(new Ball(316, 96, 0, 0, blue));
+  balls_intro.push(new Ball(352, 96, 0, 0, blue));
+  balls_intro.push(new Ball(364, 96, 0, 0, blue));
+  balls_intro.push(new Ball(412, 96, 0, 0, blue));
+  balls_intro.push(new Ball(460, 96, 0, 0, blue));
+  balls_intro.push(new Ball(472, 96, 0, 0, blue));
+  balls_intro.push(new Ball(496, 96, 0, 0, blue));
+  balls_intro.push(new Ball(544, 96, 0, 0, blue));
+  balls_intro.push(new Ball(580, 96, 0, 0, blue));
+  balls_intro.push(new Ball(616, 96, 0, 0, blue));
+  balls_intro.push(new Ball(688, 96, 0, 0, grey));
+  balls_intro.push(new Ball(724, 96, 0, 0, grey));
+  balls_intro.push(new Ball(772, 96, 0, 0, grey));
+  balls_intro.push(new Ball(784, 96, 0, 0, grey));
+  balls_intro.push(new Ball(40, 108, 0, 0, blue));
+  balls_intro.push(new Ball(76, 108, 0, 0, blue));
+  balls_intro.push(new Ball(88, 108, 0, 0, blue));
+  balls_intro.push(new Ball(124, 108, 0, 0, blue));
+  balls_intro.push(new Ball(172, 108, 0, 0, blue));
+  balls_intro.push(new Ball(208, 108, 0, 0, blue));
+  balls_intro.push(new Ball(220, 108, 0, 0, blue));
+  balls_intro.push(new Ball(256, 108, 0, 0, blue));
+  balls_intro.push(new Ball(304, 108, 0, 0, blue));
+  balls_intro.push(new Ball(316, 108, 0, 0, blue));
+  balls_intro.push(new Ball(352, 108, 0, 0, blue));
+  balls_intro.push(new Ball(364, 108, 0, 0, blue));
+  balls_intro.push(new Ball(412, 108, 0, 0, blue));
+  balls_intro.push(new Ball(424, 108, 0, 0, blue));
+  balls_intro.push(new Ball(460, 108, 0, 0, blue));
+  balls_intro.push(new Ball(496, 108, 0, 0, blue));
+  balls_intro.push(new Ball(532, 108, 0, 0, blue));
+  balls_intro.push(new Ball(544, 108, 0, 0, blue));
+  balls_intro.push(new Ball(580, 108, 0, 0, blue));
+  balls_intro.push(new Ball(616, 108, 0, 0, blue));
+  balls_intro.push(new Ball(652, 108, 0, 0, grey));
+  balls_intro.push(new Ball(688, 108, 0, 0, grey));
+  balls_intro.push(new Ball(724, 108, 0, 0, grey));
+  balls_intro.push(new Ball(736, 108, 0, 0, grey));
+  balls_intro.push(new Ball(772, 108, 0, 0, grey));
+  balls_intro.push(new Ball(52, 120, 0, 0, blue));
+  balls_intro.push(new Ball(64, 120, 0, 0, blue));
+  balls_intro.push(new Ball(76, 120, 0, 0, blue));
+  balls_intro.push(new Ball(232, 120, 0, 0, blue));
+  balls_intro.push(new Ball(244, 120, 0, 0, blue));
+  balls_intro.push(new Ball(436, 120, 0, 0, blue));
+  balls_intro.push(new Ball(448, 120, 0, 0, blue));
+  balls_intro.push(new Ball(508, 120, 0, 0, blue));
+  balls_intro.push(new Ball(502, 120, 0, 0, blue));
+  balls_intro.push(new Ball(652, 120, 0, 0, grey));
+  balls_intro.push(new Ball(736, 120, 0, 0, grey));
+  balls_intro.push(new Ball(748, 120, 0, 0, grey));
+  balls_intro.push(new Ball(760, 120, 0, 0, grey));
+
+  return balls_intro;
+}
+function getMousePos(canvas, evt) {
+  // get canvas position
+  var obj = canvas;
+  var top = 0;
+  var left = 0;
+  while (obj.tagName != 'BODY') {
+    top += obj.offsetTop;
+    left += obj.offsetLeft;
+    obj = obj.offsetParent;
+  }
+
+  // return relative mouse position
+  var mouseX = evt.clientX - left + window.pageXOffset;
+  var mouseY = evt.clientY - top + window.pageYOffset;
+  return {
+    x: mouseX,
+    y: mouseY
+  };
+}
+function updateballs_intro(canvas, balls_intro, timeDiff, mousePos) {
+  var context = canvas.getContext('2d');
+  var collisionDamper = 0.3;
+  var floorFriction = 0.0005 * timeDiff;
+  var mouseForceMultiplier = 1 * timeDiff;
+  var restoreForce = 0.002 * timeDiff;
+
+  for (var n = 0; n < balls_intro.length; n++) {
+    var ball = balls_intro[n];
+    // set ball position based on velocity
+    ball.y += ball.vy;
+    ball.x += ball.vx;
+
+    // restore forces
+    if (ball.x > ball.origX) ball.vx -= restoreForce;
+    else ball.vx += restoreForce;
+    if (ball.y > ball.origY) ball.vy -= restoreForce;
+    else ball.vy += restoreForce;
+
+    // mouse forces
+    var mouseX = mousePos.x;
+    var mouseY = mousePos.y;
+
+    var distX = ball.x - mouseX;
+    var distY = ball.y - mouseY;
+
+    var radius = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+
+    var totalDist = Math.abs(distX) + Math.abs(distY);
+
+    var forceX = (Math.abs(distX) / totalDist) * (1 / radius) * mouseForceMultiplier;
+    var forceY = (Math.abs(distY) / totalDist) * (1 / radius) * mouseForceMultiplier;
+
+    // mouse is left of ball
+    if (distX > 0) ball.vx += forceX;
+    else ball.vx -= forceX;
+    // mouse is on top of ball
+    if (distY > 0) ball.vy += forceY;
+    else ball.vy -= forceY;
+
+    // floor friction
+    if (ball.vx > 0) ball.vx -= floorFriction;
+    else if (ball.vx < 0) ball.vx += floorFriction;
+    if (ball.vy > 0) ball.vy -= floorFriction;
+    else if (ball.vy < 0) ball.vy += floorFriction;
+
+    // floor condition
+    if (ball.y > (canvas.height - ball.radius)) {
+      ball.y = canvas.height - ball.radius - 2;
+      ball.vy *= -1;
+      ball.vy *= (1 - collisionDamper);
+    }
+
+    // ceiling condition
+    if (ball.y < (ball.radius)) {
+      ball.y = ball.radius + 2;
+      ball.vy *= -1;
+      ball.vy *= (1 - collisionDamper);
+    }
+
+    // right wall condition
+    if (ball.x > (canvas.width - ball.radius)) {
+      ball.x = canvas.width - ball.radius - 2;
+      ball.vx *= -1;
+      ball.vx *= (1 - collisionDamper);
+    }
+
+    // left wall condition
+    if (ball.x < (ball.radius)) {
+      ball.x = ball.radius + 2;
+      ball.vx *= -1;
+      ball.vx *= (1 - collisionDamper);
+    }
+  }
+}
+function Ball(x, y, vx, vy, color) {
+  this.x = x;
+  this.y = y;
+  this.vx = vx;
+  this.vy = vy;
+  this.color = color;
+  this.origX = x;
+  this.origY = y;
+  this.radius = 10;
+}
+function animate(canvas, balls_intro, lastTime, mousePos) {
+  var context = loginCanvas.getContext('2d');
+
+  // update
+  var date = new Date();
+  var time = date.getTime();
+  var timeDiff = time - lastTime;
+  updateballs_intro(loginCanvas, balls_intro, timeDiff, mousePos);
+  lastTime = time;
+
+  // clear
+  context.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
+
+  // render
+  for (var n = 0; n < balls_intro.length; n++) {
+    var ball = balls_intro[n];
+    context.beginPath();
+    context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI, false);
+    context.fillStyle = ball.color;
+    context.fill();
+  }
+
+  // request new frame
+  requestAnimFrame(function () {
+    animate(loginCanvas, balls_intro, lastTime, mousePos);
+  });
+}
+var loginCanvas = document.getElementById('loginCanvas');
+var balls_intro = initballs_intro();
+var date = new Date();
+var time = date.getTime();
+/*
+ * set mouse position really far away
+ * so the mouse forces are nearly obsolete
+ */
+var mousePos = {
+  x: 9999,
+  y: 9999
+};
+
+loginCanvas.addEventListener('mousemove', function (evt) {
+  var pos = getMousePos(loginCanvas, evt);
+  mousePos.x = pos.x;
+  mousePos.y = pos.y;
+});
+
+loginCanvas.addEventListener('mouseout', function (evt) {
+  mousePos.x = 9999;
+  mousePos.y = 9999;
+});
+animate(loginCanvas, balls_intro, time, mousePos);
+
+
 // 마우스위 좌표정보를 담는 변수
 var pointX;
 var pointY;
@@ -15,6 +367,7 @@ var shotOffsetX;
 var gameStart = false;
 
 // 사용 예정
+// 0 = 왼쪽 1 = 중간 2 = 오른쪽
 var mapState;
 
 // 맵의 길이
@@ -41,11 +394,7 @@ canvas.height = 640;
 var socket;
 
 //???
-var modal = document.getElementById('myModal');
-var nickBox = document.getElementById('nickBox');
-var guest = document.getElementById('guest');
 
-modal.style.display = 'block';
 
 // When the user press enter key, play as guest
 
@@ -53,28 +402,13 @@ modal.style.display = 'block';
 // 누르면, 소켓들을 실행함.
 // 이렇게 한 이유는 play버튼을 누르기도 전에 게임이 실행되어
 // 그냥 뒤지는것을 방지하기 위함.
-nickBox.addEventListener("keydown", function (event) {
-    if (event.which == 13 || event.keyCode == 13) {
-        var nickname = nickBox.value;
-        console.log(nickBox.value);
 
-        startSocket();
-        //socket.emit('nickname', nickname);
-        modal.style.display = 'none';
-    }
-});
 
 //닉네임 입력을 완료하면, 플레이버튼을 누름.
 // 누르면, 소켓들을 실행함.
 // 이렇게 한 이유는 play버튼을 누르기도 전에 게임이 실행되어
 // 그냥 뒤지는것을 방지하기 위함.
-guest.addEventListener('mousedown', function helloModal() {
-    var nickname = nickBox.value;
-    console.log(nickBox.value);
-    startSocket();
-  //  socket.emit('nickname', nickname);
-    modal.style.display = 'none';
-});
+
 
 // 로직이 바뀌어서 기존에 있던 채팅코드는 주석처리함
 //chat
@@ -129,7 +463,8 @@ var MainPlayer = {
 // 이들은 그리는 함수에서 사용된다.
 var player;
 var players = [];
-var balls = [];
+var ballArr = [];
+var corpseArr = [];
 
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
 var gameHanddler;
@@ -144,15 +479,18 @@ var gameHanddler;
 // 그후 계속 update emit을 받아 자신과, 적들과 공들에 대한 객체들을 계속 업데이트 받아 대입함.
 function startSocket(){
   //소켓에 접속한디.
-  socket = io();
+
+ socket = io({
+  transports: ['websocket']
+});
 
   console.log("start socket");
 
   // 접속이 되었다는 emit을 받고 닉네임을 넘겨줌
   socket.on("connected", () => {
     console.log("iam connected");
-    console.log(nickBox.value);
-    socket.emit("nickName", nickBox.value);
+    console.log(nick.value);
+    socket.emit("nickName", nick.value);
     console.log("i sent nickname");
   });
 
@@ -185,9 +523,27 @@ function startSocket(){
     this.balls = balls;
   })
 
+// 서버와 클라이언트의 시간측정을 위한 이벤트
+  socket.on('timeCheck', (time) => {
+    var clientTime = new Date().getTime();
+  //  console.log("ping = "+(clientTime - time));
+  })
+
 // 죽으면, 렌더링 루프를 종료함.
   socket.on("die", () => {
-    clearInterval(gameHanddler);
+  //  clearInterval(gameHanddler);
+  })
+
+  socket.on("otherDie", (diePlayer) => {
+
+  })
+
+//다른 플레이어가 사망하면, 이 이벤트가 발생한다.
+//콜백의 인자는 사망플레이어의 영혼을 매개변수로 받아 전역변수에 널는다.
+//이러면 안될것 같다. 수정필요
+  socket.on("corpsesData", (corpseArr) => {
+    console.log("igot");
+    this.corpseArr = corpseArr;
   })
 
 
@@ -198,8 +554,10 @@ function startSocket(){
 // 그뒤 렌더링 loop를 돌린다.
 // 이는 맵을 먼저 그리고, 적들을 그리고, 자기 자신을 그리고 마지막에 공들을 그린다.
   function gameStart(){
+
     startEvent();
     gameHanddler = setInterval(() => {
+      var nStart = new Date().getTime();
       drawMap(player);
 
       //loop for draw player
@@ -212,6 +570,9 @@ function startSocket(){
       for(var loop = 0; loop < this.balls.length; loop++){
         drawBall(this.balls[loop]);
       }
+      dieEffecte();
+      var nEnd = new Date().getTime();
+  //    console.log("client loop time = "+(nEnd - nStart));
   });
 
   }
@@ -286,6 +647,11 @@ function startEvent(){
 // 이 정보는 서버에서 보내오는 객체에 포함되어 있다.
 
 function drawMyPlayer(player){
+  ctx.save();
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = "#00e5bb";
+  ctx.font="15px Arial";
+
   ctx.fillStyle = "green";
   // 피통을 그린다.
   ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
@@ -296,6 +662,8 @@ function drawMyPlayer(player){
   ctx.fillText(player.name, player.vLocationX - 32, player.locationY - 52);
   // 그림(해골)을 그린다.
   ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
+
+  ctx.restore();
 }
 
 // 다른 플레이어들을 그리는 함수이다.
@@ -311,6 +679,12 @@ function drawPlayer(player){
   // canvas width = 1340
   //location check
 //  console.log("differ = "+this.player.locationX+" vs "+player.locationX);
+    ctx.save();
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "red";
+    ctx.font="15px Arial";
+
 
   // 자신이 왼쪽이 있는 경우이다. 굉장히 간단하다.
   // 그냥 서버에서 받은 데로만 그리면 된다.
@@ -347,6 +721,8 @@ function drawPlayer(player){
        ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width/2), player.locationY - 52);
        ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width/2) , player.locationY - 32);
      }
+
+     ctx.restore();
 }
 
 //맵을 그리는 함수이다.
@@ -386,9 +762,17 @@ function drawMap(me){
 // 1. 자신이 왼쪽에 있는 경우 2. 자신이 중간에 있는 경우 3. 자신이 오른쪽에 있는경우.
 // 이때 그리는 공식은 상대방을 그리는 공식과 같다.
 function drawBall(ball){
+  ctx.save();
+  var radgrad = ctx.createRadialGradient(60,60,0,60,60,60);
+    radgrad.addColorStop(0, 'rgba(255,0,0,1)');
+    radgrad.addColorStop(0.8, 'rgba(228,0,0,.9)');
+    radgrad.addColorStop(1, 'rgba(228,0,0,0)');
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "black";
+
     ctx.fillStyle = "white";
     ctx.beginPath();
-
     //location check
 
     //자신이 왼쪽에 있는경우
@@ -404,4 +788,47 @@ function drawBall(ball){
        ctx.arc(ball.locationX - player.locationX + (canvas.width/2), ball.locationY, 10, 0, Math.PI * 2);
      }
      ctx.fill();
+     ctx.restore();
+}
+
+function dieEffecte(){
+    try{
+      if(corpseArr.length != 0){
+        console.log("how many solu? = "+this.corpseArr.length);
+        try{
+         for(var loop = 0; loop < corpseArr.length; loop++){
+           console.log("draw "+corpseArr[loop].locationX);
+           ctx.beginPath();
+           ctx.shadowBlur = 20;
+           ctx.shadowColor = corpseArr[loop].color;
+           ctx.fillStyle = corpseArr[loop].color;
+
+           if(mapState == "left"){
+             ctx.arc(corpseArr[loop].locationX , corpseArr[loop].locationY, 20, 0, Math.PI*2);
+           } else if(mapState == "right"){
+             ctx.arc(corpseArr[loop].locationX -mapWidth + canvas.width, corpseArr[loop].locationY, 20, 0, Math.PI*2);
+           } else if(mapState == "middle"){
+             ctx.arc(corpseArr[loop].locationX - player.locationX + (canvas.width/2), corpseArr[loop].locationY, 20, 0, Math.PI*2);
+           }
+           ctx.fill();
+         }
+       }catch(e){
+
+       }
+     }
+   } catch(e){
+
+   }
+   //clearInterval(corpseImpactHanddler);
+ }
+
+
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
