@@ -35,6 +35,25 @@
           font-size: 45px;
           border-radius: 4px;
       }
+
+      .upgrade {
+        text-align: center;
+        border-radius: 25px;
+        width:150px;
+        height:20px;
+        background:blue;
+      }
+      #statContainer {
+        z-index: 300000;
+        position: absolute;
+        top:350px; left:10px;
+      }
+
+      li{
+        margin: 10px 0;
+      }
+
+
   </style>
 </head>
 
@@ -48,11 +67,33 @@
 
 <div id="container">
   <div id = "gameAreaWrapper" style="display:none;">
-    <canvas id="myCanvas" width="500" height="500" style="background:#FAEBD7"></canvas>
-    </div>
-  </div>
+    <canvas style="position: relative;" id="myCanvas" width="500" height="500" style="background:#FAEBD7"></canvas>
+    <div id = "upgradeForm"  draggable="true" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+      <!-- //정보 전송 목록
+      // 1. Max hp
+    	// 2. Speed
+    	// 3. Throw power
+    	// 4. Max ball count
+    	// 5. Ball Demage
+    	// 6. Ball hp
+      // 7. Jump demage -->
+      <ul id = "statContainer" style="list-style-type:none; display:none;" >
+        <li><p class ="upgrade" id = "maxHp" onclick="upgradeEmit(id)" style="background : red;">Max hp</p></li>
+        <li><p class ="upgrade" id = "speed" onclick="upgradeEmit(id)")>Speed</p></li>
+        <li><p class ="upgrade" id = "throwPower" onclick="upgradeEmit(id)" style="background : orange;">Throw power</p></li>
+        <li><p class ="upgrade" id = "maxBallCount" onclick="upgradeEmit(id)" style="background : yellow;">Max ball count</p></li>
+        <li><p class ="upgrade" id = "balldemage" onclick="upgradeEmit(id)" style="background : green;">Ball Demage</p></li>
+        <li><p class ="upgrade" id = "ballHp" onclick="upgradeEmit(id)" style="background : pink;">Ball hp</p></li>
+        <li><p class ="upgrade" id = "jumpDemage" onclick="upgradeEmit(id)"style="background : skyblue;">Jump demage</p></li>
+      </ul>
 
-  <div id = "menuWrapper">
+    </div>
+
+  </div>
+</div>
+
+  <div id = "menuWrapper" style="display:none;">
+    <canvas id="deadCanvas" width="850" height="150"></canvas>
 
   </div>
 </div>

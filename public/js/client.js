@@ -469,6 +469,15 @@ var corpseArr = [];
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
 var gameHanddler;
 
+var skillPoint=0;
+
+function upgradeEmit(abilyty){
+  this.skillPoint--;
+  console.log("ss"+skillPoint);
+  socket.emit("upgrade", abilyty);
+  document.getElementById('statContainer').style.display = 'none';
+}
+
 // 소켓들을 실행함.
 // socket = io();
 // 를 통해 소켓이 접속하고
@@ -531,11 +540,33 @@ function startSocket(){
 
 // 죽으면, 렌더링 루프를 종료함.
   socket.on("die", () => {
+
   //  clearInterval(gameHanddler);
   })
 
   socket.on("otherDie", (diePlayer) => {
 
+  })
+
+  socket.on("levelUp", (playerStat) => {
+    //레벌업 창 띄우고, 선택한것 emit하기
+    console.log("in on "+this.skillPoint);
+    this.skillPoint = playerStat.skillPoint;
+    console.log("in on "+this.skillPoint+", "+playerStat.skillPoint);
+    var handdler = setInterval(function () {
+      document.getElementById("maxHp").innerHTML += playerStat.maxHp;
+      document.getElementById("speed").innerHTML += playerStat.speed;
+      document.getElementById("throwPower").innerHTML += playerStat.throwPower;
+      document.getElementById("maxBallCount").innerHTML += playerStat.maxBallCount;
+      document.getElementById("balldemage").innerHTML += playerStat.ballDemage;
+      document.getElementById("ballHp").innerHTML += playerStat.ballHp;
+      document.getElementById("jumpDemage").innerHTML += playerStat.jumpDemage;
+
+      document.getElementById('statContainer').style.display = 'inline-block';
+      if(this.skillPoint == 1){
+        clearInterval(handdler);
+      }
+    }, 100);
   })
 
 //다른 플레이어가 사망하면, 이 이벤트가 발생한다.
@@ -565,6 +596,7 @@ function startSocket(){
         drawPlayer(players[loop]);
       }
       drawMyPlayer(player);
+      drawScoreBar(player);
 
       //loop for draw ball
       for(var loop = 0; loop < this.balls.length; loop++){
@@ -645,9 +677,46 @@ function startEvent(){
 // 마지막으로 자신의 객체를 그리는데, skeletonSheet.getSheet(player.ImageIndex)
 // 를 사용하여 자신이 왼족을 보고 있는지, 오른쪽을 보고 있는지, 공중에 있는지를 그린다.
 // 이 정보는 서버에서 보내오는 객체에 포함되어 있다.
+function drawScoreBar(player){
+  //빈 게이지
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  ctx.fillRect(canvas.width/4, canvas.height - 70, (canvas.width/4)*2, 20);
+  ctx.beginPath();
+  ctx.arc(canvas.width/4,canvas.height - 70+10, 10, Math.PI/2, Math.PI*3/2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc((canvas.width/4)*3,canvas.height - 70+10, 10,  Math.PI/2, Math.PI*3/2, true);
+  ctx.fill();
+  ctx.restore();
+
+  //찬 게이지
+  ctx.save();
+  ctx.fillStyle = "rgb(255, 236, 71)";
+  ctx.fillRect(canvas.width/4, canvas.height - 70+2,  player.score * (((canvas.width/4)*2)/player.nextLevelScore)-2, 20-4);
+  ctx.beginPath();
+  ctx.arc(canvas.width/4+2, canvas.height - 70+10, 8,  Math.PI/2, Math.PI*3/2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(canvas.width/4 + player.score * (((canvas.width/4)*2)/player.nextLevelScore)-2, canvas.height - 70+10, 8,   Math.PI/2, Math.PI*3/2, true);
+  ctx.fill();
+  ctx.restore();
+
+  //경험치 / 다음레벨 경험치
+  ctx.save();
+  ctx.textBaseline="middle";
+  ctx.font = "900 10pt Arial";
+  ctx.fillStyle = "white";
+  ctx.fillText(player.level+" lvl  "+player.score+" / "+player.nextLevelScore,canvas.width/2 - ctx.measureText(player.level+" lvl  "+player.score+" / "+player.nextLevelScore).width/2 ,canvas.height - 70+10 );
+  ctx.strokeStyle = "black";
+  ctx.strokeText(player.level+" lvl  "+player.score+" / "+player.nextLevelScore,canvas.width/2 - ctx.measureText(player.level+" lvl  "+player.score+" / "+player.nextLevelScore).width/2 ,canvas.height - 70+10 );
+  ctx.restore();
+}
+
 
 function drawMyPlayer(player){
   ctx.save();
+
   ctx.shadowBlur = 20;
   ctx.shadowColor = "#00e5bb";
   ctx.font="15px Arial";
@@ -792,26 +861,28 @@ function drawBall(ball){
 }
 
 function dieEffecte(){
+  var nStart = new Date().getTime();
     try{
       if(corpseArr.length != 0){
-        console.log("how many solu? = "+this.corpseArr.length);
+        console.log("in if");
         try{
-         for(var loop = 0; loop < corpseArr.length; loop++){
-           console.log("draw "+corpseArr[loop].locationX);
-           ctx.beginPath();
-           ctx.shadowBlur = 20;
-           ctx.shadowColor = corpseArr[loop].color;
-           ctx.fillStyle = corpseArr[loop].color;
-
-           if(mapState == "left"){
-             ctx.arc(corpseArr[loop].locationX , corpseArr[loop].locationY, 20, 0, Math.PI*2);
-           } else if(mapState == "right"){
-             ctx.arc(corpseArr[loop].locationX -mapWidth + canvas.width, corpseArr[loop].locationY, 20, 0, Math.PI*2);
-           } else if(mapState == "middle"){
-             ctx.arc(corpseArr[loop].locationX - player.locationX + (canvas.width/2), corpseArr[loop].locationY, 20, 0, Math.PI*2);
+          console.log("in try");
+           for(var loop = 0; loop < corpseArr.length; loop++){
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = corpseArr[loop].color;  // corpseArr[loop].color 접근에 오래 걸리는듯 함
+            ctx.fillStyle = corpseArr[loop].color;
+             ctx.beginPath();
+             if(mapState == "left"){
+               ctx.arc(corpseArr[loop].locationX , corpseArr[loop].locationY, 20, 0, Math.PI*2);
+             } else if(mapState == "right"){
+               ctx.arc(corpseArr[loop].locationX -mapWidth + canvas.width, corpseArr[loop].locationY, 20, 0, Math.PI*2);
+             } else if(mapState == "middle"){
+               ctx.arc(corpseArr[loop].locationX - player.locationX + (canvas.width/2), corpseArr[loop].locationY, 20, 0, Math.PI*2);
+             }
+             ctx.fill();
+             ctx.restore();
            }
-           ctx.fill();
-         }
        }catch(e){
 
        }
@@ -819,16 +890,6 @@ function dieEffecte(){
    } catch(e){
 
    }
-   //clearInterval(corpseImpactHanddler);
+   var nEnd =  new Date().getTime();
+   console.log("die effect time = "+(nEnd - nStart));
  }
-
-
-
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}

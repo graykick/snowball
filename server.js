@@ -69,7 +69,9 @@ function makePlayerObject(player){
     ImageIndex: player.nowImageIndex,
     hp: player.hp, // 해골 방향 index
     score: player.score,
-    name : player.nickName
+    name : player.nickName,
+    nextLevelScore : player.nextLevelScore,
+    level : player.level
   };
 
   return ObjPlayer;
@@ -112,6 +114,7 @@ var PLAYER_LIST = {};
 var ballArr = [];
 var players = [];
 var corpseArr = [];
+var deadPlayer = {};
 
 //서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag이다.
 //이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성된다.
@@ -125,6 +128,7 @@ io.sockets.on('connection', function (socket) {
   player.socketId = socket.id;
   PLAYER_LIST[socket.id] = player;
   SOCKET_LIST[socket.id] = socket;
+  player.socket = socket;
   players.push(makePlayerObject(player));
 
 //큰라이언트 측에 소켓연결이 성공적이라는 emit을 준다. 이 emit을 받으면, 클라이언트는 닉네임을 보내온다.
@@ -203,6 +207,25 @@ io.sockets.on('connection', function (socket) {
       delete PLAYER_LIST[socket.id];
   });
 
+  socket.on("upgrade", (abilyty) => {
+    player.skillPoint--;
+    if(abilyty == "maxHp"){
+      player.maxHp += 10;
+    } else if(abilyty == "speed") {
+      player.speed += 10;
+    } else if(abilyty == "throwPower") {
+      player.throwPower += 10;
+    } else if(abilyty == "maxBallCount") {
+      player.maxBallCount += 1;
+    } else if(abilyty == "ballDemage") {
+      player.throwDemage += 5;
+    } else if(abilyty == "ballHp") {
+      player.ballHp += 10;
+    } else if(abilyty == "jumpDemage") {
+      player.jumpDemage += 10;
+    }
+  })
+
 
 });
 
@@ -223,16 +246,9 @@ function start(){
     startFlag = false;
     setInterval(gameLoop, 1000/60);
     setInterval(update, 10);
-  //  setInterval(checkBallImpact, 100);
+    setInterval(corpseImpact, 500);
   }
-  corpseImpact();
 }
-
-
-
-
-
-
 
 
 // gameloop는 정말로 게임을 진행하는 루프이다.
@@ -248,6 +264,7 @@ function gameLoop(){
   for(var loop in PLAYER_LIST){
     PLAYER_LIST[loop].run();
     if(!(PLAYER_LIST[loop].live)){
+      deadPlayer[PLAYER_LIST[loop].socketId] = PLAYER_LIST[loop];
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die');
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('otherDie', makePlayerObject(PLAYER_LIST[loop]), makeDeathBall(PLAYER_LIST[loop]));
       delete PLAYER_LIST[loop];
@@ -326,15 +343,13 @@ function update(){
     try{
       SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
       SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
+      SOCKET_LIST[loop].emit("corpsesData", corpseArr);
     } catch(e){
     //  SOCKET_LIST[loop].emit("update", , enemysArr, balls);
     }
 
   }
 
-  //if(corpseArr.length != 0){
-    io.emit("corpses", corpseArr);
-  //}
   var nEnd = new Date().getTime();
   var nDiff = nEnd - nStart;
   //console.log("updateloop time = "+nDiff+"ms");
@@ -362,10 +377,16 @@ function checkImpact() {
           var radius = PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass;
 
           //체력 감소
-          PLAYER_LIST[outLoop].hp -= 10;
+          PLAYER_LIST[outLoop].hp -= ballArr[inLoop].demage;
 
           // 점수 증가
           PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
+
+          //레벨업확인
+          if(PLAYER_LIST[ballArr[inLoop].ownerSocketId].checkScore()){
+            levelUp(ballArr[inLoop].ownerSocketId);
+          }
+
 
           //공에 맞았음으로 반동을 적용한다.
           if (ballArr[inLoop].location.x > PLAYER_LIST[outLoop].location.x) {
@@ -385,6 +406,30 @@ function checkImpact() {
   //console.log("checkImpact time = "+(nEnd-nStart));
 }
 
+function levelUp(playerId){
+  //정보 전송 목록
+  // 1. Max hp
+	// 2. Speed
+	// 3. Throw power
+	// 4. Max ball count
+	// 5. Ball Demage
+	// 6. Ball hp
+  // 7. Jump demage
+  var playerStat = {
+    maxHp : PLAYER_LIST[playerId].maxHp,
+    speed : PLAYER_LIST[playerId].speed,
+    throwPower : PLAYER_LIST[playerId].throwPower,
+    maxBallCount : PLAYER_LIST[playerId].maxBallCount,
+    ballDemage : PLAYER_LIST[playerId].throwDemage,
+    ballHp : PLAYER_LIST[playerId].ballHp,
+    jumpDemage : PLAYER_LIST[playerId].jumpDemage,
+    skillPoint : PLAYER_LIST[playerId].skillPoint
+  }
+  if(PLAYER_LIST[playerId].skillPoint >= 1){
+    SOCKET_LIST[playerId].emit("levelUp", playerStat);
+  }
+}
+
 //아직 수정중이다.
 function checkBallImpact(){
   var nStartc = new Date().getTime();
@@ -392,13 +437,25 @@ function checkBallImpact(){
   for(var outLoop = 0; outLoop < outLoopLength; outLoop++){
     for(var inLoop = 0; inLoop < outLoopLength; inLoop++){
       try{
-
         if(ballArr[outLoop].ownerSocketId != ballArr[inLoop].ownerSocketId && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
           PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
           PLAYER_LIST[ballArr[outLoop].ownerSocketId].nowBallCount--;
 
-          ballArr.splice(inLoop, 1);
-          ballArr.splice(outLoop, 1);
+          ballArr[inLoop].hp -= ballArr[outLoop].demage;
+          ballArr[outLoop].hp -= ballArr[inLoop].demage;
+          console.log("hp check "+  ballArr[inLoop].hp+", "+ballArr[outLoop].hp);
+
+          if(ballArr[inLoop].hp <= 0){
+            ballArr.splice(inLoop, 1);
+          }
+          if(ballArr[outLoop].hp <= 0){
+            ballArr.splice(outLoop, 1);
+          }
+
+
+
+          // ballArr.splice(inLoop, 1);
+          // ballArr.splice(outLoop, 1);
         }
       } catch(e){
       }
@@ -426,6 +483,7 @@ function makeDeathBall(player){
       locationY : player.location.y - Math.random()*1 + Math.random()*1,
       color : colorArr[loop]
     }
+  //  console.log("color = "+data.color);
     corpseArr.push(data);
     console.log("push test = "+corpseArr.length);
   }
@@ -437,25 +495,44 @@ function makeDeathBall(player){
 //또한 모두먹어 배열의 length가 0이면 해당 interval을 종료한다.
 //매 루프마다, 영혼의 위치를 변화 시키기위해 -0.9 ~ 0.9의 값을 더하고 뺀다.
 function corpseImpact(){
-  var corpseImpactHanddler = setInterval(() => {
-    if(corpseArr.length != 0){
-    try{
-      for(var outLoop in PLAYER_LIST){
-        for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
-          corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
-          corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
-          if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
-            PLAYER_LIST[outLoop].score += 10;
-            corpseArr.splice(inLoop);
+      if(corpseArr.length != 0){
+        try{
+          for(var outLoop in PLAYER_LIST){
+            for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
+              corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
+              corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
+              if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
+                PLAYER_LIST[outLoop].score += 10;
+                corpseArr.splice(inLoop);
+              }
+            }
           }
+        } catch(e){
+
         }
       }
-    } catch(e){
-
-    }
-    io.emit("corpsesData", corpseArr);
-    }
-  }, 100);
 }
+
+// function corpseImpact(){
+//   var corpseImpactHanddler = setInterval(() => {
+//     if(corpseArr.length != 0){
+//     try{
+//       for(var outLoop in PLAYER_LIST){
+//         for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
+//           corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
+//           corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
+//           if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
+//             PLAYER_LIST[outLoop].score += 10;
+//             corpseArr.splice(inLoop);
+//           }
+//         }
+//       }
+//     } catch(e){
+//
+//     }
+//     io.emit("corpsesData", corpseArr);
+//     }
+//   }, 100);
+// }
 
 }
