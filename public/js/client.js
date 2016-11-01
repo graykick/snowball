@@ -652,7 +652,10 @@ function startEvent(){
         mouseY : pointY,
         mouseX : pointX + shotOffsetX
       };
-      socket.emit('throwBall', ballData);
+
+      if(!death){
+        socket.emit('throwBall', ballData);
+      }
   });
 
   //움직임임 이벤트. 방향과  flag를 담은 객체를 함께 전송
