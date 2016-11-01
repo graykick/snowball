@@ -263,6 +263,9 @@ function gameLoop(){
   //이 사망판정은 player클래스 자체적으로 한다.
   for(var loop in PLAYER_LIST){
     PLAYER_LIST[loop].run();
+    for(var outLoop in PLAYER_LIST){
+      PLAYER_LIST[loop].checkOtherPlayer(PLAYER_LIST[outLoop]);
+    }
     if(!(PLAYER_LIST[loop].live)){
       deadPlayer[PLAYER_LIST[loop].socketId] = PLAYER_LIST[loop];
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die');
@@ -346,6 +349,9 @@ function update(){
       SOCKET_LIST[loop].emit("corpsesData", corpseArr);
     } catch(e){
     //  SOCKET_LIST[loop].emit("update", , enemysArr, balls);
+    SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
+    SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
+    SOCKET_LIST[loop].emit("corpsesData", corpseArr);
     }
 
   }
@@ -361,6 +367,25 @@ function update(){
 // 충돌시 player의 피 깎음
 // 또한 그 공을 던진 사람의 점수를 올림.
 // 또 공을 받으면, 반동으로 뒤로 말려남.
+
+
+
+
+
+
+
+
+
+
+
+// function checkPlayerImpact(){
+//   for(var outLoop in PLAYER_LIST){
+//     for(var inLoop in PLAYER_LIST){
+//       if(PLAYER_LIST[outLoop].)
+//     }
+//   }
+// }
+
 function checkImpact() {
 
   //loop for imapactCheck players and balls
@@ -512,27 +537,4 @@ function corpseImpact(){
         }
       }
 }
-
-// function corpseImpact(){
-//   var corpseImpactHanddler = setInterval(() => {
-//     if(corpseArr.length != 0){
-//     try{
-//       for(var outLoop in PLAYER_LIST){
-//         for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
-//           corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
-//           corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
-//           if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
-//             PLAYER_LIST[outLoop].score += 10;
-//             corpseArr.splice(inLoop);
-//           }
-//         }
-//       }
-//     } catch(e){
-//
-//     }
-//     io.emit("corpsesData", corpseArr);
-//     }
-//   }, 100);
-// }
-
 }

@@ -465,6 +465,7 @@ var player;
 var players = [];
 var ballArr = [];
 var corpseArr = [];
+var death = false;
 
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
 var gameHanddler;
@@ -532,6 +533,11 @@ function startSocket(){
     this.balls = balls;
   })
 
+  socket.on("updateDeath", (enemys, balls) => {
+    players = enemys;
+    this.balls = balls;
+  })
+
 // 서버와 클라이언트의 시간측정을 위한 이벤트
   socket.on('timeCheck', (time) => {
     var clientTime = new Date().getTime();
@@ -540,8 +546,7 @@ function startSocket(){
 
 // 죽으면, 렌더링 루프를 종료함.
   socket.on("die", () => {
-
-  //  clearInterval(gameHanddler);
+    death = true;
   })
 
   socket.on("otherDie", (diePlayer) => {
@@ -715,24 +720,26 @@ function drawScoreBar(player){
 
 
 function drawMyPlayer(player){
-  ctx.save();
+  if(!death){
+    ctx.save();
 
-  ctx.shadowBlur = 20;
-  ctx.shadowColor = "#00e5bb";
-  ctx.font="15px Arial";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#00e5bb";
+    ctx.font="15px Arial";
 
-  ctx.fillStyle = "green";
-  // 피통을 그린다.
-  ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
-  ctx.fillStyle = "black";
-  // 점수를 그린다.
-  ctx.fillText(player.score, player.vLocationX - 52, player.locationY - 52);
-  //닉네임을 그린다.
-  ctx.fillText(player.name, player.vLocationX - 32, player.locationY - 52);
-  // 그림(해골)을 그린다.
-  ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
+    ctx.fillStyle = "green";
+    // 피통을 그린다.
+    ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
+    ctx.fillStyle = "black";
+    // 점수를 그린다.
+    ctx.fillText(player.score, player.vLocationX - 52, player.locationY - 52);
+    //닉네임을 그린다.
+    ctx.fillText(player.name, player.vLocationX - 32, player.locationY - 52);
+    // 그림(해골)을 그린다.
+    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
 
-  ctx.restore();
+    ctx.restore();
+  }
 }
 
 // 다른 플레이어들을 그리는 함수이다.
