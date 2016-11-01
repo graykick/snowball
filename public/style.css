@@ -1,0 +1,44 @@
+#loginCanvas {
+    position: absolute;
+    width: 850px;
+    height: 150px;
+    top: 0; bottom: 50%; left: 0; right: 0;
+    margin: auto;
+}
+
+#nick {
+    position: absolute;
+    width: 440px;
+    height: 50px;
+    top:10%; bottom: 0; left: 0; right: 0;
+    margin: auto;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid #E9EDE8;
+    font-size: 30px;
+    text-align: center;
+}
+
+#lastInfo {
+    position: absolute;
+    top: 40%; bottom: 0; left: 0; right: 0;
+    margin: auto;
+    font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+    font-size: 16px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+#play {
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    top:40%; bottom: 0; left: 0; right: 0;
+    margin: auto;
+    color: black;
+    background-color: #E9EDE8;
+    border: none;
+    border-radius: 32px;
+    font-size: 45px;
+    text-shadow: 1px 1px 0 #444;
+}

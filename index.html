@@ -2,53 +2,30 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <title>SNOW BALL</title>
     <script src="/socket.io/socket.io.js"></script>
-    <style>
-        #loginCanvas {
-            position: absolute;
-            top: 30%;
-            left: 25%;
-            width: 850px;
-            height: 150px;
-            margin: -100px 0 0 -100px;
-        }
-        
-        #nick {
-            position: fixed;
-            top: 50%;
-            left: 33%;
-            width: 440px;
-            height: 50px;
-            font-size: 30px;
-        }
-        
-        #play {
-            position: fixed;
-            top: 65%;
-            left: 47%;
-            color: black;
-            border: 2px solid #fff;
-            font-size: 45px;
-            border-radius: 4px;
-        }
-    </style>
+    <script src="public/style.css"></script>
 </head>
 
 <body style="background-image: url('public/image/background.jpg'); width: 95%; height: 685px; background-size: 100% 100%;">
-    <div id="loginDiv">
-        <canvas id="loginCanvas" width="850" height="150"></canvas>
-        <input id="nick" autofocus="autofocus" placeholder="Nickname" maxlength="24" onkeypress="return searchKeyPress(event);">
-        <input type='submit' id="play" value="Play" onclick="submitNick();"></input>
+<div id="loginDiv">
+    <canvas id="loginCanvas" width="850" height="150"></canvas>
+    <div id="lastInfo">
+        <span style="opacity: .45;">Your killed by </span><b>nick</b><br>
+        <span style="opacity: .45;">Your final length was </span><b>18</b></br>
     </div>
+    <input id="nick" type="text" autofocus="autofocus" placeholder="Nickname" maxlength="24"
+           onkeypress="return searchKeyPress(event);"/>
+    <input type='submit' id="play" value="Play" onclick="submitNick();"/>
+</div>
 
-    <div id="gameDiv" style="display:none;">
-        <canvas id="gameCanvas"></canvas>
-    </div>
+<div id="gameDiv" style="display:none;">
+    <canvas id="gameCanvas"></canvas>
+</div>
 
-    <script text="text/javascript" src="public/js/spriteSheet.js"></script>
-    <script text="text/javascript" src="public/js/client.js"></script>
+<script text="text/javascript" src="public/js/spriteSheet.js"></script>
+<script text="text/javascript" src="public/js/client.js"></script>
 </body>
 
 </html>
