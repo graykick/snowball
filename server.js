@@ -558,12 +558,14 @@ function corpseImpact(){
       if(corpseArr.length != 0){
         try{
           for(var outLoop in PLAYER_LIST){
+            console.log("amount = "+ corpseArr.length);
             for(var inLoop = 0; inLoop < corpseArr.length; inLoop++){
-              corpseArr[inLoop].locationX += (Math.random()*1- Math.random()*1);
+              corpseArr[inLoop].locationX += (Math.random()*5- Math.random()*5);
               corpseArr[inLoop].locationY += (Math.random()*1- Math.random()*1);
               if(Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)){
                 PLAYER_LIST[outLoop].score += 10;
-                corpseArr.splice(inLoop);
+                console.log("how many");
+                corpseArr.splice(inLoop,1);
               }
             }
           }
