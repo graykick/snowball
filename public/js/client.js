@@ -13,7 +13,7 @@ function searchKeyPress(e) { // trigger
 }
 function submitNick() {
   document.getElementById('loginDiv').style.display = 'none';
-  document.getElementById('gameAreaWrapper').style.display = 'inline-block';
+  document.getElementById('gameAreaWrapper').style.display = 'flex';
   startSocket();
 }
 
@@ -545,8 +545,32 @@ function startSocket(){
   })
 
 // 죽으면, 렌더링 루프를 종료함.
-  socket.on("die", () => {
+  socket.on("die", (information) => {
+    // name:SOCKET_LIST[PLAYER_LIST[loop].socketId].nickName,
+    // score:SOCKET_LIST[PLAYER_LIST[loop].socketId].score,
+    // level:SOCKET_LIST[PLAYER_LIST[loop].socketId].level,
+    // MAXHP:SOCKET_LIST[PLAYER_LIST[loop].socketId].maxHp,
+    // SPEED:SOCKET_LIST[PLAYER_LIST[loop].socketId].speed,
+    // THROWPOWER:SOCKET_LIST[PLAYER_LIST[loop].socketId].throwPower,
+    // MAXBALLCOUNT:SOCKET_LIST[PLAYER_LIST[loop].socketId].maxBallCount,
+    // BALLDEMAGE:SOCKET_LIST[PLAYER_LIST[loop].socketId].ballDemage,
+    // BALLHP:SOCKET_LIST[PLAYER_LIST[loop].socketId].ballHp,
+    // JUMPDEMAGE:SOCKET_LIST[PLAYER_LIST[loop].socketId].jumpDemage
+    document.getElementById("NAME").innerHTML = "name : "+information.name;
+    document.getElementById("SCORE").innerHTML = "score : "+information.score;
+    document.getElementById("LEVEL").innerHTML = "level : "+information.level;
+
+    document.getElementById("MAXHP").innerHTML = "maxhp : "+information.MAXHP;
+    document.getElementById("SPEED").innerHTML = "speed : "+information.SPEED;
+    document.getElementById("THROWPOWER").innerHTML = "throw power : "+information.THROWPOWER;
+    document.getElementById("MAXBALLCOUNT").innerHTML = "max ball count : "+information.MAXBALLCOUNT;
+    document.getElementById("BALLDEMAGE").innerHTML = "ball demage : "+information.BALLDEMAGE;
+    document.getElementById("BALLHP").innerHTML = "ball hp : "+information.BALLHP;
+    document.getElementById("JUMPDEMAGE").innerHTML = "jump demage : "+information.JUMPDEMAGE;
     death = true;
+
+
+    document.getElementById("dieWrapper").style.display="flex";
   })
 
   socket.on("otherDie", (diePlayer) => {
@@ -578,7 +602,6 @@ function startSocket(){
 //콜백의 인자는 사망플레이어의 영혼을 매개변수로 받아 전역변수에 널는다.
 //이러면 안될것 같다. 수정필요
   socket.on("corpsesData", (corpseArr) => {
-    console.log("igot");
     this.corpseArr = corpseArr;
   })
 
@@ -608,6 +631,7 @@ function startSocket(){
         drawBall(this.balls[loop]);
       }
       dieEffecte();
+      dieScreen();
       var nEnd = new Date().getTime();
   //    console.log("client loop time = "+(nEnd - nStart));
   });
@@ -870,13 +894,21 @@ function drawBall(ball){
      ctx.restore();
 }
 
+function dieScreen(){
+  if(death){
+    ctx.save();
+    ctx.globalAlpha=0.2;
+    ctx.fillStyle = "#d5deed";
+    ctx.fillRect(0,0,canvas.width, canvas.height);
+    ctx.restore();
+  }
+}
+
 function dieEffecte(){
   var nStart = new Date().getTime();
     try{
       if(corpseArr.length != 0){
-        console.log("in if");
         try{
-          console.log("in try");
            for(var loop = 0; loop < corpseArr.length; loop++){
             ctx.save();
             ctx.shadowBlur = 20;
@@ -901,5 +933,4 @@ function dieEffecte(){
 
    }
    var nEnd =  new Date().getTime();
-   console.log("die effect time = "+(nEnd - nStart));
  }

@@ -43,15 +43,100 @@
         height:20px;
         background:blue;
       }
+
+      #container{
+        /*display: -webkit-flex;
+        display: flex;*/
+        /*-webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;*/
+      }
+
       #statContainer {
         z-index: 300000;
         position: absolute;
         top:350px; left:10px;
       }
+      #dieWrapper {
+
+        display: -webkit-flex;
+          display: flex;
+          -webkit-align-items: center;
+          align-items: center;
+  -webkit-justify-content: center;
+          justify-content: center;
+
+        border-style: solid;
+        border-radius: 10px;
+        position: absolute;
+        top:0px;
+
+          height:400px;
+
+          top:30px;
+          margin: auto;
+          padding: 50px;
+
+          left: 50%;
+          transform: translateX(-50%);
+          color: white;
+          text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+          font-size: 150%;
+      }
+
+      #stat{
+        -webkit-flex: 1;
+          flex: 1;
+         width: 200px;
+
+      }
+      #info{
+         width: 200px;
+      }
+
+      .DEATH{
+        /*display: none;*/
+      }
 
       li{
         margin: 10px 0;
       }
+
+      @keyframes slidein {
+  from {
+    margin-left: 100%;
+    width: 10%;
+  }
+
+  to {
+    margin-left: 0%;
+    width: 100%;
+  }
+}
+
+
+
+.button {
+  padding: 15px 25px;
+  font-size: 24px;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 9px #999;
+}
+
+.button:hover {background-color: #3e8e41}
+
+.button:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
 
 
   </style>
@@ -61,7 +146,7 @@
   <div id="loginDiv">
         <canvas id="loginCanvas" width="850" height="150"></canvas>
         <input id="nick" autofocus="autofocus" placeholder="Nickname" maxlength="24" onkeypress="return searchKeyPress(event);">
-        <input type='submit' id="play" value="Play" onclick="submitNick();"></input>
+        <input class="button" type='submit' id="play" value="Play" onclick="submitNick();"></input>
     </div>
 
 
@@ -86,9 +171,39 @@
         <li><p class ="upgrade" id = "ballHp" onclick="upgradeEmit(id)" style="background : pink;">Ball hp</p></li>
         <li><p class ="upgrade" id = "jumpDemage" onclick="upgradeEmit(id)"style="background : skyblue;">Jump demage</p></li>
       </ul>
+    </div>
+    <div id="dieWrapper" style="display:none;" >
+
+      <ul id="info"  class="DEATH" style="list-style-type:none;">
+        <h2 class="DEATH">
+          You are Dead
+        </h2>
+        <li><p class="DEATH" id ="NAME">
+          adasd
+        </p></li>
+        <li><p class="DEATH" id ="SCORE">
+        </p></li>
+        <li><p class="DEATH" id ="LEVEL">
+        </p></li>
+      </ul>
+      <ul id="stat" class="DEATH" style="list-style-type:none;">
+        <li><p class="DEATH" id ="MAXHP">
+        </p></li>
+        <li><p class="DEATH" id ="SPEED">
+        </p></li>
+        <li><p class="DEATH" id ="THROWPOWER">
+        </p></li>
+        <li><p class="DEATH" id ="MAXBALLCOUNT">
+        </p></li>
+        <li><p class="DEATH" id ="BALLDEMAGE">
+        </p></li>
+        <li><p class="DEATH" id ="BALLHP">
+        </p></li>
+        <li><p class="DEATH" id ="JUMPDEMAGE">
+        </p></li>
+      </ul>
 
     </div>
-
   </div>
 </div>
 

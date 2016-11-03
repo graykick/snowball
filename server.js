@@ -268,7 +268,20 @@ function gameLoop(){
     }
     if(!(PLAYER_LIST[loop].live)){
       deadPlayer[PLAYER_LIST[loop].socketId] = PLAYER_LIST[loop];
-      SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die');
+      var dieInfo = {
+        name:PLAYER_LIST[loop].nickName,
+        score:PLAYER_LIST[loop].score,
+        level:PLAYER_LIST[loop].level,
+        MAXHP:PLAYER_LIST[loop].maxHp,
+        SPEED:PLAYER_LIST[loop].speed,
+        THROWPOWER:PLAYER_LIST[loop].throwPower,
+        MAXBALLCOUNT:PLAYER_LIST[loop].maxBallCount,
+        BALLDEMAGE:PLAYER_LIST[loop].throwDemage,
+        BALLHP:PLAYER_LIST[loop].ballHp,
+        JUMPDEMAGE:PLAYER_LIST[loop].jumpDemage
+      };
+      SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die',dieInfo);
+
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('otherDie', makePlayerObject(PLAYER_LIST[loop]), makeDeathBall(PLAYER_LIST[loop]));
       delete PLAYER_LIST[loop];
     }
@@ -350,7 +363,7 @@ function update(){
     } catch(e){
       //catch문에 집입하는 경우는, 플레이어가 사망하여, 삭제 되었는데, 그 플레이어에 접근하는경우
       //사망으로 판정하여, 죽은 사람에게만, updateDeath를 보냄.
-      SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
+    //  SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
       SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
       SOCKET_LIST[loop].emit("corpsesData", corpseArr);
     }
