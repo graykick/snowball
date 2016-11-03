@@ -82,7 +82,7 @@
           transform: translateX(-50%);
           color: white;
           text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
-          font-size: 150%;
+          font-size: 130%;
       }
 
       #stat{
@@ -94,6 +94,19 @@
       #info{
          width: 200px;
       }
+
+      #revival{
+        animation: blink 2.5s linear infinite;
+      }
+
+      @keyframes blink {
+    0% { color: red; }
+    33% { color: yellow; }
+    66% { color: blue; }
+    100% { color: green; }
+/*    from { background-color: red;}
+    to {background-color: green;}  */
+}
 
       .DEATH{
         /*display: none;*/
@@ -185,6 +198,9 @@
         </p></li>
         <li><p class="DEATH" id ="LEVEL">
         </p></li>
+        <li><p id="revival" onclick="revival();">
+          &lt;press to revival&gt;
+        </p></li>
       </ul>
       <ul id="stat" class="DEATH" style="list-style-type:none;">
         <li><p class="DEATH" id ="MAXHP">
@@ -202,7 +218,6 @@
         <li><p class="DEATH" id ="JUMPDEMAGE">
         </p></li>
       </ul>
-
     </div>
   </div>
 </div>

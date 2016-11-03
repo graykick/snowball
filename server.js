@@ -208,6 +208,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on("upgrade", (abilyty) => {
+    console.log("i got skill");
     player.skillPoint--;
     if(abilyty == "maxHp"){
       player.maxHp += 10;
@@ -224,6 +225,22 @@ io.sockets.on('connection', function (socket) {
     } else if(abilyty == "jumpDemage") {
       player.jumpDemage += 10;
     }
+  })
+
+  socket.on("revival", () => {
+    console.log("wow awsome revial! "+player.hp+", level "+player.level);
+    PLAYER_LIST[socket.id] = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
+    PLAYER_LIST[socket.id].score = player.score/2;
+    PLAYER_LIST[socket.id].nickName = player.nickName;
+
+    PLAYER_LIST[socket.id].id = socket;
+    PLAYER_LIST[socket.id].socketId = socket.id;
+    PLAYER_LIST[socket.id].socket = socket;
+
+    player = PLAYER_LIST[socket.id];
+  //  player.checkScore();
+
+    socket.emit("revivalOK");
   })
 
 
@@ -263,6 +280,10 @@ function gameLoop(){
   //이 사망판정은 player클래스 자체적으로 한다.
   for(var loop in PLAYER_LIST){
     PLAYER_LIST[loop].run();
+    if(PLAYER_LIST[loop].skillPoint >= 1){
+      console.log("tt tt tt tt tt");
+      levelUp(loop);
+    }
     for(var outLoop in PLAYER_LIST){
       PLAYER_LIST[loop].checkOtherPlayer(PLAYER_LIST[outLoop]);
     }
@@ -422,9 +443,9 @@ function checkImpact() {
           PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
 
           //레벨업확인
-          if(PLAYER_LIST[ballArr[inLoop].ownerSocketId].checkScore()){
-            levelUp(ballArr[inLoop].ownerSocketId);
-          }
+          // if(PLAYER_LIST[ballArr[inLoop].ownerSocketId].checkScore()){
+          //   levelUp(ballArr[inLoop].ownerSocketId);
+          // }
 
 
           //공에 맞았음으로 반동을 적용한다.
@@ -446,6 +467,7 @@ function checkImpact() {
 }
 
 function levelUp(playerId){
+  console.log("i am called");
   //정보 전송 목록
   // 1. Max hp
 	// 2. Speed
@@ -464,9 +486,8 @@ function levelUp(playerId){
     jumpDemage : PLAYER_LIST[playerId].jumpDemage,
     skillPoint : PLAYER_LIST[playerId].skillPoint
   }
-  if(PLAYER_LIST[playerId].skillPoint >= 1){
+
     SOCKET_LIST[playerId].emit("levelUp", playerStat);
-  }
 }
 
 //아직 수정중이다.

@@ -470,10 +470,8 @@ var death = false;
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
 var gameHanddler;
 
-var skillPoint=0;
-
 function upgradeEmit(abilyty){
-  this.skillPoint--;
+  console.log("semt");
   console.log("ss"+skillPoint);
   socket.emit("upgrade", abilyty);
   document.getElementById('statContainer').style.display = 'none';
@@ -577,25 +575,30 @@ function startSocket(){
 
   })
 
+  socket.on("revivalOK", () => {
+    console.log("iam revival");
+    document.getElementById("dieWrapper").style.display = "none";
+    document.getElementById("upgradeForm").style.display = "none";
+    death = false;
+  })
+
   socket.on("levelUp", (playerStat) => {
     //레벌업 창 띄우고, 선택한것 emit하기
     console.log("in on "+this.skillPoint);
     this.skillPoint = playerStat.skillPoint;
     console.log("in on "+this.skillPoint+", "+playerStat.skillPoint);
-    var handdler = setInterval(function () {
-      document.getElementById("maxHp").innerHTML += playerStat.maxHp;
-      document.getElementById("speed").innerHTML += playerStat.speed;
-      document.getElementById("throwPower").innerHTML += playerStat.throwPower;
-      document.getElementById("maxBallCount").innerHTML += playerStat.maxBallCount;
-      document.getElementById("balldemage").innerHTML += playerStat.ballDemage;
-      document.getElementById("ballHp").innerHTML += playerStat.ballHp;
-      document.getElementById("jumpDemage").innerHTML += playerStat.jumpDemage;
+
+      document.getElementById("maxHp").innerHTML = "Max Hp : " + playerStat.maxHp;
+      document.getElementById("speed").innerHTML = "Speed : " + playerStat.speed;
+      document.getElementById("throwPower").innerHTML = "Throw Power : " + playerStat.throwPower;
+      document.getElementById("maxBallCount").innerHTML = "Max Ball Count : " + playerStat.maxBallCount;
+      document.getElementById("balldemage").innerHTML = "Ball Demage : " + playerStat.ballDemage;
+      document.getElementById("ballHp").innerHTML = "Ball Hp : " + playerStat.ballHp;
+      document.getElementById("jumpDemage").innerHTML = "Jump Demage : " + playerStat.jumpDemage;
 
       document.getElementById('statContainer').style.display = 'inline-block';
-      if(this.skillPoint == 1){
-        clearInterval(handdler);
-      }
-    }, 100);
+      document.getElementById("upgradeForm").style.display = "inline-block";
+
   })
 
 //다른 플레이어가 사망하면, 이 이벤트가 발생한다.
@@ -642,7 +645,7 @@ function startSocket(){
 // function gameStart(){
 //   console.log("in game start");
 //   startEvent();
-//   gameHanddler = setInterval(() => {
+//   gameHanddler = setInterval(() le=> {
 //     drawMap(player);
 //     drawMyPlayer(player);
 //     for(var loop = 0; loop < players.length; loop++){
@@ -933,4 +936,8 @@ function dieEffecte(){
 
    }
    var nEnd =  new Date().getTime();
+ }
+
+ function revival() {
+   socket.emit("revival");
  }
