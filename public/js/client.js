@@ -547,12 +547,12 @@ function startSocket(){
   socket.on("update", (me, enemys, balls) => {
     player = me;
     players = enemys;
-    this.balls = balls;
+    ballArr = balls;
   })
 
   socket.on("updateDeath", (enemys, balls) => {
     players = enemys;
-    this.balls = balls;
+    ballArr = balls;
   })
 
 // 서버와 클라이언트의 시간측정을 위한 이벤트
@@ -650,8 +650,10 @@ function startSocket(){
       drawScoreBar(player);
 
       //loop for draw ball
-      for(var loop = 0; loop < this.balls.length; loop++){
-        drawBall(this.balls[loop]);
+
+
+      for(var loop = 0; loop < ballArr.length; loop++){
+        drawBall(ballArr[loop]);
       }
       dieEffecte();
       dieScreen();
