@@ -15,7 +15,10 @@ function submitNick() {
   document.getElementById('loginDiv').style.display = 'none';
   document.getElementById('gameAreaWrapper').style.display = 'flex';
   startSocket();
+  cancelAniFrame(introAnimationID);
 }
+
+var introAnimationID;
 
 window.requestAnimFrame = (function (callback) {
   return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
@@ -23,6 +26,16 @@ window.requestAnimFrame = (function (callback) {
       window.setTimeout(callback, 1000 / 60);
     };
 })();
+
+window.cancelAniFrame = (function () {
+     return window.cancelAnimationFrame ||
+             window.webkitCancelAnimationFrame ||
+             window.mozCancelAnimationFrame ||
+             window.oCancelAnimationFrame ||
+             function (id) {
+                 window.clearTimeout(id);
+             };
+ })();
 
 function initballs_intro() {
   balls_intro = [];
@@ -325,7 +338,7 @@ function animate(canvas, balls_intro, lastTime, mousePos) {
   }
 
   // request new frame
-  requestAnimFrame(function () {
+  introAnimationID =  requestAnimFrame(function () {
     animate(loginCanvas, balls_intro, lastTime, mousePos);
   });
 }
@@ -353,6 +366,12 @@ loginCanvas.addEventListener('mouseout', function (evt) {
   mousePos.y = 9999;
 });
 animate(loginCanvas, balls_intro, time, mousePos);
+
+
+
+
+
+
 
 
 // 마우스위 좌표정보를 담는 변수
@@ -618,8 +637,9 @@ function startSocket(){
   function gameStart(){
 
     startEvent();
-    gameHanddler = setInterval(() => {
-      var nStart = new Date().getTime();
+
+    animationStart();
+    function animationStart() {
       drawMap(player);
 
       //loop for draw player
@@ -636,9 +656,31 @@ function startSocket(){
       dieEffecte();
       dieScreen();
       SnowDraw();
-      var nEnd = new Date().getTime();
-  //    console.log("client loop time = "+(nEnd - nStart));
-},10);
+      requestAnimFrame(animationStart);
+  }
+
+//
+//     gameHanddler = setInterval(() => {
+//       var nStart = new Date().getTime();
+//       drawMap(player);
+//
+//       //loop for draw player
+//       for(var loop = 0; loop < players.length; loop++){
+//         drawPlayer(players[loop]);
+//       }
+//       drawMyPlayer(player);
+//       drawScoreBar(player);
+//
+//       //loop for draw ball
+//       for(var loop = 0; loop < this.balls.length; loop++){
+//         drawBall(this.balls[loop]);
+//       }
+//       dieEffecte();
+//       dieScreen();
+//       SnowDraw();
+//       var nEnd = new Date().getTime();
+//   //    console.log("client loop time = "+(nEnd - nStart));
+// },10);
 
   }
 }
