@@ -119,6 +119,7 @@ var corpseArr = [];
 var deadPlayer = {};
 var Aplayers = {length : 0};
 var Bplayers = {length : 0};
+var topPlayers = [];
 
 // Atower range 3578 ~ 3609
 var Atower = new Tower(3578, 3609);
@@ -307,6 +308,7 @@ function start(){
     setInterval(gameLoop, 1000/60);
     setInterval(update, 10);
     setInterval(corpseImpact, 500);
+    setInterval(leaderBoard, 1000);
   }
 }
 
@@ -389,6 +391,7 @@ function gameLoop(){
   checkTowerImpact();
   checkBallImpact();
   checkImpact();
+  leaderBoard();
 //  if(this.corpseArr.length != 0){
   //}
 
@@ -431,6 +434,7 @@ function update(){
       SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
       SOCKET_LIST[loop].emit("corpsesData", corpseArr);
       SOCKET_LIST[loop].emit("tower", [Atower.hp, Btower.hp]);
+      SOCKET_LIST[loop].emit("topPlayers", topPlayers);
     } catch(e){
       //catch문에 집입하는 경우는, 플레이어가 사망하여, 삭제 되었는데, 그 플레이어에 접근하는경우
       //사망으로 판정하여, 죽은 사람에게만, updateDeath를 보냄.
@@ -674,9 +678,27 @@ function checkTowerImpact(){
   }
 }
 
+function leaderBoard(){
+  var playerArr = [];
+  var topUsers = [];
+  for(var loop in PLAYER_LIST){
+    playerArr.push(PLAYER_LIST[loop]);
+  }
+  playerArr.sort( function(a, b) { return b.score - a.score; });
+
+  for (var i = 0; i < Math.min(10, playerArr.length); i++) {
+    topUsers.push({
+      score: playerArr[i].score,
+      name: playerArr[i].nickName
+    });
+  }
+
+  topPlayers = topUsers;
+}
+
 function towerCheck(){
   if(Atower.hp >= 0){
-    // server 507 수정
+
   } else if(Btower.hp >= 0){
 
   }

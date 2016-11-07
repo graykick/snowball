@@ -486,6 +486,7 @@ var ballArr = [];
 var corpseArr = [];
 var death = false;
 var towers = [];
+var topPlayers = [];
 
 
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
@@ -633,6 +634,10 @@ function startSocket(){
     this.corpseArr = corpseArr;
   })
 
+  socket.on("topPlayers", (topArr) => {
+    topPlayers = topArr;
+  })
+
 
 
 // 게임루프이다. 서버에서 게임을 시작하라는 명령을 받으면 실행 되는데,
@@ -665,6 +670,8 @@ function startSocket(){
       dieScreen();
       drawTower();
       drawScore();
+      drawLeaderBoard();
+      SnowDraw();
       requestAnimFrame(animationStart);
   }
 
@@ -915,11 +922,7 @@ function drawMap(me){
   //이해하지 않아도 된다.
   else if(me.locationX+670>3200){ // if right max
     mapState = "right";
-    //shotOffsetX = (me.locationX) - (canvas.width/2);
     shotOffsetX = mapWidth - canvas.width;
-
-    //       ctx.arc(ball.locationX -mapWidth + canvas.width, ball.locationY, 10, 0, Math.PI * 2);
-
     ctx.drawImage(Img.map, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
   }
   //자신이 중간에 있는 경우이다.
@@ -928,7 +931,6 @@ function drawMap(me){
   else { // middle
     mapState = "middle";
     shotOffsetX = (me.locationX) - (canvas.width/2);
-    console.log("offset = "+shotOffsetX);
     ctx.drawImage(Img.map, me.locationX-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
   }
 }
@@ -1033,6 +1035,23 @@ function dieEffecte(){
    ctx.fillText(Math.floor(towers[0])+" : "+Math.floor(towers[1]), canvas.width/2 - ctx.measureText(Math.floor(towers[0])+" : "+Math.floor(towers[1])).width/2, 50);
  }
 
+ function drawLeaderBoard(){
+   ctx.save();
+   ctx.globalAlpha = 0.5;
+   ctx.fillStyle = "gray";
+   ctx.fillRect(10,10,150,220);
+   ctx.fillStyle = "white";
+   ctx.strokeStyle = "black";
+   ctx.font="20px Arial";
+   ctx.globalAlpha = 1;
+
+   for(var loop = 0; loop < topPlayers.length; loop++){
+     ctx.strokeText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
+     ctx.fillText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
+   }
+   ctx.restore();
+ }
+
  function revival() {
    socket.emit("revival");
  }
@@ -1054,4 +1073,65 @@ for(var i = 0; i < mp; i++)
     r: Math.random()*4+1, //radius
     d: Math.random()*mp //density
   })
+}
+
+
+//Lets draw the flakes
+function SnowDraw()
+{
+//  ctx.clearRect(0, 0, W, H);
+ctx.save();
+ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+ctx.beginPath();
+for(var i = 0; i < mp; i++)
+{
+  var p = particles[i];
+  ctx.moveTo(p.x, p.y);
+  ctx.arc(p.x, p.y, p.r, 0, Math.PI*2, true);
+}
+ctx.fill();
+ctx.restore();
+snowUpdate();
+}
+
+//Function to move the snowflakes
+//angle will be an ongoing incremental flag. Sin and Cos functions will be applied to it to create vertical and horizontal movements of the flakes
+var angle = 0;
+function snowUpdate()
+{
+angle += 0.01;
+for(var i = 0; i < mp; i++)
+{
+  var p = particles[i];
+  //Updating X and Y coordinates
+  //We will add 1 to the cos function to prevent negative values which will lead flakes to move upwards
+  //Every particle has its own density which can be used to make the downward movement different for each flake
+  //Lets make it more random by adding in the radius
+  p.y += Math.cos(angle+p.d) + 1 + p.r/2;
+  p.x += Math.sin(angle) * 2;
+
+  //Sending flakes back from the top when it exits
+  //Lets make it a bit more organic and let flakes enter from the left and right also.
+  if(p.x > W+5 || p.x < -5 || p.y > H)
+  {
+    if(i%3 > 0) //66.67% of the flakes
+    {
+      particles[i] = {x: Math.random()*W, y: -2, r: p.r, d: p.d};
+    }
+    else
+    {
+      //If the flake is exitting from the right
+      if(Math.sin(angle) > 0)
+      {
+        //Enter from the left
+        particles[i] = {x: -2, y: Math.random()*H, r: p.r, d: p.d};
+      }
+      else
+      {
+        //Enter from the right
+        particles[i] = {x: W+2, y: Math.random()*H, r: p.r, d: p.d};
+      }
+    }
+  }
+}
 }
