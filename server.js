@@ -9,7 +9,8 @@ var
     Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
-    Object = require('./lib/object.js');
+    Tower = require('./lib/tower.js'),
+    Object = require('./lib/object.js'),
     cluster = require('cluster');
     var sio = require('socket.io');
     var  PORT = 3002;
@@ -71,7 +72,8 @@ function makePlayerObject(player){
     score: player.score,
     name : player.nickName,
     nextLevelScore : player.nextLevelScore,
-    level : player.level
+    level : player.level,
+    team : player.team
   };
 
   return ObjPlayer;
@@ -115,6 +117,14 @@ var ballArr = [];
 var players = [];
 var corpseArr = [];
 var deadPlayer = {};
+var Aplayers = {length : 0};
+var Bplayers = {length : 0};
+
+// Atower range 3578 ~ 3609
+var Atower = new Tower(3578, 3609);
+// B tower :  3612 ~ 3643
+var Btower = new Tower(3412, 3643);
+
 
 //서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag이다.
 //이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성된다.
@@ -130,6 +140,30 @@ io.sockets.on('connection', function (socket) {
   SOCKET_LIST[socket.id] = socket;
   player.socket = socket;
   players.push(makePlayerObject(player));
+
+  console.log("A and B = "+Aplayers.length+", "+Bplayers.length);
+  if(!startFlag){
+    if(Aplayers.length <= Bplayers.length){
+      player.location.x = Math.random()*500+100;
+      player.team = "A";
+      console.log("A");
+      Aplayers[socket.id] = player;
+      Aplayers.length += 1;
+    } else if (Aplayers.length > Bplayers.length) {
+      player.location.x = Math.random()*500+2600;
+      player.team = "B";
+      console.log("B");
+
+      Bplayers[socket.id] = player;
+      Bplayers.length += 1;
+    }
+  } else if(startFlag){
+    player.location.x = Math.random()*100+100;
+    player.team = "A";
+    console.log("first A");
+    Aplayers[socket.id] = player;
+    Aplayers.length += 1;
+  }
 
 //큰라이언트 측에 소켓연결이 성공적이라는 emit을 준다. 이 emit을 받으면, 클라이언트는 닉네임을 보내온다.
   socket.emit("connected");
@@ -205,6 +239,13 @@ io.sockets.on('connection', function (socket) {
   socket.on('disconnect', function () {
       delete SOCKET_LIST[socket.id];
       delete PLAYER_LIST[socket.id];
+      if(player.team == "A"){
+        delete Aplayers[socket.id];
+        Aplayers.length -= 1;
+      } else if(player.team = "B") {
+        delete Bplayers[socket.id];
+        Bplayers.length -= 1;
+      }
   });
 
   socket.on("upgrade", (abilyty) => {
@@ -232,6 +273,8 @@ io.sockets.on('connection', function (socket) {
     PLAYER_LIST[socket.id] = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
     PLAYER_LIST[socket.id].score = player.score/2;
     PLAYER_LIST[socket.id].nickName = player.nickName;
+    PLAYER_LIST[socket.id].team = player.team;
+
 
     PLAYER_LIST[socket.id].id = socket;
     PLAYER_LIST[socket.id].socketId = socket.id;
@@ -289,6 +332,7 @@ function gameLoop(){
     }
     if(!(PLAYER_LIST[loop].live)){
       deadPlayer[PLAYER_LIST[loop].socketId] = PLAYER_LIST[loop];
+
       var dieInfo = {
         name:PLAYER_LIST[loop].nickName,
         score:PLAYER_LIST[loop].score,
@@ -304,6 +348,10 @@ function gameLoop(){
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die',dieInfo);
 
       SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('otherDie', makePlayerObject(PLAYER_LIST[loop]), makeDeathBall(PLAYER_LIST[loop]));
+      if(PLAYER_LIST[loop].team == "A"){
+        delete Aplayers[PLAYER_LIST[loop].socketId];
+        Aplayers.length -= 1;
+      }
       delete PLAYER_LIST[loop];
     }
   }
@@ -338,6 +386,7 @@ function gameLoop(){
   //checkImpact함수는 공과 공의충돌을 검사하기위한 함수이다.
   // 공끼리 부딛히면 삭제한다.
   // 그러나 아직 작동하지 않는다.
+  checkTowerImpact();
   checkBallImpact();
   checkImpact();
 //  if(this.corpseArr.length != 0){
@@ -381,12 +430,27 @@ function update(){
       SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
       SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
       SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+      SOCKET_LIST[loop].emit("tower", [Atower.hp, Btower.hp]);
     } catch(e){
       //catch문에 집입하는 경우는, 플레이어가 사망하여, 삭제 되었는데, 그 플레이어에 접근하는경우
       //사망으로 판정하여, 죽은 사람에게만, updateDeath를 보냄.
     //  SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
+    try {
+
+    } catch (e) {
       SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
+
+    } finally {
+
+    }
+    try {
       SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+
+    } catch (e) {
+
+    } finally {
+
+    }
     }
 
   }
@@ -433,7 +497,7 @@ function checkImpact() {
       //(ballArr[inLoop].ownerId != PLAYER_LIST[outLoop].id)
       //를 사용하여 검사함.
 
-      if ((ballArr[inLoop].ownerId != PLAYER_LIST[outLoop].id) && Vector.subStatic(PLAYER_LIST[outLoop].location, ballArr[inLoop].location).mag() < PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass) {
+      if ((ballArr[inLoop].team != PLAYER_LIST[outLoop].team) && Vector.subStatic(PLAYER_LIST[outLoop].location, ballArr[inLoop].location).mag() < PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass) {
           var radius = PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass;
 
           //체력 감소
@@ -497,7 +561,7 @@ function checkBallImpact(){
   for(var outLoop = 0; outLoop < outLoopLength; outLoop++){
     for(var inLoop = 0; inLoop < outLoopLength; inLoop++){
       try{
-        if(ballArr[outLoop].ownerSocketId != ballArr[inLoop].ownerSocketId && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
+        if(ballArr[outLoop].team != ballArr[inLoop].team && Vector.subStatic(ballArr[outLoop].location, ballArr[inLoop].location).mag() < ballArr[outLoop].mass + ballArr[inLoop].mass){
           PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
           PLAYER_LIST[ballArr[outLoop].ownerSocketId].nowBallCount--;
 
@@ -574,4 +638,32 @@ function corpseImpact(){
         }
       }
 }
+
+function checkTowerImpact(){
+  for(var loop = 0; loop < ballArr.length; loop++){
+    if(ballArr[loop].nowPosition >= Atower.min && ballArr[loop].nowPosition <= Atower.max){
+      if(ballArr[loop].team == "A" && Atower.hp < 5000){
+        Atower.hp += 0.5;
+        console.log("Atower hilled");
+      } else if(ballArr[loop].team != "A") {
+        Atower.hp -= ballArr[loop].demage;
+        console.log("Atower clashed");
+      }
+      PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount --;
+      ballArr.splice(loop,1);
+
+    } else if(ballArr[loop].nowPosition >= Btower.min && ballArr[loop].nowPosition <= Btower.max) {
+      if(ballArr[loop].team == "B" && Btower.hp < 5000){
+        Btower.hp += 0.5;
+        console.log("Atower hilled");
+      } else if(ballArr[loop].team != "B") {
+        Btower.hp -= ballArr[loop].demage;
+        console.log("Btower clashed");
+      }
+      PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount --;
+      ballArr.splice(loop,1);
+    }
+  }
+}
+
 }

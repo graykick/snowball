@@ -485,6 +485,8 @@ var players = [];
 var ballArr = [];
 var corpseArr = [];
 var death = false;
+var towers = [];
+
 
 //렌더딩 루프의 핸들러 이다. 죽으면 정지하기 위해 사용된다.
 var gameHanddler;
@@ -620,6 +622,10 @@ function startSocket(){
 
   })
 
+  socket.on("tower", (tower) => {
+    towers = tower;
+  })
+
 //다른 플레이어가 사망하면, 이 이벤트가 발생한다.
 //콜백의 인자는 사망플레이어의 영혼을 매개변수로 받아 전역변수에 널는다.
 //이러면 안될것 같다. 수정필요
@@ -657,7 +663,8 @@ function startSocket(){
       }
       dieEffecte();
       dieScreen();
-
+      drawTower();
+      drawScore();
       requestAnimFrame(animationStart);
   }
 
@@ -832,7 +839,11 @@ function drawPlayer(player){
     ctx.save();
 
     ctx.shadowBlur = 20;
+
     ctx.shadowColor = "red";
+    if(player.team == this.player.team){
+      ctx.shadowColor = "blue";
+    }
     ctx.font="15px Arial";
 
 
@@ -840,6 +851,9 @@ function drawPlayer(player){
   // 그냥 서버에서 받은 데로만 그리면 된다.
     if(this.player.locationX-670<0){ // if left max
       ctx.fillStyle = "red";
+      if(player.team == this.player.team){
+        ctx.fillStyle = "blue";
+      }
       ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
       ctx.fillStyle = "black";
       ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
@@ -852,6 +866,9 @@ function drawPlayer(player){
      // 이해할 필요는 없다.
       else if(this.player.locationX+670>3200){ // if right max
        ctx.fillStyle = "red";
+       if(player.team == this.player.team){
+         ctx.fillStyle = "blue";
+       }
        ctx.fillRect(player.locationX- 42 -mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
        ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
@@ -865,6 +882,9 @@ function drawPlayer(player){
      // 이해하지 않아도 된다.
      else { // middle
        ctx.fillStyle = "red";
+       if(player.team == this.player.team){
+         ctx.fillStyle = "blue";
+       }
        ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
        ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
@@ -895,6 +915,8 @@ function drawMap(me){
   //이해하지 않아도 된다.
   else if(me.locationX+670>3200){ // if right max
     mapState = "right";
+    shotOffsetX = (me.locationX) - (canvas.width/2);
+
     ctx.drawImage(Img.map, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
   }
   //자신이 중간에 있는 경우이다.
@@ -980,6 +1002,32 @@ function dieEffecte(){
 
    }
    var nEnd =  new Date().getTime();
+ }
+
+ function drawTower(){
+   ctx.save();
+   ctx.font="15px Arial";
+   if(this.player.locationX-670<0){ // if left max
+     ctx.fillStyle = "black";
+     ctx.fillText(towers[0], 10, 300);
+
+    }
+    // 자신이 오른쪽에 있는경우
+    else if(this.player.locationX+670>3200){ // if right max
+      ctx.fillStyle = "black";
+      ///ctx.fillRect(3187,300, 10, towers[1]);
+      ctx.fillText(towers[1], 1300,300);
+    }
+    ctx.restore();
+ }
+
+ function drawScore(){
+   console.log("ff");
+   ctx.fillStyle = "white";
+   ctx.strokeStyle = "black";
+   ctx.font="40px Arial";
+   ctx.strokeText(Math.floor(towers[0])+" : "+Math.floor(towers[1]), canvas.width/2 - ctx.measureText(Math.floor(towers[0])+" : "+Math.floor(towers[1])).width/2, 50);
+   ctx.fillText(Math.floor(towers[0])+" : "+Math.floor(towers[1]), canvas.width/2 - ctx.measureText(Math.floor(towers[0])+" : "+Math.floor(towers[1])).width/2, 50);
  }
 
  function revival() {
