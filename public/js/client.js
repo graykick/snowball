@@ -915,7 +915,10 @@ function drawMap(me){
   //이해하지 않아도 된다.
   else if(me.locationX+670>3200){ // if right max
     mapState = "right";
-    shotOffsetX = (me.locationX) - (canvas.width/2);
+    //shotOffsetX = (me.locationX) - (canvas.width/2);
+    shotOffsetX = mapWidth - canvas.width;
+
+    //       ctx.arc(ball.locationX -mapWidth + canvas.width, ball.locationY, 10, 0, Math.PI * 2);
 
     ctx.drawImage(Img.map, 3200-canvas.width, 0, 1340, 640, 0,0, canvas.width, canvas.height);
   }
@@ -925,6 +928,7 @@ function drawMap(me){
   else { // middle
     mapState = "middle";
     shotOffsetX = (me.locationX) - (canvas.width/2);
+    console.log("offset = "+shotOffsetX);
     ctx.drawImage(Img.map, me.locationX-670, 0, 1340, 640, 0,0, canvas.width, canvas.height);
   }
 }
@@ -1022,7 +1026,6 @@ function dieEffecte(){
  }
 
  function drawScore(){
-   console.log("ff");
    ctx.fillStyle = "white";
    ctx.strokeStyle = "black";
    ctx.font="40px Arial";

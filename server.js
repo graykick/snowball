@@ -435,22 +435,14 @@ function update(){
       //catch문에 집입하는 경우는, 플레이어가 사망하여, 삭제 되었는데, 그 플레이어에 접근하는경우
       //사망으로 판정하여, 죽은 사람에게만, updateDeath를 보냄.
     //  SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
-    try {
+      try {
+        SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
+        SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+      } catch (e) {
 
-    } catch (e) {
-      SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
 
-    } finally {
+      }
 
-    }
-    try {
-      SOCKET_LIST[loop].emit("corpsesData", corpseArr);
-
-    } catch (e) {
-
-    } finally {
-
-    }
     }
 
   }
@@ -504,7 +496,14 @@ function checkImpact() {
           PLAYER_LIST[outLoop].hp -= ballArr[inLoop].demage;
 
           // 점수 증가
-          PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
+          try {
+            PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
+
+          } catch (e) {
+
+          } finally {
+
+          }
 
           //레벨업확인
           // if(PLAYER_LIST[ballArr[inLoop].ownerSocketId].checkScore()){
@@ -520,9 +519,16 @@ function checkImpact() {
           }
 
           // 맞은 공을  배열에서 삭제한다.
-         PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
-          ballArr.splice(inLoop, 1);
-          continue;
+          try {
+            PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
+             ballArr.splice(inLoop, 1);
+             continue;
+          } catch (e) {
+
+          } finally {
+
+          }
+
       }
     }
   }
@@ -648,6 +654,7 @@ function checkTowerImpact(){
       } else if(ballArr[loop].team != "A") {
         Atower.hp -= ballArr[loop].demage;
         console.log("Atower clashed");
+        PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
       }
       PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount --;
       ballArr.splice(loop,1);
@@ -659,11 +666,21 @@ function checkTowerImpact(){
       } else if(ballArr[loop].team != "B") {
         Btower.hp -= ballArr[loop].demage;
         console.log("Btower clashed");
+        PLAYER_LIST[ballArr[loop].ownerSocketId].score += 2;
       }
       PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount --;
       ballArr.splice(loop,1);
     }
   }
+}
+
+function towerCheck(){
+  if(Atower.hp >= 0){
+    // server 507 수정
+  } else if(Btower.hp >= 0){
+
+  }
+
 }
 
 }
