@@ -292,7 +292,6 @@ function getMousePos(canvas, evt) {
     obj = obj.offsetParent;
   }
 
-  // return relative mouse position
   var mouseX = evt.clientX - left + window.pageXOffset;
   var mouseY = evt.clientY - top + window.pageYOffset;
   return {
@@ -418,13 +417,26 @@ loginCanvas.addEventListener('mousemove', function (evt) {
   mousePos.x = pos.x;
   mousePos.y = pos.y;
 });
-
 loginCanvas.addEventListener('mouseout', function (evt) {
   mousePos.x = 9999;
   mousePos.y = 9999;
 });
 
-/* 게임 */
+/* 게임 */          
+        if(!!window.Worker){ //브라우저가 웹 워커를 지원하는지 검사한다    
+            
+          var worker = new Worker("/public/js/worker.js");  //새로운 워커(객체)를 생성한다       
+                       
+          worker.onmessage = function(event){ //워커로부터 전달되는 메시지를 받는다
+            alert(event.data);
+          };
+                            
+          worker.postMessage("워커야! 깨어나라!"); //워커에게 메시지를 전달한다        
+        }
+        else{
+          alert("현재 브라우저는 웹 워커를 지원하지 않습니다")
+        }
+
 function startSocket() {
   socket = io({
     transports: ['websocket']
@@ -434,11 +446,9 @@ function startSocket() {
   socket.on("connected", () => {
     socket.emit("nickName", nick.value);
   });
-
   // 자신의 객체를 클라이언트에 있는 player에 대입
   socket.on("gameStart", (me) => {
     this.player = me;
-
     gameStart();
   });
 
