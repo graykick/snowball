@@ -73,8 +73,7 @@ function makePlayerObject(player){
     name : player.nickName,
     nextLevelScore : player.nextLevelScore,
     level : player.level,
-    team : player.team,
-    maxhp : player.maxHp
+    team : player.team
   };
 
   return ObjPlayer;
@@ -256,7 +255,7 @@ io.sockets.on('connection', function (socket) {
     if(abilyty == "maxHp"){
       player.maxHp += 10;
     } else if(abilyty == "speed") {
-      player.speed += 3;
+      player.speed += 10;
     } else if(abilyty == "throwPower") {
       player.throwPower += 10;
     } else if(abilyty == "maxBallCount") {
