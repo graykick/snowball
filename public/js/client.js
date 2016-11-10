@@ -57,8 +57,8 @@ var introAnimationID,
 
   gameHanddler, //렌더딩 루프의 핸들러. 죽으면 정지하기 위해 사용
   socket;
-W = canvas.width = window.innerWidth;
-H = canvas.height = window.innerHeight;
+W = canvas.width = 1340;
+H = canvas.height = 640;
 
 Img.map = new Image();
 Img.map.src = '/public/image/map.png';
@@ -432,6 +432,10 @@ function startSocket() {
 
   // 접속이 되었다는 emit을 받고 닉네임 전달
   socket.on("connected", () => {
+    if(nick.value == ""){
+      nick.value = "NoName";
+    }
+    console.log(nick.value);
     socket.emit("nickName", nick.value);
   });
   // 자신의 객체를 클라이언트에 있는 player에 대입
@@ -860,16 +864,15 @@ function drawScore() {
 function drawLeaderBoard() {
   ctx.save();
   ctx.globalAlpha = 0.5;
-  ctx.fillStyle = "gray";
+  ctx.fillStyle = "rgba(0,0,0,0.01)";
   ctx.fillRect(10, 10, 150, 220);
-  ctx.fillStyle = "white";
   ctx.strokeStyle = "black";
   ctx.font = "20px Arial";
   ctx.globalAlpha = 1;
 
   for (var loop = 0; loop < topPlayers.length; loop++) {
-    ctx.strokeText((loop + 1) + ". " + topPlayers[loop].name + " : " + topPlayers[loop].score, 12, 40 + loop * 21);
-    ctx.fillText((loop + 1) + ". " + topPlayers[loop].name + " : " + topPlayers[loop].score, 12, 40 + loop * 21);
+    ctx.strokeText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
+    ctx.fillText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
   }
   ctx.restore();
 }

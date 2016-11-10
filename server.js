@@ -122,7 +122,6 @@ if (cluster.isMaster) {
         socket.emit("connected");
 
         socket.on("nickName", (nickName) => {
-            console.log("i got nickName = " + nickName);
             player.nickName = nickName;
 
             // 닉네임받아 player객체에 저장하면,
