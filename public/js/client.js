@@ -435,7 +435,6 @@ function startSocket() {
     if(nick.value == ""){
       nick.value = "NoName";
     }
-    console.log(nick.value);
     socket.emit("nickName", nick.value);
   });
   // 자신의 객체를 클라이언트에 있는 player에 대입
@@ -494,7 +493,6 @@ function startSocket() {
   })
 
   socket.on("revivalOK", () => {
-    console.log("iam revival");
     document.getElementById("dieWrapper").style.display = "none";
     document.getElementById("upgradeForm").style.display = "none";
     death = false;
