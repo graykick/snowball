@@ -593,9 +593,7 @@ function startSocket(){
     document.getElementById("dieWrapper").style.display="flex";
   })
 
-  socket.on("otherDie", (diePlayer) => {
 
-  })
 
   socket.on("revivalOK", () => {
     console.log("iam revival");
@@ -811,13 +809,39 @@ function drawScoreBar(player){
 function drawMyPlayer(player){
   if(!death){
     ctx.save();
+
     ctx.shadowBlur = 20;
     ctx.shadowColor = "#00e5bb";
     ctx.font="15px Arial";
 
-    ctx.fillStyle = "green";
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(player.vLocationX-50, player.locationY-42, 100, 10);
+    ctx.beginPath();
+    ctx.arc(player.vLocationX-50, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.vLocationX+50, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2, true);
+    ctx.fill();
+  //  ctx.restore();
+
+    //찬 게이지
+    ctx.fillStyle = "rgb(77, 255, 71)";
+    console.log("value "+player.maxhp);
+    ctx.fillRect(player.vLocationX-50, player.locationY-42+1, player.hp * (100/player.maxhp), 8);
+    ctx.beginPath();
+    ctx.arc(player.vLocationX-50+2, player.locationY-42+5, 4,  Math.PI/2, Math.PI*3/2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.vLocationX - 50 + player.hp * (100/player.maxhp)-1, player.locationY-42+5, 4, Math.PI/2, Math.PI*3/2, true);
+    ctx.fill();
+  //  ctx.restore();
+
+
+
+
     // 피통을 그린다.
-    ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
+  //  ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
     ctx.fillStyle = "black";
     // 점수를 그린다.
     ctx.fillText(player.score, player.vLocationX - 52, player.locationY - 52);
@@ -845,54 +869,136 @@ function drawPlayer(player){
 //  console.log("differ = "+this.player.locationX+" vs "+player.locationX);
     ctx.save();
 
-    ctx.shadowBlur = 20;
 
+
+    ctx.shadowBlur = 20;
     ctx.shadowColor = "red";
     if(player.team == this.player.team){
       ctx.shadowColor = "blue";
     }
+
     ctx.font="15px Arial";
 
 
   // 자신이 왼쪽이 있는 경우이다. 굉장히 간단하다.
   // 그냥 서버에서 받은 데로만 그리면 된다.
-    if(this.player.locationX-670<0){ // if left max
-      ctx.fillStyle = "red";
-      if(player.team == this.player.team){
-        ctx.fillStyle = "blue";
-      }
-      ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
-      ctx.fillStyle = "black";
-      ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
-      ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
-      ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
-     }
+
+
+      //찬 게이지
+
+      //ctx.fillStyle = "rgb(77, 255, 71)";
+      if(this.player.locationX-670<0){ // if left max
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(player.locationX-50, player.locationY-42, 100, 10);
+        ctx.beginPath();
+        ctx.arc(player.locationX-50, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(player.locationX+50, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2, true);
+        ctx.fill();
+
+
+        ctx.fillStyle = "red";
+        if(player.team == this.player.team){
+          ctx.fillStyle = "blue";
+        }
+        console.log("value "+player.maxhp);
+        ctx.fillRect(player.locationX-50, player.locationY-42+1, player.hp * (100/player.maxhp), 8);
+        ctx.beginPath();
+        ctx.arc(player.locationX-50+2, player.locationY-42+5, 4,  Math.PI/2, Math.PI*3/2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(player.locationX - 50 + player.hp * (100/player.maxhp)-1, player.locationY-42+5, 4, Math.PI/2, Math.PI*3/2, true);
+        ctx.fill();
+
+
+
+    //  ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
+        ctx.fillStyle = "black";
+        ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
+        ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
+        ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
+       }
      // 조금 복잡하다. this.player.locationX+670>3200
      // 이는 자신이 오른쪽 끝에 있음을 나타낸다. 그래서 상대방의 위치를 서버에서 받은 그대로 그리지 않고, 조작을 해야한다.
      // 공식은 상대위치 - 맵 width + 화면 width이다. (-42는 offset이므로 상관 X)
      // 이해할 필요는 없다.
       else if(this.player.locationX+670>3200){ // if right max
+
+       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+       ctx.fillRect(player.locationX-50-mapWidth + canvas.width, player.locationY-42, 100, 10);
+       ctx.beginPath();
+       ctx.arc(player.locationX-50-mapWidth + canvas.width, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2);
+       ctx.fill();
+       ctx.beginPath();
+       ctx.arc(player.locationX+50-mapWidth + canvas.width, player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2, true);
+       ctx.fill();
+
+
+       //찬 게이지
+
+       //ctx.fillStyle = "rgb(77, 255, 71)";
+
        ctx.fillStyle = "red";
        if(player.team == this.player.team){
          ctx.fillStyle = "blue";
        }
-       ctx.fillRect(player.locationX- 42 -mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
+
+       console.log("value "+player.maxhp);
+       ctx.fillRect(player.locationX-50-mapWidth + canvas.width, player.locationY-42+1, player.hp * (100/player.maxhp), 8);
+       ctx.beginPath();
+       ctx.arc(player.locationX-50+2-mapWidth + canvas.width, player.locationY-42+5, 4,  Math.PI/2, Math.PI*3/2);
+       ctx.fill();
+       ctx.beginPath();
+       ctx.arc(player.locationX - 50-mapWidth + canvas.width + player.hp * (100/player.maxhp)-1, player.locationY-42+5, 4, Math.PI/2, Math.PI*3/2, true);
+       ctx.fill();
+
+      // ctx.fillRect(player.locationX- 42 -mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
        ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
        ctx.fillText(player.name, player.locationX-mapWidth + canvas.width - 32, player.locationY - 52);
-      ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) -mapWidth + canvas.width , player.locationY - 32);
+       ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) -mapWidth + canvas.width , player.locationY - 32);
      }
+
      // 자신이 중간에 있는 경우이다.
      // 그래서 상대를 그릴때 서버에서만 받은대로 그리지 않는다.
      // 자신이 중간에 있음으로, 상대의 위치를 이에 맞추어야 한다.
      // 상대위치 - 자신위치 + 화면크기/2 이다.
      // 이해하지 않아도 된다.
      else { // middle
-       ctx.fillStyle = "red";
-       if(player.team == this.player.team){
-         ctx.fillStyle = "blue";
-       }
-       ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
+
+
+       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+       ctx.fillRect(player.locationX-50- this.player.locationX+ (canvas.width/2), player.locationY-42, 100, 10);
+       ctx.beginPath();
+       ctx.arc(player.locationX-50- this.player.locationX+ (canvas.width/2), player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2);
+       ctx.fill();
+       ctx.beginPath();
+       ctx.arc(player.locationX+50- this.player.locationX+ (canvas.width/2), player.locationY-42+5, 5, Math.PI/2, Math.PI*3/2, true);
+       ctx.fill();
+
+       //찬 게이지
+        //ctx.fillStyle = "rgb(77, 255, 71)";
+         ctx.fillStyle = "red";
+         if(player.team == this.player.team){
+           ctx.fillStyle = "blue";
+         }
+
+       //console.log("value "+player.maxhp);
+       ctx.fillRect(player.locationX-50- this.player.locationX+ (canvas.width/2), player.locationY-42+1, player.hp * (100/player.maxhp), 8);
+       ctx.beginPath();
+       ctx.arc(player.locationX-50+2- this.player.locationX+ (canvas.width/2), player.locationY-42+5, 4,  Math.PI/2, Math.PI*3/2);
+       ctx.fill();
+       ctx.beginPath();
+       ctx.arc(player.locationX - 50 - this.player.locationX+ (canvas.width/2)+ player.hp * (100/player.maxhp)-1, player.locationY-42+5, 4, Math.PI/2, Math.PI*3/2, true);
+       ctx.fill();
+
+
+
+
+
+    //   ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
        ctx.fillStyle = "black";
        ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
        ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width/2), player.locationY - 52);
