@@ -669,50 +669,16 @@ function startSocket(){
       drawTower();
       drawScore();
       drawLeaderBoard();
+      drawMiniMap();
       SnowDraw();
       requestAnimFrame(animationStart);
   }
 
-//
-//     gameHanddler = setInterval(() => {
-//       var nStart = new Date().getTime();
-//       drawMap(player);
-//
-//       //loop for draw player
-//       for(var loop = 0; loop < players.length; loop++){
-//         drawPlayer(players[loop]);
-//       }
-//       drawMyPlayer(player);
-//       drawScoreBar(player);
-//
-//       //loop for draw ball
-//       for(var loop = 0; loop < this.balls.length; loop++){
-//         drawBall(this.balls[loop]);
-//       }
-//       dieEffecte();
-//       dieScreen();
-//       SnowDraw();
-//       var nEnd = new Date().getTime();
-//   //    console.log("client loop time = "+(nEnd - nStart));
-// },10);
 
   }
 }
 
-// function gameStart(){
-//   console.log("in game start");
-//   startEvent();
-//   gameHanddler = setInterval(() le=> {
-//     drawMap(player);
-//     drawMyPlayer(player);
-//     for(var loop = 0; loop < players.length; loop++){
-//       drawPlayer(players[loop]);
-//     }
-//     for(var loop = 0; loop > balls.length; loop++){
-//       drawBall(balls[loop]);
-//     }
-//   },30);
-// }
+
 
 // 이벤트리스너 들을 할당하는 함수아다.
 // mousemove이벤트는 현재 마우스의 좌표를 알기위해 사용된다.
@@ -853,8 +819,8 @@ function drawMyPlayer(player){
     //ctx.strokeText(player.score, player.vLocationX - 52, player.locationY);
 
     //닉네임을 그린다.
-    ctx.fillText(player.name, player.vLocationX -ctx.measureText(player.name).width/2 , player.locationY - 52);
-    ctx.strokeText(player.name, player.vLocationX -ctx.measureText(player.name).width/2 , player.locationY - 52);
+    ctx.fillText(player.level+"lv "+player.name, player.vLocationX -ctx.measureText(player.level+"lv "+player.name).width/2 , player.locationY - 52);
+    ctx.strokeText(player.level+"lv "+player.name, player.vLocationX -ctx.measureText(player.level+"lv "+player.name).width/2 , player.locationY - 52);
 
     // 그림(해골)을 그린다.
     ctx.shadowBlur = 20;
@@ -938,8 +904,8 @@ function drawPlayer(player){
       //  ctx.strokeText(player.score,player.locationX -52, player.locationY - 52);
 
         //닉네임을 그린다.
-        ctx.fillText(player.name,player.locationX +50-ctx.measureText(player.name).width , player.locationY - 52);
-        ctx.strokeText(player.name,player.locationX +50-ctx.measureText(player.name).width , player.locationY - 52);
+        ctx.fillText(player.level+"lv "+player.name,player.locationX +50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
+        ctx.strokeText(player.level+"lv "+player.name,player.locationX +50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
 
         // ctx.fillStyle = "black";
         // ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
@@ -995,8 +961,8 @@ function drawPlayer(player){
       // ctx.strokeText(player.score, player.locationX -mapWidth + canvas.width - 52, player.locationY - 52);
 
        //닉네임을 그린다.
-       ctx.fillText(player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.name).width , player.locationY - 52);
-       ctx.strokeText(player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.name).width , player.locationY - 52);
+       ctx.fillText(player.level+"lv "+player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
+       ctx.strokeText(player.level+"lv "+player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
       //  ctx.fillStyle = "black";
       //  ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
       //  ctx.fillText(player.name, player.locationX-mapWidth + canvas.width - 32, player.locationY - 52);
@@ -1054,8 +1020,8 @@ function drawPlayer(player){
     //  ctx.strokeText(player.score,(player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
 
       //닉네임을 그린다.
-      ctx.fillText(player.name, (player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.name).width , player.locationY - 52);
-      ctx.strokeText(player.name,(player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.name).width , player.locationY - 52);
+      ctx.fillText(player.level+"lv "+player.name, (player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
+      ctx.strokeText(player.level+"lv "+player.name,(player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.level+"lv "+player.name).width , player.locationY - 52);
 
       //  ctx.fillStyle = "black";
       //  ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
@@ -1175,6 +1141,37 @@ function dieEffecte(){
    var nEnd =  new Date().getTime();
  }
 
+ function drawMiniMap() {
+    //console.log(player);
+    var XOnMinimap = 1020, YOnMinimap = 520;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = "rgba(0,0,0,.8)";
+    // TODO: x,y
+    ctx.fillRect(XOnMinimap, YOnMinimap, 310, 100);
+    ctx.strokeStyle = "black";
+
+    // 자신을 그림
+    ctx.beginPath();
+    ctx.arc(XOnMinimap+(player.locationX/10.3),
+        YOnMinimap-((canvas.height-player.locationY*2-600)/10), 5, 0, Math.PI * 2);
+    ctx.fillStyle = "lime";
+    ctx.fill();
+
+    // 나를 제외한 플레이어를 그림
+    for (var loop = 0; loop < players.length; loop++) {
+        ctx.beginPath();
+        ctx.arc(XOnMinimap+(players[loop].locationX/12),
+            YOnMinimap-((canvas.height-players[loop].locationY*2-600)/10), 5, 0, Math.PI * 2);
+        ctx.fillStyle = "red";
+        if (player.team == players[loop].team) {
+            ctx.fillStyle = "blue";
+        }
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
  function drawTower(){
    ctx.save();
    ctx.font="15px Arial";
@@ -1202,17 +1199,19 @@ function dieEffecte(){
 
  function drawLeaderBoard(){
    ctx.save();
-   ctx.globalAlpha = 0.5;
-   ctx.fillStyle = "gray";
-   ctx.fillRect(10,10,150,220);
+   //ctx.globalAlpha = 0.5;
+  //  ctx.fillStyle = "gray";
+  //  ctx.fillRect(10,10,150,220);
    ctx.fillStyle = "white";
    ctx.strokeStyle = "black";
    ctx.font="20px Arial";
-   ctx.globalAlpha = 1;
+   //ctx.globalAlpha = 1;
 
    for(var loop = 0; loop < topPlayers.length; loop++){
-     ctx.strokeText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
-     ctx.fillText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
+     ctx.strokeText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
+     ctx.fillText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
+  //    ctx.strokeText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
+  //    ctx.fillText((loop+1)+". "+topPlayers[loop].name + " : "+ topPlayers[loop].score, 12,40+loop*21);
    }
    ctx.restore();
  }
