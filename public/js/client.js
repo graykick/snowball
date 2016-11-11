@@ -342,6 +342,12 @@ function animate(canvas, balls_intro, lastTime, mousePos) {
     animate(loginCanvas, balls_intro, lastTime, mousePos);
   });
 }
+window.onload = function(){
+  if(window.localStorage && window.localStorage.nick){
+    document.getElementById("nick").value = localStorage.nick;
+  }
+}
+
 var loginCanvas = document.getElementById('loginCanvas');
 var balls_intro = initballs_intro();
 var date = new Date();
@@ -520,6 +526,10 @@ function startSocket(){
   socket.on("connected", () => {
     console.log("iam connected");
     console.log(nick.value);
+    if(window.localStorage){
+      localStorage.nick = nick.value;
+    }
+    console.log("localStorage test = "+localStorage.nick);
     socket.emit("nickName", nick.value);
     console.log("i sent nickname");
   });
