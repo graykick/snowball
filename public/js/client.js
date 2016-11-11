@@ -826,8 +826,7 @@ function drawMyPlayer(player){
   //  ctx.restore();
 
     //찬 게이지
-    ctx.fillStyle = "rgb(77, 255, 71)";
-    console.log("value "+player.maxhp);
+    ctx.fillStyle = "#00ff80";
     ctx.fillRect(player.vLocationX-50, player.locationY-42+1, player.hp * (100/player.maxhp), 8);
     ctx.beginPath();
     ctx.arc(player.vLocationX-50+2, player.locationY-42+5, 4,  Math.PI/2, Math.PI*3/2);
@@ -842,12 +841,24 @@ function drawMyPlayer(player){
 
     // 피통을 그린다.
   //  ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.font="bolder 18px Arial";
+    ctx.shadowBlur = 0;
+
+
     // 점수를 그린다.
-    ctx.fillText(player.score, player.vLocationX - 52, player.locationY - 52);
+
+    //ctx.fillText(player.score, player.vLocationX - 52, player.locationY);
+    //ctx.strokeText(player.score, player.vLocationX - 52, player.locationY);
+
     //닉네임을 그린다.
-    ctx.fillText(player.name, player.vLocationX - 32, player.locationY - 52);
+    ctx.fillText(player.name, player.vLocationX -ctx.measureText(player.name).width/2 , player.locationY - 52);
+    ctx.strokeText(player.name, player.vLocationX -ctx.measureText(player.name).width/2 , player.locationY - 52);
+
     // 그림(해골)을 그린다.
+    ctx.shadowBlur = 20;
+
     ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
 
     ctx.restore();
@@ -915,9 +926,25 @@ function drawPlayer(player){
 
 
     //  ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
-        ctx.fillStyle = "black";
-        ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
-        ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
+
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.font="bolder 18px Arial";
+        ctx.shadowBlur = 0;
+
+       // 점수를 그린다.
+
+      //  ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
+      //  ctx.strokeText(player.score,player.locationX -52, player.locationY - 52);
+
+        //닉네임을 그린다.
+        ctx.fillText(player.name,player.locationX +50-ctx.measureText(player.name).width , player.locationY - 52);
+        ctx.strokeText(player.name,player.locationX +50-ctx.measureText(player.name).width , player.locationY - 52);
+
+        // ctx.fillStyle = "black";
+        // ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
+        // ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
+        ctx.shadowBlur = 20;
         ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
        }
      // 조금 복잡하다. this.player.locationX+670>3200
@@ -955,9 +982,25 @@ function drawPlayer(player){
        ctx.fill();
 
       // ctx.fillRect(player.locationX- 42 -mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
-       ctx.fillStyle = "black";
-       ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
-       ctx.fillText(player.name, player.locationX-mapWidth + canvas.width - 32, player.locationY - 52);
+
+
+       ctx.fillStyle = "white";
+       ctx.strokeStyle = "black";
+       ctx.font="bolder 18px Arial";
+       ctx.shadowBlur = 0;
+
+      // 점수를 그린다.
+
+      // ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
+      // ctx.strokeText(player.score, player.locationX -mapWidth + canvas.width - 52, player.locationY - 52);
+
+       //닉네임을 그린다.
+       ctx.fillText(player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.name).width , player.locationY - 52);
+       ctx.strokeText(player.name, player.locationX -mapWidth + canvas.width +50-ctx.measureText(player.name).width , player.locationY - 52);
+      //  ctx.fillStyle = "black";
+      //  ctx.fillText(player.score, player.locationX -mapWidth + canvas.width  - 52, player.locationY - 52);
+      //  ctx.fillText(player.name, player.locationX-mapWidth + canvas.width - 32, player.locationY - 52);
+      ctx.shadowBlur = 20;
        ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) -mapWidth + canvas.width , player.locationY - 32);
      }
 
@@ -999,10 +1042,26 @@ function drawPlayer(player){
 
 
     //   ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width/2), player.locationY - 42, player.hp, 10);
-       ctx.fillStyle = "black";
-       ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
-       ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width/2), player.locationY - 52);
-       ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width/2) , player.locationY - 32);
+
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.font="bolder 18px Arial";
+      ctx.shadowBlur = 0;
+
+     // 점수를 그린다.
+
+    //  ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
+    //  ctx.strokeText(player.score,(player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
+
+      //닉네임을 그린다.
+      ctx.fillText(player.name, (player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.name).width , player.locationY - 52);
+      ctx.strokeText(player.name,(player.locationX) - this.player.locationX + (canvas.width/2)+50-ctx.measureText(player.name).width , player.locationY - 52);
+
+      //  ctx.fillStyle = "black";
+      //  ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width/2), player.locationY - 52);
+      //  ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width/2), player.locationY - 52);
+      ctx.shadowBlur = 20;
+      ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width/2) , player.locationY - 32);
      }
 
      ctx.restore();
