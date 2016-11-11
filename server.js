@@ -18,6 +18,7 @@ var
     Vector = require('./lib/vector.js'),
     Player = require('./lib/player.js'),
     Ball = require('./lib/ball.js'),
+    Tower = require('./lib/tower.js'),
     Object = require('./lib/object.js'),
 
     canvasWidth = 1340,
@@ -42,12 +43,17 @@ if (cluster.isMaster) {
         players = [],
         corpseArr = [],
         deadPlayer = {},
+        Aplayers = { length: 0 },
+        Bplayers = { length: 0 },
+        topPlayers = [],
 
         // 서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag
         // 이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성됨
         startFlag = true;
+    var Atower = new Tower(3578, 3609); // Atower range 3578 ~ 3609
+    var Btower = new Tower(3412, 3643); // B tower :  3612 ~ 3643
 
-    io.adapter(redis({host: 'localhost', port: 6379}));
+    io.adapter(redis({ host: 'localhost', port: 6379 }));
 
     app.get('/', function (req, res) {
         res.sendFile(__dirname + '/index.html');
@@ -58,23 +64,24 @@ if (cluster.isMaster) {
         console.log("Server " + PORT + " listening pid = " + process.pid);
     });
 
-    /* web worker */
+    /* web worker 
     var Worker = require('webworker-threads').Worker;
-// var w = new Worker('worker.js'); // Standard API
+    // var w = new Worker('worker.js'); // Standard API
 
-    var worker = new Worker(function(){
+    var worker = new Worker(function () {
         postMessage("I'm working before postMessage('ali').");
-        this.onmessage = function(event) {
+        this.onmessage = function (event) {
             postMessage('Hi ' + event.data);
             self.close();
         };
     });
-    worker.onmessage = function(event) {
+    worker.onmessage = function (event) {
         console.log("Worker said : " + event.data);
     };
     worker.postMessage('ali');
-
-    io.on('connection', (socket) => {
+    */
+    
+    io.sockets.on('connection', (socket) => {
         testNum++;
         console.log("global connected id = " + socket.id + " testNum = " + testNum + " pid = " + process.pid);
 
@@ -86,11 +93,34 @@ if (cluster.isMaster) {
         player.socket = socket;
         players.push(makePlayerObject(player));
 
+        console.log("A and B = " + Aplayers.length + ", " + Bplayers.length);
+        if (!startFlag) {
+            if (Aplayers.length <= Bplayers.length) {
+                player.location.x = Math.random() * 500 + 100;
+                player.team = "A";
+                console.log("A");
+                Aplayers[socket.id] = player;
+                Aplayers.length += 1;
+            } else if (Aplayers.length > Bplayers.length) {
+                player.location.x = Math.random() * 500 + 2600;
+                player.team = "B";
+                console.log("B");
+
+                Bplayers[socket.id] = player;
+                Bplayers.length += 1;
+            }
+        } else if (startFlag) {
+            player.location.x = Math.random() * 100 + 100;
+            player.team = "A";
+            console.log("first A");
+            Aplayers[socket.id] = player;
+            Aplayers.length += 1;
+        }
+
         // 소켓연결 성공
         socket.emit("connected");
 
         socket.on("nickName", (nickName) => {
-            console.log("i got nickName = " + nickName);
             player.nickName = nickName;
 
             // 닉네임받아 player객체에 저장하면,
@@ -150,10 +180,16 @@ if (cluster.isMaster) {
         socket.on('disconnect', function () {
             delete SOCKET_LIST[socket.id];
             delete PLAYER_LIST[socket.id];
+            if (player.team == "A") {
+                delete Aplayers[socket.id];
+                Aplayers.length -= 1;
+            } else if (player.team = "B") {
+                delete Bplayers[socket.id];
+                Bplayers.length -= 1;
+            }
         })
 
         socket.on("upgrade", (abilyty) => {
-            console.log("i got skill");
             player.skillPoint--;
             if (abilyty == "maxHp") {
                 player.maxHp += 10;
@@ -173,7 +209,6 @@ if (cluster.isMaster) {
         })
 
         socket.on("revival", () => {
-            console.log("wow awsome revial! " + player.hp + ", level " + player.level);
             PLAYER_LIST[socket.id] = new Player(new Vector(Math.random() * canvasWidth + 1, 50), 32);
             PLAYER_LIST[socket.id].score = player.score / 2;
             PLAYER_LIST[socket.id].nickName = player.nickName;
@@ -196,11 +231,12 @@ if (cluster.isMaster) {
                 vLocationX: player.vLocation.x,
                 vLocationY: player.vLocation.y,
                 ImageIndex: player.nowImageIndex,
-                hp: player.hp,
+                hp: player.hp, // 해골 방향 index
                 score: player.score,
                 name: player.nickName,
                 nextLevelScore: player.nextLevelScore,
-                level: player.level
+                level: player.level,
+                team: player.team
             };
             return ObjPlayer;
         }
@@ -247,6 +283,7 @@ if (cluster.isMaster) {
                 setInterval(gameLoop, 1000 / 60);
                 setInterval(update, 10);
                 setInterval(corpseImpact, 500);
+                setInterval(leaderBoard, 1000);
             }
         }
 
@@ -266,6 +303,7 @@ if (cluster.isMaster) {
                 }
                 if (!(PLAYER_LIST[loop].live)) {
                     deadPlayer[PLAYER_LIST[loop].socketId] = PLAYER_LIST[loop];
+
                     var dieInfo = {
                         name: PLAYER_LIST[loop].nickName,
                         score: PLAYER_LIST[loop].score,
@@ -281,6 +319,10 @@ if (cluster.isMaster) {
                     SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('die', dieInfo);
 
                     SOCKET_LIST[PLAYER_LIST[loop].socketId].emit('otherDie', makePlayerObject(PLAYER_LIST[loop]), makeDeathBall(PLAYER_LIST[loop]));
+                    if (PLAYER_LIST[loop].team == "A") {
+                        delete Aplayers[PLAYER_LIST[loop].socketId];
+                        Aplayers.length -= 1;
+                    }
                     delete PLAYER_LIST[loop];
                 }
             }
@@ -300,10 +342,11 @@ if (cluster.isMaster) {
                 }
             }
 
-            // 플레이어와 ball간의 충돌검사를 하는 함수
+            // 충돌검사
+            checkTowerImpact();
             checkBallImpact();
-            // 공과 공의충돌을 검사하기위한 함수
             checkImpact();
+            leaderBoard();
 
             var nEnd = new Date().getTime(); //end time check(Units ms)
 
@@ -342,19 +385,26 @@ if (cluster.isMaster) {
                     SOCKET_LIST[loop].emit('timeCheck', new Date().getTime());
                     SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
                     SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+                    SOCKET_LIST[loop].emit("tower", [Atower.hp, Btower.hp]);
+                    SOCKET_LIST[loop].emit("topPlayers", topPlayers);
                 } catch (e) {
                     //catch문에 집입하는 경우는, 플레이어가 사망하여, 삭제 되었는데, 그 플레이어에 접근하는경우
                     //사망으로 판정하여, 죽은 사람에게만, updateDeath를 보냄.
                     //  SOCKET_LIST[loop].emit('timeCheck',  new Date().getTime());
-                    SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
-                    SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+                    try {
+                        SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
+                        SOCKET_LIST[loop].emit("corpsesData", corpseArr);
+                    } catch (e) {
+
+
+                    }
+
                 }
 
             }
 
             var nEnd = new Date().getTime();
             var nDiff = nEnd - nStart;
-            //console.log("updateloop time = "+nDiff+"ms");
         }
 
         // player와 ball간의 충돌검사하는 함수
@@ -373,15 +423,8 @@ if (cluster.isMaster) {
 
                         // 체력 감소
                         PLAYER_LIST[outLoop].hp -= ballArr[inLoop].demage;
-
                         // 점수 증가
                         PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
-                        /*
-                         레벨업확인
-                         if(PLAYER_LIST[ballArr[inLoop].ownerSocketId].checkScore()){
-                         levelUp(ballArr[inLoop].ownerSocketId);
-                         }
-                         */
                         // 공에 맞았음으로 반동을 적용
                         if (ballArr[inLoop].location.x > PLAYER_LIST[outLoop].location.x) {
                             PLAYER_LIST[outLoop].applyForth(new Vector(-1, 0));
@@ -390,9 +433,16 @@ if (cluster.isMaster) {
                         }
 
                         // 맞은 공을 배열에서 삭제
-                        PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
-                        ballArr.splice(inLoop, 1);
-                        continue;
+                        try {
+                            PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
+                            ballArr.splice(inLoop, 1);
+                            continue;
+                        } catch (e) {
+
+                        } finally {
+
+                        }
+
                     }
                 }
             }
@@ -430,7 +480,6 @@ if (cluster.isMaster) {
 
                             ballArr[inLoop].hp -= ballArr[outLoop].demage;
                             ballArr[outLoop].hp -= ballArr[inLoop].demage;
-                            console.log("hp check " + ballArr[inLoop].hp + ", " + ballArr[outLoop].hp);
 
                             if (ballArr[inLoop].hp <= 0) {
                                 ballArr.splice(inLoop, 1);
@@ -438,8 +487,6 @@ if (cluster.isMaster) {
                             if (ballArr[outLoop].hp <= 0) {
                                 ballArr.splice(outLoop, 1);
                             }
-                            // ballArr.splice(inLoop, 1);
-                            // ballArr.splice(outLoop, 1);
                         }
                     } catch (e) {
                     }
@@ -459,14 +506,12 @@ if (cluster.isMaster) {
             });
             // 배열에 삽입
             for (var loop = 0; loop < circleNum; loop++) {
-                console.log("makle!");
                 var data = {
                     locationX: player.location.x - Math.random() * 1 + Math.random() * 1,
                     locationY: player.location.y - Math.random() * 1 + Math.random() * 1,
                     color: colorArr[loop]
                 }
                 corpseArr.push(data); // 충돌검사
-                console.log("push test = " + corpseArr.length);
             }
         }
 
@@ -476,7 +521,6 @@ if (cluster.isMaster) {
             if (corpseArr.length != 0) {
                 try {
                     for (var outLoop in PLAYER_LIST) {
-                        console.log("amount = " + corpseArr.length);
                         for (var inLoop = 0; inLoop < corpseArr.length; inLoop++) {
                             // 영혼의 위치를 변화 시키기위해 -0.9 ~ 0.9의 값을 더하고 뺌
                             corpseArr[inLoop].locationX += (Math.random() * 5 - Math.random() * 5);
@@ -484,7 +528,6 @@ if (cluster.isMaster) {
                             if (Vector.subStatic(PLAYER_LIST[outLoop].location, new Vector(corpseArr[inLoop].locationX, corpseArr[inLoop].locationY)).mag() < (PLAYER_LIST[outLoop].mass + 10)) {
                                 // 충돌 시, 플레이어의 점수를 추가하고 해당 영혼을 배열에서 삭제
                                 PLAYER_LIST[outLoop].score += 10;
-                                console.log("how many");
                                 corpseArr.splice(inLoop, 1);
                             }
                         }
@@ -492,6 +535,57 @@ if (cluster.isMaster) {
                 } catch (e) {
                 }
             }
+        }
+        function checkTowerImpact() {
+            for (var loop = 0; loop < ballArr.length; loop++) {
+                if (ballArr[loop].nowPosition >= Atower.min && ballArr[loop].nowPosition <= Atower.max) {
+                    if (ballArr[loop].team == "A" && Atower.hp < 5000) {
+                        Atower.hp += 0.5;
+                    } else if (ballArr[loop].team != "A") {
+                        Atower.hp -= ballArr[loop].demage;
+                        PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
+                    }
+                    PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount--;
+                    ballArr.splice(loop, 1);
+
+                } else if (ballArr[loop].nowPosition >= Btower.min && ballArr[loop].nowPosition <= Btower.max) {
+                    if (ballArr[loop].team == "B" && Btower.hp < 5000) {
+                        Btower.hp += 0.5;
+                    } else if (ballArr[loop].team != "B") {
+                        Btower.hp -= ballArr[loop].demage;
+                        PLAYER_LIST[ballArr[loop].ownerSocketId].score += 2;
+                    }
+                    PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount--;
+                    ballArr.splice(loop, 1);
+                }
+            }
+        }
+
+        function leaderBoard() {
+            var playerArr = [];
+            var topUsers = [];
+            for (var loop in PLAYER_LIST) {
+                playerArr.push(PLAYER_LIST[loop]);
+            }
+            playerArr.sort(function (a, b) { return b.score - a.score; });
+
+            for (var i = 0; i < Math.min(10, playerArr.length); i++) {
+                topUsers.push({
+                    score: playerArr[i].score,
+                    name: playerArr[i].nickName
+                });
+            }
+
+            topPlayers = topUsers;
+        }
+
+        function towerCheck() {
+            if (Atower.hp >= 0) {
+
+            } else if (Btower.hp >= 0) {
+
+            }
+
         }
     })
 }
