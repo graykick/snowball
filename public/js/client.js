@@ -2,7 +2,6 @@
 // 1. 소켓 접속
 // 2. 접속완료 받으면 닉네임 전송
 // 3. 게임시작 emit을 받으면, 게임시작
-
 var introAnimationID,
   /* 메인의 로고 */
   loginCanvas = document.getElementById('loginCanvas'),
@@ -16,7 +15,7 @@ var introAnimationID,
   /* 눈송이 */
   mp = 25, //max particles
   particles = [],
-  W,H,
+  W, H,
   /* 게임 */
   canvas = document.getElementById('myCanvas'),
   ctx = canvas.getContext('2d'),
@@ -36,27 +35,9 @@ var introAnimationID,
   death = false,
   towers = [],
   topPlayers = [],
-
-  playerConfig = {
-    border: 6,
-    textColor: '#FFFFFF',
-    textBorder: '#000000',
-    textBorderSize: 3,
-    defaultSize: 30
-  },
-  MainPlayer = {
-    locationX: 0,
-    locationY: 0,
-    vLocationX: 0,
-    vLocationY: 0,
-    ImageIndex: 0,
-    hp: 0,
-    score: 0,
-    name: ""
-  },
-
   gameHanddler, //렌더딩 루프의 핸들러. 죽으면 정지하기 위해 사용
   socket;
+
 W = canvas.width = 1340;
 H = canvas.height = 640;
 
@@ -66,6 +47,27 @@ Img.player = new Image();
 Img.player.src = '/public/image/skeleton.png';
 var skeletonSheet = new spriteSheet(Img.player, 9, 2, 64, 64);
 
+window.requestAnimFrame = (function(callback) {
+  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+    function(callback) {
+      window.setTimeout(callback, 1000 / 60);
+    };
+})();
+window.cancelAniFrame = (function() {
+  return window.cancelAnimationFrame ||
+    window.webkitCancelAnimationFrame ||
+    window.mozCancelAnimationFrame ||
+    window.oCancelAnimationFrame ||
+    function(id) {
+      window.clearTimeout(id);
+    };
+})();
+window.onload = function() {
+  if (window.localStorage && window.localStorage.nick) {
+    document.getElementById("nick").value = localStorage.nick;
+  }
+}
+animate(loginCanvas, balls_intro, time, mousePos);
 /* 눈송이 */
 for (var i = 0; i < mp; i++) {
   particles.push({
@@ -75,24 +77,7 @@ for (var i = 0; i < mp; i++) {
     d: Math.random() * mp //density
   })
 }
-
-window.requestAnimFrame = (function (callback) {
-  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
-    function (callback) {
-      window.setTimeout(callback, 1000 / 60);
-    };
-})();
-window.cancelAniFrame = (function () {
-  return window.cancelAnimationFrame ||
-    window.webkitCancelAnimationFrame ||
-    window.mozCancelAnimationFrame ||
-    window.oCancelAnimationFrame ||
-    function (id) {
-      window.clearTimeout(id);
-    };
-})();
-
-animate(loginCanvas, balls_intro, time, mousePos);
+var angle = 0;
 
 /* 메인의 로고 */
 function searchKeyPress(e) { // trigger
@@ -103,12 +88,14 @@ function searchKeyPress(e) { // trigger
   }
   return true;
 }
+
 function submitNick() {
   document.getElementById('loginDiv').style.display = 'none';
   document.getElementById('gameAreaWrapper').style.display = 'flex';
   startSocket();
   cancelAniFrame(introAnimationID);
 }
+
 function initballs_intro() {
   balls_intro = [];
 
@@ -283,6 +270,7 @@ function initballs_intro() {
 
   return balls_intro;
 }
+
 function getMousePos(canvas, evt) {
   // get canvas position
   var obj = canvas;
@@ -294,6 +282,7 @@ function getMousePos(canvas, evt) {
     obj = obj.offsetParent;
   }
 
+  // return relative mouse position
   var mouseX = evt.clientX - left + window.pageXOffset;
   var mouseY = evt.clientY - top + window.pageYOffset;
   return {
@@ -301,6 +290,7 @@ function getMousePos(canvas, evt) {
     y: mouseY
   };
 }
+
 function updateballs_intro(canvas, balls_intro, timeDiff, mousePos) {
   var context = canvas.getContext('2d');
   var collisionDamper = 0.3;
@@ -376,6 +366,7 @@ function updateballs_intro(canvas, balls_intro, timeDiff, mousePos) {
     }
   }
 }
+
 function Ball(x, y, vx, vy, color) {
   this.x = x;
   this.y = y;
@@ -386,6 +377,7 @@ function Ball(x, y, vx, vy, color) {
   this.origY = y;
   this.radius = 10;
 }
+
 function animate(canvas, balls_intro, lastTime, mousePos) {
   var context = loginCanvas.getContext('2d');
 
@@ -409,34 +401,36 @@ function animate(canvas, balls_intro, lastTime, mousePos) {
   }
 
   // request new frame
-  introAnimationID = requestAnimFrame(function () {
+  introAnimationID = requestAnimFrame(function() {
     animate(loginCanvas, balls_intro, lastTime, mousePos);
   });
 }
-
-loginCanvas.addEventListener('mousemove', function (evt) {
+var mousePos = {
+  x: 9999,
+  y: 9999
+};
+loginCanvas.addEventListener('mousemove', function(evt) {
   var pos = getMousePos(loginCanvas, evt);
   mousePos.x = pos.x;
   mousePos.y = pos.y;
 });
-loginCanvas.addEventListener('mouseout', function (evt) {
+
+loginCanvas.addEventListener('mouseout', function(evt) {
   mousePos.x = 9999;
   mousePos.y = 9999;
 });
 
 /* 게임 */
 function startSocket() {
-  socket = io({
-    transports: ['websocket']
-  });
+  socket = io({transports: ['websocket']});
 
-  // 접속이 되었다는 emit을 받고 닉네임 전달
   socket.on("connected", () => {
-    if(nick.value == ""){
-      nick.value = "NoName";
+    if (window.localStorage) {
+      localStorage.nick = nick.value;
     }
     socket.emit("nickName", nick.value);
   });
+
   // 자신의 객체를 클라이언트에 있는 player에 대입
   socket.on("gameStart", (me) => {
     this.player = me;
@@ -455,23 +449,8 @@ function startSocket() {
     ballArr = balls;
   })
 
-  // 서버와 클라이언트의 시간측정을 위한 이벤트
-  socket.on('timeCheck', (time) => {
-    var clientTime = new Date().getTime();
-  })
-
-  // 죽으면, 렌더링 루프를 종료함.
+  // 죽으면 렌더링 루프를 종료함.
   socket.on("die", (information) => {
-    // name:SOCKET_LIST[PLAYER_LIST[loop].socketId].nickName,
-    // score:SOCKET_LIST[PLAYER_LIST[loop].socketId].score,
-    // level:SOCKET_LIST[PLAYER_LIST[loop].socketId].level,
-    // MAXHP:SOCKET_LIST[PLAYER_LIST[loop].socketId].maxHp,
-    // SPEED:SOCKET_LIST[PLAYER_LIST[loop].socketId].speed,
-    // THROWPOWER:SOCKET_LIST[PLAYER_LIST[loop].socketId].throwPower,
-    // MAXBALLCOUNT:SOCKET_LIST[PLAYER_LIST[loop].socketId].maxBallCount,
-    // BALLDEMAGE:SOCKET_LIST[PLAYER_LIST[loop].socketId].ballDemage,
-    // BALLHP:SOCKET_LIST[PLAYER_LIST[loop].socketId].ballHp,
-    // JUMPDEMAGE:SOCKET_LIST[PLAYER_LIST[loop].socketId].jumpDemage
     document.getElementById("NAME").innerHTML = "name : " + information.name;
     document.getElementById("SCORE").innerHTML = "score : " + information.score;
     document.getElementById("LEVEL").innerHTML = "level : " + information.level;
@@ -488,10 +467,6 @@ function startSocket() {
     document.getElementById("dieWrapper").style.display = "flex";
   })
 
-  socket.on("otherDie", (diePlayer) => {
-
-  })
-
   socket.on("revivalOK", () => {
     document.getElementById("dieWrapper").style.display = "none";
     document.getElementById("upgradeForm").style.display = "none";
@@ -499,9 +474,8 @@ function startSocket() {
   })
 
   socket.on("levelUp", (playerStat) => {
-    //레벌업 창 띄우고, 선택한것 emit하기
+    //레벌업 창 띄우고, 선택한것 emit
     this.skillPoint = playerStat.skillPoint;
-
     document.getElementById("maxHp").innerHTML = "Max Hp : " + playerStat.maxHp;
     document.getElementById("speed").innerHTML = "Speed : " + playerStat.speed;
     document.getElementById("throwPower").innerHTML = "Throw Power : " + playerStat.throwPower;
@@ -509,10 +483,8 @@ function startSocket() {
     document.getElementById("balldemage").innerHTML = "Ball Demage : " + playerStat.ballDemage;
     document.getElementById("ballHp").innerHTML = "Ball Hp : " + playerStat.ballHp;
     document.getElementById("jumpDemage").innerHTML = "Jump Demage : " + playerStat.jumpDemage;
-
     document.getElementById('statContainer').style.display = 'inline-block';
     document.getElementById("upgradeForm").style.display = "inline-block";
-
   })
 
   socket.on("tower", (tower) => {
@@ -521,7 +493,6 @@ function startSocket() {
 
   // 다른 플레이어가 사망할 때 실행
   // 콜백의 인자는 사망플레이어의 영혼을 매개변수로 받아 전역변수에 대입
-  // 이러면 안될것 같다. 수정필요
   socket.on("corpsesData", (corpseArr) => {
     this.corpseArr = corpseArr;
   })
@@ -530,22 +501,17 @@ function startSocket() {
     topPlayers = topArr;
   })
 
-
   function gameStart() {
     startEvent();
     animationStart();
 
     function animationStart() {
       drawMap(player);
-
-      // 적, 자신, 점수판
       for (var loop = 0; loop < players.length; loop++) {
         drawPlayer(players[loop]);
       }
       drawMyPlayer(player);
       drawScoreBar(player);
-
-      // 공, 죽을 때 효과와 화면
       for (var loop = 0; loop < ballArr.length; loop++) {
         drawBall(ballArr[loop]);
       }
@@ -554,71 +520,77 @@ function startSocket() {
       drawTower();
       drawScore();
       drawLeaderBoard();
+      drawMiniMap();
       SnowDraw();
       requestAnimFrame(animationStart);
     }
   }
 }
+
 function upgradeEmit(abilyty) {
   socket.emit("upgrade", abilyty);
   document.getElementById('statContainer').style.display = 'none';
 }
 
 // 이벤트리스너 할당
-// mousemove이벤트는 현재 마우스의 좌표를 알기위해 사용된다.
-// mouseup이벤트는 서버측에 공을 던졌음을 알리기위해 사용된다. 이때 마우스의 좌표를 담은 객체를 함께 전송한다.
-// keydown이벤트는 사용자가 플레이어를 움직이고 싶어한다는 것을 알리기 위해 사용된디.
-// keyup이벤트는 사용자가 플레이어를 그만 움직인다는 것을 알리기위해 사용된다.
+// mousemove: 현재 마우스의 좌표를 알기위해 사용
+// mouseup: 서버측에 공을 던졌음을 알리기위해 사용, 마우스의 좌표를 담은 객체를 함께 전송
 function startEvent() {
-  // 마우스좌표를 계속 알아야 하는 이유는 공을 던질때 어디로 던지는지 알기 위해서 이다.
-  canvas.addEventListener('mousemove', function (event) {
+  canvas.addEventListener('mousemove', function(event) {
     pointX = event.offsetX;
     pointY = event.offsetY;
   });
-
-  // 여기서  shotOffsetX는 조금 이해하기 힘들 수 있는데 맵의 이동을 구현함에 있어서
-  // 필수적으로 추가된것이다. 맵의 크기는 3200인데 보여지는 화면의 크기는 1340이라서,
-  // 복잡한 처리가 필요하다.
-  canvas.addEventListener('mouseup', function (event) {
+  canvas.addEventListener('mouseup', function(event) {
     var ballData = {
       mouseY: pointY,
       mouseX: pointX + shotOffsetX
     };
-
     if (!death) {
       socket.emit('throwBall', ballData);
     }
   });
 
-  //움직임 이벤트. 방향과  flag를 담은 객체를 함께 전송
-  document.onkeydown = function (event) {
+  // 움직임 이벤트. 방향과 flag를 담은 객체 전송
+  document.onkeydown = function(event) {
     if (event.keyCode === 68) //d
-      socket.emit('keyPress', { inputId: 'right', state: true });
+      socket.emit('keyPress', {
+      inputId: 'right',
+      state: true
+    });
     else if (event.keyCode === 65) //a
-      socket.emit('keyPress', { inputId: 'left', state: true });
+      socket.emit('keyPress', {
+      inputId: 'left',
+      state: true
+    });
     else if (event.keyCode === 87) // w
-      socket.emit('keyPress', { inputId: 'up', state: true });
+      socket.emit('keyPress', {
+      inputId: 'up',
+      state: true
+    });
   }
 
-  //그만 움직임 이벤트.방향과  flag를 담은 객체를 함께 전송
-  document.onkeyup = function (event) {
-    if (event.keyCode === 68)	//d
-      socket.emit('keyPress', { inputId: 'right', state: false });
+  // 그만 움직임 이벤트. 방향과 flag를 담은 객체를 함께 전송
+  document.onkeyup = function(event) {
+    if (event.keyCode === 68) //d
+      socket.emit('keyPress', {
+      inputId: 'right',
+      state: false
+    });
     else if (event.keyCode === 65) //a
-      socket.emit('keyPress', { inputId: 'left', state: false });
+      socket.emit('keyPress', {
+      inputId: 'left',
+      state: false
+    });
     else if (event.keyCode === 87) // w
-      socket.emit('keyPress', { inputId: 'up', state: false });
+      socket.emit('keyPress', {
+      inputId: 'up',
+      state: false
+    });
   }
 }
 
-// 자신을 그리는 함수 간단하다.
-// 자신의 피통은 초록생으로 현재 자신의 체력만큼 사각혁을 그리고
-// 자신의 닉네임과, 점수를 그린다.(글자로)
-// 마지막으로 자신의 객체를 그리는데, skeletonSheet.getSheet(player.ImageIndex)
-// 를 사용하여 자신이 왼족을 보고 있는지, 오른쪽을 보고 있는지, 공중에 있는지를 그린다.
-// 이 정보는 서버에서 보내오는 객체에 포함되어 있다.
 function drawScoreBar(player) {
-  //빈 게이지
+  // 빈 게이지
   ctx.save();
   ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
   ctx.fillRect(canvas.width / 4, canvas.height - 70, (canvas.width / 4) * 2, 20);
@@ -630,7 +602,7 @@ function drawScoreBar(player) {
   ctx.fill();
   ctx.restore();
 
-  //찬 게이지
+  // 찬 게이지
   ctx.save();
   ctx.fillStyle = "rgb(255, 236, 71)";
   ctx.fillRect(canvas.width / 4, canvas.height - 70 + 2, player.score * (((canvas.width / 4) * 2) / player.nextLevelScore) - 2, 20 - 4);
@@ -642,7 +614,7 @@ function drawScoreBar(player) {
   ctx.fill();
   ctx.restore();
 
-  //경험치 / 다음레벨 경험치
+  // 경험치 / 다음레벨 경험치
   ctx.save();
   ctx.textBaseline = "middle";
   ctx.font = "900 10pt Arial";
@@ -660,17 +632,38 @@ function drawMyPlayer(player) {
     ctx.shadowColor = "#00e5bb";
     ctx.font = "15px Arial";
 
-    ctx.fillStyle = "green";
-    // 피통
-    ctx.fillRect(player.vLocationX - 42, player.vLocationY - 42, player.hp, 10);
-    ctx.fillStyle = "black";
-    // 점수
-    ctx.fillText(player.score, player.vLocationX - 52, player.locationY - 52);
-    //닉네임
-    ctx.fillText(player.name, player.vLocationX - 32, player.locationY - 52);
-    // 해골
-    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(player.vLocationX - 50, player.locationY - 42, 100, 10);
+    ctx.beginPath();
+    ctx.arc(player.vLocationX - 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.vLocationX + 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
 
+    // 찬 게이지
+    ctx.fillStyle = "#00ff80";
+    ctx.fillRect(player.vLocationX - 50, player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
+    ctx.beginPath();
+    ctx.arc(player.vLocationX - 50 + 2, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.vLocationX - 50 + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
+
+    // 피통
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.font = "bolder 18px Arial";
+    ctx.shadowBlur = 0;
+
+    //닉네임
+    ctx.fillText(player.level + "lv " + player.name, player.vLocationX - ctx.measureText(player.level + "lv " + player.name).width / 2, player.locationY - 52);
+    ctx.strokeText(player.level + "lv " + player.name, player.vLocationX - ctx.measureText(player.level + "lv " + player.name).width / 2, player.locationY - 52);
+
+    // 해골
+    ctx.shadowBlur = 20;
+    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), player.vLocationX - 32, player.vLocationY - 32);
     ctx.restore();
   }
 }
@@ -682,57 +675,114 @@ function drawMyPlayer(player) {
 // 이 3가지 분기는 자신의 위치에 따라 달라짐. 그래서 if의 조건절에 자신의 위치가 사용
 function drawPlayer(player) {
   ctx.save();
-
   ctx.shadowBlur = 20;
-  ctx.shadowColor = "red"; // 상대방으 피통은 붉은색
+  ctx.shadowColor = "red";
   if (player.team == this.player.team) {
     ctx.shadowColor = "blue";
   }
-
   ctx.font = "15px Arial";
-
 
   // 자신이 왼쪽이 있는 경우. 서버에서 받은대로 그림
   if (this.player.locationX - 670 < 0) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(player.locationX - 50, player.locationY - 42, 100, 10);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX + 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
     ctx.fillStyle = "red";
     if (player.team == this.player.team) {
       ctx.fillStyle = "blue";
     }
-    ctx.fillRect(player.locationX - 42, player.locationY - 42, player.hp, 10);
-    ctx.fillStyle = "black";
-    ctx.fillText(player.score, player.locationX - 52, player.locationY - 52);
-    ctx.fillText(player.name, player.locationX - 32, player.locationY - 52);
+    ctx.fillRect(player.locationX - 50, player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 + 2, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.font = "18px Arial";
+    ctx.shadowBlur = 0;
+
+    // 닉네임
+    ctx.fillText(player.level + "lv " + player.name, player.locationX + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    ctx.strokeText(player.level + "lv " + player.name, player.locationX + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+
+    ctx.shadowBlur = 20;
     ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
   }
   // 자신이 오른쪽에 있는 경우
   // this.player.locationX+670>3200
   // 공식은 상대위치 - 맵 width + 화면 width (-42는 offset이므로 상관 X)
   else if (this.player.locationX + 670 > 3200) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42, 100, 10);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX + 50 - mapWidth + canvas.width, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
     ctx.fillStyle = "red";
     if (player.team == this.player.team) {
       ctx.fillStyle = "blue";
     }
-    ctx.fillRect(player.locationX - 42 - mapWidth + canvas.width, player.locationY - 42, player.hp, 10);
-    ctx.fillStyle = "black";
-    ctx.fillText(player.score, player.locationX - mapWidth + canvas.width - 52, player.locationY - 52);
-    ctx.fillText(player.name, player.locationX - mapWidth + canvas.width - 32, player.locationY - 52);
+    ctx.fillRect(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 + 2 - mapWidth + canvas.width, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 - mapWidth + canvas.width + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.font = "18px Arial";
+    ctx.shadowBlur = 0;
+
+    // 닉네임
+    ctx.fillText(player.level + "lv " + player.name, player.locationX - mapWidth + canvas.width + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    ctx.strokeText(player.level + "lv " + player.name, player.locationX - mapWidth + canvas.width + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    ctx.shadowBlur = 20;
     ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - mapWidth + canvas.width, player.locationY - 32);
   }
   // 자신이 중간에 있는 경우
   // 자신이 중간에 있음으로, 상대의 위치를 이에 맞추어야 한다.
   // 상대위치 - 자신위치 + 화면크기/2
   else {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42, 100, 10);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX + 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
     ctx.fillStyle = "red";
     if (player.team == this.player.team) {
       ctx.fillStyle = "blue";
     }
-    ctx.fillRect((player.locationX - 42) - this.player.locationX + (canvas.width / 2), player.locationY - 42, player.hp, 10);
-    ctx.fillStyle = "black";
-    ctx.fillText(player.score, (player.locationX - 52) - this.player.locationX + (canvas.width / 2), player.locationY - 52);
-    ctx.fillText(player.name, (player.locationX - 32) - this.player.locationX + (canvas.width / 2), player.locationY - 52);
+    ctx.fillRect(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 + 2 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(player.locationX - 50 - this.player.locationX + (canvas.width / 2) + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.font = "18px Arial";
+    ctx.shadowBlur = 0;
+
+    // 닉네임을 그린다.
+    ctx.fillText(player.level + "lv " + player.name, (player.locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    ctx.strokeText(player.level + "lv " + player.name, (player.locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    ctx.shadowBlur = 20;
     ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width / 2), player.locationY - 32);
   }
-
   ctx.restore();
 }
 
@@ -773,7 +823,6 @@ function drawBall(ball) {
 
   ctx.shadowBlur = 20;
   ctx.shadowColor = "black";
-
   ctx.fillStyle = "white";
   ctx.beginPath();
 
@@ -804,14 +853,13 @@ function dieScreen() {
 }
 
 function dieEffecte() {
-  var nStart = new Date().getTime();
   try {
     if (corpseArr.length != 0) {
       try {
         for (var loop = 0; loop < corpseArr.length; loop++) {
           ctx.save();
           ctx.shadowBlur = 20;
-          ctx.shadowColor = corpseArr[loop].color;  // corpseArr[loop].color 접근에 오래 걸리는듯 함
+          ctx.shadowColor = corpseArr[loop].color; // corpseArr[loop].color 접근에 오래 걸리는듯 함
           ctx.fillStyle = corpseArr[loop].color;
           ctx.beginPath();
           if (mapState == "left") {
@@ -824,28 +872,52 @@ function dieEffecte() {
           ctx.fill();
           ctx.restore();
         }
-      } catch (e) {
-
-      }
+      } catch (e) {}
     }
-  } catch (e) {
+  } catch (e) {}
+}
 
+function drawMiniMap() {
+  var XOnMinimap = 1020,
+    YOnMinimap = 520;
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = "rgba(0,0,0,.8)";
+  // TODO: x,y
+  ctx.fillRect(XOnMinimap, YOnMinimap, 310, 100);
+  ctx.strokeStyle = "black";
+
+  // 자신을 그림
+  ctx.beginPath();
+  ctx.arc(XOnMinimap + (player.locationX / 10.3),
+    YOnMinimap - ((canvas.height - player.locationY * 2 - 600) / 10), 5, 0, Math.PI * 2);
+  ctx.fillStyle = "lime";
+  ctx.fill();
+
+  // 나를 제외한 플레이어를 그림
+  for (var loop = 0; loop < players.length; loop++) {
+    ctx.beginPath();
+    ctx.arc(XOnMinimap + (players[loop].locationX / 12),
+      YOnMinimap - ((canvas.height - players[loop].locationY * 2 - 600) / 10), 5, 0, Math.PI * 2);
+    ctx.fillStyle = "red";
+    if (player.team == players[loop].team) {
+      ctx.fillStyle = "blue";
+    }
+    ctx.fill();
   }
-  var nEnd = new Date().getTime();
+  ctx.restore();
 }
 
 function drawTower() {
   ctx.save();
   ctx.font = "15px Arial";
-  if (this.player.locationX - 670 < 0) { // if left max
+  if (this.player.locationX - 670 < 0) {
     ctx.fillStyle = "black";
     ctx.fillText(towers[0], 10, 300);
-
   }
   // 자신이 오른쪽에 있는경우
-  else if (this.player.locationX + 670 > 3200) { // if right max
+  else if (this.player.locationX + 670 > 3200) {
     ctx.fillStyle = "black";
-    ///ctx.fillRect(3187,300, 10, towers[1]);
     ctx.fillText(towers[1], 1300, 300);
   }
   ctx.restore();
@@ -861,16 +933,13 @@ function drawScore() {
 
 function drawLeaderBoard() {
   ctx.save();
-  ctx.globalAlpha = 0.5;
-  ctx.fillStyle = "rgba(0,0,0,0.01)";
-  ctx.fillRect(10, 10, 150, 220);
+  ctx.fillStyle = "white";
   ctx.strokeStyle = "black";
   ctx.font = "20px Arial";
-  ctx.globalAlpha = 1;
 
   for (var loop = 0; loop < topPlayers.length; loop++) {
-    ctx.strokeText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
-    ctx.fillText("#"+(loop + 1) + "  " + topPlayers[loop].name +"  " + topPlayers[loop].score, 12, 40 + loop * 21);
+    ctx.strokeText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 12, 40 + loop * 21);
+    ctx.fillText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 12, 40 + loop * 21);
   }
   ctx.restore();
 }
@@ -879,9 +948,7 @@ function revival() {
   socket.emit("revival");
 }
 
-/* 눈송이 */
 function SnowDraw() {
-  //  ctx.clearRect(0, 0, W, H);
   ctx.save();
   ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
   ctx.beginPath();
@@ -897,7 +964,8 @@ function SnowDraw() {
 
 //Function to move the snowflakes
 //angle will be an ongoing incremental flag. Sin and Cos functions will be applied to it to create vertical and horizontal movements of the flakes
-var angle = 0;
+
+
 function snowUpdate() {
   angle += 0.01;
   for (var i = 0; i < mp; i++) {
@@ -912,19 +980,32 @@ function snowUpdate() {
     //Sending flakes back from the top when it exits
     //Lets make it a bit more organic and let flakes enter from the left and right also.
     if (p.x > W + 5 || p.x < -5 || p.y > H) {
-      if (i % 3 > 0) { //66.67% of the flakes
-
-        particles[i] = { x: Math.random() * W, y: -2, r: p.r, d: p.d };
-      }
-      else {
+      if (i % 3 > 0) //66.67% of the flakes
+      {
+        particles[i] = {
+          x: Math.random() * W,
+          y: -2,
+          r: p.r,
+          d: p.d
+        };
+      } else {
         //If the flake is exitting from the right
         if (Math.sin(angle) > 0) {
           //Enter from the left
-          particles[i] = { x: -2, y: Math.random() * H, r: p.r, d: p.d };
-        }
-        else {
+          particles[i] = {
+            x: -2,
+            y: Math.random() * H,
+            r: p.r,
+            d: p.d
+          };
+        } else {
           //Enter from the right
-          particles[i] = { x: W + 2, y: Math.random() * H, r: p.r, d: p.d };
+          particles[i] = {
+            x: W + 2,
+            y: Math.random() * H,
+            r: p.r,
+            d: p.d
+          };
         }
       }
     }

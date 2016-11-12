@@ -2,74 +2,62 @@
 <html>
 
 <head>
-    <meta charset="utf-8"/>
-    <title>SNOW BALL</title>
-    <script src="/socket.io/socket.io.js"></script>
+  <meta charset="utf-8"/>
+  <title>SNOW BALL</title>
+  <script src="/socket.io/socket.io.js"></script>
   <style>
-    #loginCanvas { position: absolute; top: 30%; left: 25%; width: 850px; height: 150px; margin: -100px 0 0 -100px; } #nick
-    { position: fixed; top: 50%; left: 33%; width: 440px; height: 50px; font-size: 30px; } #play { position: fixed; top: 65%;
-    left: 47%; color: black; border: 2px solid #fff; font-size: 45px; border-radius: 4px; } .upgrade { text-align: center; border-radius:
-    25px; width:150px; height:20px; background:blue; } #statContainer { z-index: 300000; position: absolute; top:350px; left:10px;
-    } #dieWrapper { display: -webkit-flex; display: flex; align-items: center; justify-content: center; border-style: solid;
-    border-radius: 10px; position: absolute; top:0px; height:400px; top:30px; margin: auto; padding: 50px; left: 50%; transform:
-    translateX(-50%); color: white; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black; font-size: 130%; } #stat{
-    flex: 1; width: 200px; } #info{ width: 200px; } #revival{ animation: blink 2.5s linear infinite; } @keyframes blink { 0%
-    { color: red; } 33% { color: yellow; } 66% { color: blue; } 100% { color: green; } } li{ margin: 10px 0; } @keyframes slidein
-    { from { margin-left: 100%; width: 10%; } to { margin-left: 0%; width: 100%; } } .button { padding: 15px 25px; font-size:
-    24px; text-align: center; cursor: pointer; outline: none; color: #fff; background-color: #4CAF50; border: none; border-radius:
-    15px; box-shadow: 0 9px #999; } .button:hover {background-color: #3e8e41}
+a{position:relative;color:rgba(255,255,255,1);text-decoration:none;background-color:rgba(219,87,5,1);font-weight:700;font-size:3em;display:block;padding:4px;border-radius:8px;box-shadow:0 9px 0 rgba(219,31,5,1),0 9px 25px rgba(0,0,0,.7);margin:100px auto;top:50%;width:160px;text-align:center;transition:all .1s ease;cursor:pointer}a:active{box-shadow:0 3px 0 rgba(219,31,5,1),0 3px 6px rgba(0,0,0,.9);position:relative;top:6px}#loginCanvas{position:relative;text-decoration:none;font-weight:700;display:block;padding:4px;margin:100px auto;top:50%}#nick{position:relative;text-decoration:none;font-weight:700;font-size:3em;display:block;padding:4px;margin:100px auto;top:50%}.upgrade{text-align:center;border-radius:25px;width:150px;height:20px;background:blue}#statContainer{z-index:300000;position:absolute;top:350px;left:10px}#dieWrapper{display:-webkit-flex;display:flex;align-items:center;justify-content:center;border-style:solid;border-radius:10px;position:absolute;top:0;height:400px;top:30px;margin:auto;padding:50px;left:50%;transform:translateX(-50%);color:white;text-shadow:-2px 0 black,0 2px black,2px 0 black,0 -2px black;font-size:130%}#stat{flex:1;width:200px}#info{width:200px}#revival{animation:blink 2.5s linear infinite}@keyframes blink{0%{color:red}33%{color:yellow}66%{color:blue}100%{color:green}}li{margin:10px 0}@keyframes slidein{from{margin-left:100%;width:10%}to{margin-left:0%;width:100%}
   </style>
 </head>
 
 <body>
-	<div id="loginDiv">
-		<canvas id="loginCanvas" width="850" height="150"></canvas>
-		<input id="nick" autofocus="autofocus" placeholder="Nickname" maxlength="24" onkeypress="return searchKeyPress(event);">
-		<input class="button" type='submit' id="play" value="Play" onclick="submitNick();"></input>
-	</div>
-  <div id="container">
-	  <div id="gameAreaWrapper" style="display:none;">
-      <canvas style="position: relative;" id="myCanvas" width="500" height="500"></canvas>
-      <div id="upgradeForm" draggable="true" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
-        <!-- 정보 전송 목록
-        1. Max hp   2. Speed   3. Throw power   4. Max ball count
-        5. Ball Demage   6. Ball hp   7. Jump demage -->
-        <ul id="statContainer" style="list-style-type:none; display:none;">
-          <li><p class="upgrade" id="maxHp" onclick="upgradeEmit(id)" style="background : red;">Max hp</p></li>
-				  <li><p class="upgrade" id="speed" onclick="upgradeEmit(id)" )>Speed</p></li>
-          <li><p class="upgrade" id="throwPower" onclick="upgradeEmit(id)" style="background : orange;">Throw power</p></li>
-          <li><p class="upgrade" id="maxBallCount" onclick="upgradeEmit(id)" style="background : yellow;">Max ball count</p></li>
-          <li><p class="upgrade" id="balldemage" onclick="upgradeEmit(id)" style="background : green;">Ball Demage</p></li>
-          <li><p class="upgrade" id="ballHp" onclick="upgradeEmit(id)" style="background : pink;">Ball hp</p></li>
-          <li><p class="upgrade" id="jumpDemage" onclick="upgradeEmit(id)" style="background : skyblue;">Jump demage</p></li>
-        </ul>
-      </div>
-    </div>
-		<div id="dieWrapper" style="display:none;">
-      <ul id="info"  class="DEATH" style="list-style-type:none;">
-        <h2 class="DEATH">You are Dead</h2>
-        <li><p class="DEATH" id ="NAME">adasd</p></li>
-        <li><p class="DEATH" id ="SCORE"></p></li>
-        <li><p class="DEATH" id ="LEVEL"></p></li>
-        <li><p id="revival" onclick="revival();">&lt;press to revival&gt;</p></li>
-      </ul>
-      <ul id="stat" class="DEATH" style="list-style-type:none;">
-        <li><p class="DEATH" id ="MAXHP"></p></li>
-        <li><p class="DEATH" id ="SPEED"></p></li>
-        <li><p class="DEATH" id ="THROWPOWER"></p></li>
-        <li><p class="DEATH" id ="MAXBALLCOUNT"></p></li>
-        <li><p class="DEATH" id ="BALLDEMAGE"></p></li>
-        <li><p class="DEATH" id ="BALLHP"></p></li>
-        <li><p class="DEATH" id ="JUMPDEMAGE"></p></li>
+<div id="loginDiv">
+  <canvas id="loginCanvas" width="850" height="150"></canvas>
+  <input id="nick" width="440px" height="50px" autofocus="autofocus" placeholder="Nickname" maxlength="24" onkeypress="return searchKeyPress(event);">
+  <a class="button" type='submit' id="play" onclick="submitNick();">PLAY!</a>
+</div>
+<div id="container">
+  <div id="gameAreaWrapper" style="display:none;">
+    <canvas style="position: relative;" id="myCanvas" width="500" height="500"></canvas>
+    <div id="upgradeForm" draggable="true" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+      <!-- 정보 전송 목록
+      1. Max hp   2. Speed   3. Throw power   4. Max ball count
+      5. Ball Demage   6. Ball hp   7. Jump demage -->
+      <ul id="statContainer" style="list-style-type:none; display:none;">
+        <li><p class="upgrade" id="maxHp" onclick="upgradeEmit(id)" style="background : red;">Max hp</p></li>
+        <li><p class="upgrade" id="speed" onclick="upgradeEmit(id)" )>Speed</p></li>
+        <li><p class="upgrade" id="throwPower" onclick="upgradeEmit(id)" style="background : orange;">Throw power</p></li>
+        <li><p class="upgrade" id="maxBallCount" onclick="upgradeEmit(id)" style="background : yellow;">Max ball count</p></li>
+        <li><p class="upgrade" id="balldemage" onclick="upgradeEmit(id)" style="background : green;">Ball Demage</p></li>
+        <li><p class="upgrade" id="ballHp" onclick="upgradeEmit(id)" style="background : pink;">Ball hp</p></li>
+        <li><p class="upgrade" id="jumpDemage" onclick="upgradeEmit(id)" style="background : skyblue;">Jump demage</p></li>
       </ul>
     </div>
   </div>
-  <div id = "menuWrapper" style="display:none;">
-    <canvas id="deadCanvas" width="850" height="150"></canvas>
+  <div id="dieWrapper" style="display:none;">
+    <ul id="info"  class="DEATH" style="list-style-type:none;">
+      <h2 class="DEATH">You are Dead</h2>
+      <li><p class="DEATH" id ="NAME">adasd</p></li>
+      <li><p class="DEATH" id ="SCORE"></p></li>
+      <li><p class="DEATH" id ="LEVEL"></p></li>
+      <li><p id="revival" onclick="revival();">&lt;press to revival&gt;</p></li>
+    </ul>
+    <ul id="stat" class="DEATH" style="list-style-type:none;">
+      <li><p class="DEATH" id ="MAXHP"></p></li>
+      <li><p class="DEATH" id ="SPEED"></p></li>
+      <li><p class="DEATH" id ="THROWPOWER"></p></li>
+      <li><p class="DEATH" id ="MAXBALLCOUNT"></p></li>
+      <li><p class="DEATH" id ="BALLDEMAGE"></p></li>
+      <li><p class="DEATH" id ="BALLHP"></p></li>
+      <li><p class="DEATH" id ="JUMPDEMAGE"></p></li>
+    </ul>
   </div>
+</div>
+<div id = "menuWrapper" style="display:none;">
+  <canvas id="deadCanvas" width="850" height="150"></canvas>
+</div>
 
-  <script src="public/js/spriteSheet.js"></script>
-  <script src="public/js/randomColor.min.js"></script>
-  <script src="public/js/client.js"></script>
+<script src="public/js/spriteSheet.js"></script>
+<script src="public/js/client.min.js"></script>
 </body>
 </html>
