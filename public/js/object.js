@@ -3,7 +3,6 @@ var Vector = require('../lib/vector.js');
 
 class Object {
   constructor() {
-
   }
 
   applyForth(addingVector) {
@@ -13,7 +12,6 @@ class Object {
   }
 
   checkEdge() {
-
   }
 
   getFriction(mew, vector) { // mew = 마찰계수

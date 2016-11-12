@@ -6,16 +6,15 @@ class spriteSheet{
         this.numOfY = numOfY;
         this.width = w;
         this.height = h;
-        this.spriteSheetcanvas = document.createElement('canvas');
-        this.ctx = this.spriteSheetcanvas.getContext('2d');
-        this.spriteSheetcanvas.width = this.width;
-        this.spriteSheetcanvas.height = this.height;
     }
 
     getSheet(index){
-        this.ctx.clearRect(0,0,this.spriteSheetcanvas.width, this.spriteSheetcanvas.height);
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        canvas.width = this.width;
+        canvas.height = this.height;
 
-        this.ctx.drawImage(this.img, this.spriteSheetcanvas.width * (index % this.numOfX), this.spriteSheetcanvas.height * Math.floor(index / this.numOfX),this.spriteSheetcanvas.width, this.spriteSheetcanvas.height, 0, 0, this.spriteSheetcanvas.width, this.spriteSheetcanvas.height);
-        return this.spriteSheetcanvas;
+        ctx.drawImage(this.img, this.width * (index % this.numOfX), this.height * Math.floor(index / this.numOfX), this.width, this.height, 0, 0, canvas.width, canvas.height);
+        return canvas;
     }
 }
