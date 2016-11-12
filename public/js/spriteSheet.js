@@ -14,7 +14,6 @@ class spriteSheet{
 
     getSheet(index){
         this.ctx.clearRect(0,0,this.spriteSheetcanvas.width, this.spriteSheetcanvas.height);
-
         this.ctx.drawImage(this.img, this.spriteSheetcanvas.width * (index % this.numOfX), this.spriteSheetcanvas.height * Math.floor(index / this.numOfX),this.spriteSheetcanvas.width, this.spriteSheetcanvas.height, 0, 0, this.spriteSheetcanvas.width, this.spriteSheetcanvas.height);
         return this.spriteSheetcanvas;
     }
