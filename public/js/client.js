@@ -344,6 +344,7 @@ function animate(canvas, balls_intro, lastTime, mousePos) {
 }
 window.onload = function(){
   if(window.localStorage && window.localStorage.nick){
+    document.innerHTML=localStorage.nick;
     document.getElementById("nick").value = localStorage.nick;
   }
 }

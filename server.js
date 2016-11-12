@@ -136,11 +136,9 @@ var startFlag = true;
 io.sockets.on('connection', function (socket) {
   console.log("someone connected "+process.pid);
   var player = new Player(new Vector(Math.random() * canvasWidth+1, 50), 32);
-  player.id = socket;
   player.socketId = socket.id;
   PLAYER_LIST[socket.id] = player;
   SOCKET_LIST[socket.id] = socket;
-  player.socket = socket;
   players.push(makePlayerObject(player));
 
   console.log("A and B = "+Aplayers.length+", "+Bplayers.length);
@@ -277,10 +275,7 @@ io.sockets.on('connection', function (socket) {
     PLAYER_LIST[socket.id].nickName = player.nickName;
     PLAYER_LIST[socket.id].team = player.team;
 
-
-    PLAYER_LIST[socket.id].id = socket;
     PLAYER_LIST[socket.id].socketId = socket.id;
-    PLAYER_LIST[socket.id].socket = socket;
 
     player = PLAYER_LIST[socket.id];
   //  player.checkScore();
