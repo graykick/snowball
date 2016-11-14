@@ -45,8 +45,8 @@ if (cluster.isMaster) {
     },
     Atower = new Tower(3578, 3609), // Atower range 3578 ~ 3609
     Btower = new Tower(3412, 3643), // B tower :  3612 ~ 3643
-    topPlayers = [],
-
+    ATopUsers = [],
+    BTopUsers = [],
     // 서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag
     // 이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성됨
     startFlag = true;
@@ -56,11 +56,11 @@ if (cluster.isMaster) {
     port: 6379
   }));
 
-  app.get('/', function(req, res) {
+  app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
   });
   app.use('/public', express.static(__dirname + '/public'));
-  server.listen(port = Number(process.env.PORT || PORT), function() {
+  server.listen(port = Number(process.env.PORT || PORT), function () {
     console.log("Server " + PORT + " listening pid = " + process.pid);
   });
 
@@ -69,7 +69,7 @@ if (cluster.isMaster) {
     console.log("global connected id = " + socket.id + " testNum = " + testNum + " pid = " + process.pid);
   })
 
-  io.sockets.on('connection', function(socket) {
+  io.sockets.on('connection', function (socket) {
     console.log("someone connected " + process.pid);
     var player = new Player(new Vector(Math.random() * canvasWidth + 1, 50), 32);
     player.socketId = socket.id;
@@ -146,7 +146,7 @@ if (cluster.isMaster) {
     // keyup을 받으면, false를 대입해 그만 움직이도록 하고,
     // keydown을 받으면, true를 설정해 움직이도록 명령
     // player객체의 움직이는 메소드에서 if를 통해 움직일지 말지 정함
-    socket.on('keyPress', function(data) {
+    socket.on('keyPress', function (data) {
       if (data.inputId === 'left')
         player.press[65] = data.state; // true false 설정
       else if (data.inputId === 'right')
@@ -157,7 +157,7 @@ if (cluster.isMaster) {
 
     // 소켓연결이 끊어지면, 소켓갹체와 플레이어 객체에서 삭제
     // 배열이 아닌 객체이므로 delete 사용
-    socket.on('disconnect', function() {
+    socket.on('disconnect', function () {
       delete SOCKET_LIST[socket.id];
       delete PLAYER_LIST[socket.id];
       if (player.team == "A") {
@@ -230,7 +230,7 @@ if (cluster.isMaster) {
   }
 
   // 객체의 사이즈를 알기위한 함수
-  getObjLength = function(obj) {
+  getObjLength = function (obj) {
     var size = 0,
       key = null;
     for (key in obj) {
@@ -348,14 +348,14 @@ if (cluster.isMaster) {
         SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
         SOCKET_LIST[loop].emit("corpsesData", corpseArr);
         SOCKET_LIST[loop].emit("tower", [Atower.hp, Btower.hp]);
-        SOCKET_LIST[loop].emit("topPlayers", topPlayers);
+        SOCKET_LIST[loop].emit("topPlayers", ATopUsers, BTopUsers);
       } catch (e) {
         // 플레이어가 사망하여 삭제 되었는데 그 플레이어에 접근하는경우
         // 사망으로 판정하여 죽은 사람에게만 updateDeath
         try {
           SOCKET_LIST[loop].emit("updateDeath", enemysArr, balls);
           SOCKET_LIST[loop].emit("corpsesData", corpseArr);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }
@@ -377,7 +377,7 @@ if (cluster.isMaster) {
           // 점수 증가
           try {
             PLAYER_LIST[ballArr[inLoop].ownerSocketId].score += 10;
-          } catch (e) {} finally {}
+          } catch (e) { } finally { }
 
           // 공에 맞았음으로 반동을 적용
           if (ballArr[inLoop].location.x > PLAYER_LIST[outLoop].location.x) {
@@ -390,7 +390,7 @@ if (cluster.isMaster) {
             PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
             ballArr.splice(inLoop, 1);
             continue;
-          } catch (e) {} finally {}
+          } catch (e) { } finally { }
         }
       }
     }
@@ -431,7 +431,7 @@ if (cluster.isMaster) {
               ballArr.splice(outLoop, 1);
             }
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }
@@ -472,7 +472,7 @@ if (cluster.isMaster) {
             }
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -502,29 +502,51 @@ if (cluster.isMaster) {
   }
 
   function leaderBoard() {
-    var list = {"you": 100, "me": 75, "foo": 116, "bar": 15};
-    keysSorted = Object.keys(list).sort(function(a,b){return list[a]-list[b]})
-    console.log(keysSorted);     // bar,me,you,foo
-  }
-/*    var playerArr = [];
-    var topUsers = [];
-    for (var loop in PLAYER_LIST) {
-      playerArr.push(PLAYER_LIST[loop]);
-    }
-    playerArr.sort(function(a, b) {
-      return b.score - a.score;
-    });
+    var sorted = Object.keys(PLAYER_LIST).sort(function (a, b) { return a.score - b.score }); // 정렬된 객체의 이름
+    var Acnt = 0, Bcnt = 0, neww = true;
+    var inloop;
 
-    for (var i = 0; i < Math.min(10, playerArr.length); i++) {
-      topUsers.push({
-        score: playerArr[i].score,
-        name: playerArr[i].nickName
-      });
+    for (var loop = 0; loop < sorted.length; loop++) {
+      if (PLAYER_LIST[sorted[loop]].team == "A" && Acnt < 10) {
+        // A팀의 상위 10명
+        for (Acnt != 0 || inloop = 0; inloop < Acnt; inloop++) {
+          if (ATopUsers[inloop].id -= PLAYER_LIST[sorted[loop]].socketId) {
+            ATopUsers[inloop].score = PLAYER_LIST[sorted[loop]].score;
+            neww = false;
+          }
+        }
+        if (new == true) {
+          ATopUsers.push({
+            id: PLAYER_LIST[sorted[loop]].socketId,
+            name: PLAYER_LIST[sorted[loop]].nickName,
+            score: PLAYER_LIST[sorted[loop]].score
+          })
+          Acnt++;
+        }
+      }
+
+      if (PLAYER_LIST[sorted[loop]].team == "B" && Acnt < 10) {
+        // A팀의 상위 10명
+        for (Bcnt != 0 || inloop = 0; inloop < Bcnt; inloop++) {
+          if (BTopUsers[inloop].id -= PLAYER_LIST[sorted[loop]].socketId) {
+            BTopUsers[inloop].score = PLAYER_LIST[sorted[loop]].score;
+            neww = false;
+          }
+        }
+        if (new == true) {
+          BTopUsers.push({
+            id: PLAYER_LIST[sorted[loop]].socketId,
+            name: PLAYER_LIST[sorted[loop]].nickName,
+            score: PLAYER_LIST[sorted[loop]].score
+          })
+          Bcnt++;
+        }
+      }
+
     }
-    topPlayers = topUsers;
-  }*/
+  }
 
   function towerCheck() {
-    if (Atower.hp >= 0) {} else if (Btower.hp >= 0) {}
+    if (Atower.hp >= 0) { } else if (Btower.hp >= 0) { }
   }
 }

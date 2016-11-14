@@ -34,7 +34,8 @@ var introAnimationID,
   corpseArr = [],
   death = false,
   towers = [],
-  topPlayers = [],
+  ATopUsers = [],
+  BTopUsers = [],
   gameHanddler, //렌더딩 루프의 핸들러. 죽으면 정지하기 위해 사용
   socket;
 
@@ -497,8 +498,9 @@ function startSocket() {
     this.corpseArr = corpseArr;
   })
 
-  socket.on("topPlayers", (topArr) => {
-    topPlayers = topArr;
+  socket.on("topPlayers", (ATops, BTops) => {
+    BTopUsers = BTops;
+    ATopUsers = ATops;
   })
 
   function gameStart() {
@@ -936,11 +938,11 @@ function drawLeaderBoard() {
   ctx.fillStyle = "white";
   ctx.font = "20px Arial";
 
-  for (var loop = 0; loop < topPlayers.length; loop++) {
-    ctx.fillText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 840, 40 + loop * 21);
+  for (var loop = 0; loop < ATopUsers.length; loop++) {
+    ctx.fillText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 21);
   }
-  for (var loop = 0; loop < topPlayers.length; loop++) {
-    ctx.fillText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 360, 40 + loop * 21);
+  for (var loop = 0; loop < BTopUsers.length; loop++) {
+    ctx.fillText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 21);
   }
   ctx.restore();
 }
