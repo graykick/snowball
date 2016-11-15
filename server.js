@@ -502,65 +502,23 @@ if (cluster.isMaster) {
   }
 
   function leaderBoard() {
-    var sorted = Object.keys(PLAYER_LIST).sort(function (a, b) { return a.score - b.score }); // 정렬된 객체의 이름
-    var booleanNew = true;
+    var sorted = Object.keys(PLAYER_LIST).sort(function (a, b) { return PLAYER_LIST[b].score - PLAYER_LIST[a].score; }); // 정렬된 객체의 이름
+    ATopUsers=[];
+    BTopUsers = [];
     for (var loop = 0; loop < sorted.length; loop++) {
       if (PLAYER_LIST[sorted[loop]].team == "A" && ATopUsers.length < 10) {
-        // A팀의 상위 10명
-        if(ATopUsers.length != 0) {
-          for (var inloop = 0; inloop < ATopUsers.length; inloop++) {
-            if (ATopUsers[inloop].id != PLAYER_LIST[sorted[loop]].socketId) {
-              booleanNew = true;
-            }
-            else {
-              // 플레이어의 정보가 중복된다면
-              // id로 그 플레이어의 정보 찾아서 점수 업데이트
-              ATopUsers[inloop].score = PLAYER_LIST[sorted[loop]].score;
-              booleanNew = false;
-              break;
-            }
-          }
-        }
-        else if(ATopUsers.length == 0) {
-          booleanNew = true;
-        }
-
-        if (booleanNew) { // 맨 처음 플레이어의 정보
-          ATopUsers.push({
-            id: PLAYER_LIST[sorted[loop]].socketId,
-            name: PLAYER_LIST[sorted[loop]].nickName,
-            score: PLAYER_LIST[sorted[loop]].score
-          })
-        }
+        ATopUsers.push({
+          id: PLAYER_LIST[sorted[loop]].socketId,
+          name: PLAYER_LIST[sorted[loop]].nickName,
+          score: PLAYER_LIST[sorted[loop]].score
+        })
       }
-      else if (PLAYER_LIST[sorted[loop]].team == "B" && ATopUsers.length < 10) {
-        console.log(booleanNew);
-        if(BTopUsers.length != 0) {
-          for (var inloop = 0; inloop < BTopUsers.length; inloop++) {
-            if (BTopUsers[inloop].id != PLAYER_LIST[sorted[loop]].socketId) {
-              booleanNew = true;
-            }
-            else {
-              // 플레이어의 정보가 중복된다면
-              // id로 그 플레이어의 정보 찾아서 점수 업데이트
-              BTopUsers[inloop].score = PLAYER_LIST[sorted[loop]].score;
-              booleanNew = false;
-              break;
-            }
-          }
-        }
-        else if(BTopUsers.length == 0) {
-          booleanNew = true;
-        }
-
-
-        if (booleanNew) { // 맨 처음 플레이어의 정보
-          BTopUsers.push({
-            id: PLAYER_LIST[sorted[loop]].socketId,
-            name: PLAYER_LIST[sorted[loop]].nickName,
-            score: PLAYER_LIST[sorted[loop]].score
-          })
-        }
+      else if (PLAYER_LIST[sorted[loop]].team == "B" && BTopUsers.length < 10) {
+        BTopUsers.push({
+          id: PLAYER_LIST[sorted[loop]].socketId,
+          name: PLAYER_LIST[sorted[loop]].nickName,
+          score: PLAYER_LIST[sorted[loop]].score
+        })
       }
     }
   }
