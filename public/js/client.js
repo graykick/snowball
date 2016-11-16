@@ -13,6 +13,7 @@ var introAnimationID,
     y: 9999
   },
   /* 눈송이 */
+  angle = 0,
   mp = 25, //max particles
   particles = [],
   W, H,
@@ -68,7 +69,6 @@ window.onload = function() {
     document.getElementById("nick").value = localStorage.nick;
   }
 }
-animate(loginCanvas, balls_intro, time, mousePos);
 /* 눈송이 */
 for (var i = 0; i < mp; i++) {
   particles.push({
@@ -78,8 +78,6 @@ for (var i = 0; i < mp; i++) {
     d: Math.random() * mp //density
   })
 }
-var angle = 0;
-
 /* 메인의 로고 */
 function searchKeyPress(e) { // trigger
   e = e || window.event;
@@ -283,7 +281,6 @@ function getMousePos(canvas, evt) {
     obj = obj.offsetParent;
   }
 
-  // return relative mouse position
   var mouseX = evt.clientX - left + window.pageXOffset;
   var mouseY = evt.clientY - top + window.pageYOffset;
   return {
@@ -420,6 +417,8 @@ loginCanvas.addEventListener('mouseout', function(evt) {
   mousePos.x = 9999;
   mousePos.y = 9999;
 });
+
+animate(loginCanvas, balls_intro, time, mousePos);
 
 /* 게임 */
 function startSocket() {
