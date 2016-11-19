@@ -34,7 +34,8 @@ var introAnimationID,
   corpseArr = [],
   death = false,
   towers = [],
-  topPlayers = [],
+  ATopUsers = [],
+  BTopUsers = [],
   gameHanddler, //렌더딩 루프의 핸들러. 죽으면 정지하기 위해 사용
   socket;
 
@@ -497,8 +498,9 @@ function startSocket() {
     this.corpseArr = corpseArr;
   })
 
-  socket.on("topPlayers", (topArr) => {
-    topPlayers = topArr;
+  socket.on("topPlayers", (ATops, BTops) => {
+    BTopUsers = BTops;
+    ATopUsers = ATops;
   })
 
   function gameStart() {
@@ -591,28 +593,7 @@ function startEvent() {
 
 function drawScoreBar(player) {
   // 빈 게이지
-  ctx.save();
-  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-  ctx.fillRect(canvas.width / 4, canvas.height - 70, (canvas.width / 4) * 2, 20);
-  ctx.beginPath();
-  ctx.arc(canvas.width / 4, canvas.height - 70 + 10, 10, Math.PI / 2, Math.PI * 3 / 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc((canvas.width / 4) * 3, canvas.height - 70 + 10, 10, Math.PI / 2, Math.PI * 3 / 2, true);
-  ctx.fill();
-  ctx.restore();
-
-  // 찬 게이지
-  ctx.save();
-  ctx.fillStyle = "rgb(255, 236, 71)";
-  ctx.fillRect(canvas.width / 4, canvas.height - 70 + 2, player.score * (((canvas.width / 4) * 2) / player.nextLevelScore) - 2, 20 - 4);
-  ctx.beginPath();
-  ctx.arc(canvas.width / 4 + 2, canvas.height - 70 + 10, 8, Math.PI / 2, Math.PI * 3 / 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(canvas.width / 4 + player.score * (((canvas.width / 4) * 2) / player.nextLevelScore) - 2, canvas.height - 70 + 10, 8, Math.PI / 2, Math.PI * 3 / 2, true);
-  ctx.fill();
-  ctx.restore();
+  drawBar("rgba(0, 0, 0, 0.8)", "rgb(255, 236, 71)", canvas.width / 4, canvas.height - 70, (canvas.width / 4) * 2, 20, 1, player.score * (((canvas.width / 4) * 2) / player.nextLevelScore));
 
   // 경험치 / 다음레벨 경험치
   ctx.save();
@@ -684,25 +665,12 @@ function drawPlayer(player) {
 
   // 자신이 왼쪽이 있는 경우. 서버에서 받은대로 그림
   if (this.player.locationX - 670 < 0) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.fillRect(player.locationX - 50, player.locationY - 42, 100, 10);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX + 50, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
-    ctx.fillStyle = "red";
+    let fillColor = "red";
     if (player.team == this.player.team) {
-      ctx.fillStyle = "blue";
+      fillColor = "blue";
     }
-    ctx.fillRect(player.locationX - 50, player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 + 2, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
+    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50, player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx.font = "18px Arial";
@@ -719,25 +687,12 @@ function drawPlayer(player) {
   // this.player.locationX+670>3200
   // 공식은 상대위치 - 맵 width + 화면 width (-42는 offset이므로 상관 X)
   else if (this.player.locationX + 670 > 3200) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.fillRect(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42, 100, 10);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX + 50 - mapWidth + canvas.width, player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
-    ctx.fillStyle = "red";
+    let fillColor = "red";
     if (player.team == this.player.team) {
-      ctx.fillStyle = "blue";
+      fillColor = "blue";
     }
-    ctx.fillRect(player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 + 2 - mapWidth + canvas.width, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 - mapWidth + canvas.width + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
+    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx.font = "18px Arial";
@@ -753,25 +708,13 @@ function drawPlayer(player) {
   // 자신이 중간에 있음으로, 상대의 위치를 이에 맞추어야 한다.
   // 상대위치 - 자신위치 + 화면크기/2
   else {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.fillRect(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42, 100, 10);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX + 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 5, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
-    ctx.fillStyle = "red";
+
+    let fillColor = "red";
     if (player.team == this.player.team) {
-      ctx.fillStyle = "blue";
+      fillColor = "blue";
     }
-    ctx.fillRect(player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 1, player.hp * (100 / player.maxhp), 8);
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 + 2 - this.player.locationX + (canvas.width / 2), player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(player.locationX - 50 - this.player.locationX + (canvas.width / 2) + player.hp * (100 / player.maxhp) - 1, player.locationY - 42 + 5, 4, Math.PI / 2, Math.PI * 3 / 2, true);
-    ctx.fill();
+    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx.font = "18px Arial";
@@ -932,17 +875,58 @@ function drawScore() {
 }
 
 function drawLeaderBoard() {
+  console.log(BTopUsers);
   ctx.save();
   ctx.fillStyle = "white";
-  ctx.strokeStyle = "black";
-  ctx.font = "20px Arial";
+  ctx.font = "bolder 10px Arial";
+  ctx.textBaseline="top";
 
-  for (var loop = 0; loop < topPlayers.length; loop++) {
-    ctx.strokeText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 12, 40 + loop * 21);
-    ctx.fillText("#" + (loop + 1) + "  " + topPlayers[loop].name + "  " + topPlayers[loop].score, 12, 40 + loop * 21);
+  if(player.team = "A"){
+    for (var loop = 0; loop < ATopUsers.length; loop++) {
+      if(ATopUsers[loop].id == player.id){
+        drawBar("rgba(0, 0, 0, 0.8)", "#00ff80",20,20 + loop*16 ,180,14,1, ATopUsers[loop].score * (180 / ATopUsers[0].score));
+      } else{
+        drawBar("rgba(0, 0, 0, 0.8)","blue",20,20 + loop*16 ,180,14,1, ATopUsers[loop].score * (180 / ATopUsers[0].score));
+      }
+      ctx.strokeText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      ctx.fillText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+    }
+    for (var loop = 0; loop < BTopUsers.length; loop++) {
+      drawBar("rgba(0, 0, 0, 0.8)","red",canvas.width-200,20 + loop*16 ,180,14,1, BTopUsers[loop].score * (180 / BTopUsers[0].score));
+
+      // ctx.strokeText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      // ctx.fillText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      ctx.strokeText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
+      ctx.fillText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
+    }
   }
+
+
+
   ctx.restore();
 }
+
+function drawBar(backColor, frontColor, x, y, width, height, deep, width2){
+  ctx.save();
+  ctx.fillStyle = backColor;
+  ctx.fillRect(x, y, width, height);
+  ctx.beginPath();
+  ctx.arc(x, y + height / 2 , height / 2, Math.PI / 2, Math.PI * 3 / 2,false);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + width, y + height / 2 ,height / 2, Math.PI / 2, Math.PI * 3 / 2,true);
+  ctx.fill();
+
+  ctx.fillStyle = frontColor;
+  ctx.fillRect(x + deep, y + deep, width2, height-deep*2);
+  ctx.beginPath();
+  ctx.arc(x + deep, y + deep + (height - deep * 2) / 2, (height - deep * 2) / 2, Math.PI / 2, Math.PI * 3 / 2,false);
+  ctx.arc(x + width2 - deep, y+height/2 , (height - 2) / 2, Math.PI / 2, Math.PI * 3 / 2,true);
+  ctx.fill();
+  ctx.restore();
+}
+
+
 
 function revival() {
   socket.emit("revival");
