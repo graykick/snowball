@@ -2,6 +2,7 @@
 // 1. 소켓 접속
 // 2. 접속완료 받으면 닉네임 전송
 // 3. 게임시작 emit을 받으면, 게임시작
+console.log("js load");
 var introAnimationID,
   /* 메인의 로고 */
   loginCanvas = document.getElementById('loginCanvas'),
@@ -503,15 +504,26 @@ function startSocket() {
     ATopUsers = ATops;
   })
 
+  socket.on("allEmit",(nick) => {
+    console.log("test = "+nick);
+  })
+
+  socket.on("master",(data) => {
+    console.log(data);
+  })
+
+
+
   function gameStart() {
     startEvent();
     animationStart();
 
     function animationStart() {
       drawMap(player);
-      for (var loop = 0; loop < players.length; loop++) {
-        drawPlayer(players[loop]);
-      }
+      drawPlayer();
+      // for (var loop = 0; loop < players.length; loop++) {
+      //   drawPlayer(players[loop]);
+      // }
       drawMyPlayer(player);
       drawScoreBar(player);
       for (var loop = 0; loop < ballArr.length; loop++) {
@@ -654,79 +666,73 @@ function drawMyPlayer(player) {
 // 1. 자신이 왼쪽에 있는경우 2. 자신이 중간이 있는경우 3. 자신이 오른쪽에 있는 경우
 // 이 3가지 경우를 분기하여, 각기다른 위치에 상대방을 그림
 // 이 3가지 분기는 자신의 위치에 따라 달라짐. 그래서 if의 조건절에 자신의 위치가 사용
-function drawPlayer(player) {
-  ctx.save();
-  ctx.shadowBlur = 20;
-  ctx.shadowColor = "red";
-  if (player.team == this.player.team) {
-    ctx.shadowColor = "blue";
-  }
-  ctx.font = "15px Arial";
-
-  // 자신이 왼쪽이 있는 경우. 서버에서 받은대로 그림
-  if (this.player.locationX - 670 < 0) {
+function drawPlayer() {
+  for(let loop in players){
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "red";
     let fillColor = "red";
-    if (player.team == this.player.team) {
+    if (players[loop].team == this.player.team) {
+      ctx.shadowColor = "blue";
       fillColor = "blue";
     }
-    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50, player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+    ctx.font = "15px Arial";
 
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
-    ctx.font = "18px Arial";
-    ctx.shadowBlur = 0;
 
-    // 닉네임
-    ctx.fillText(player.level + "lv " + player.name, player.locationX + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
-    ctx.strokeText(player.level + "lv " + player.name, player.locationX + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
+    // 자신이 왼쪽이 있는 경우. 서버에서 받은대로 그림
+    if (this.player.locationX - 670 < 0) {
 
-    ctx.shadowBlur = 20;
-    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32), player.locationY - 32);
-  }
-  // 자신이 오른쪽에 있는 경우
-  // this.player.locationX+670>3200
-  // 공식은 상대위치 - 맵 width + 화면 width (-42는 offset이므로 상관 X)
-  else if (this.player.locationX + 670 > 3200) {
-    let fillColor = "red";
-    if (player.team == this.player.team) {
-      fillColor = "blue";
+      drawBar("rgba(0, 0, 0, 0.8)", fillColor, players[loop].locationX - 50, players[loop].locationY - 42, 100, 10, 1, players[loop].hp * (100 / players[loop].maxhp));
+
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.font = "18px Arial";
+      ctx.shadowBlur = 0;
+
+      // 닉네임
+      ctx.fillText(players[loop].level + "lv " + players[loop].name, players[loop].locationX + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+      ctx.strokeText(players[loop].level + "lv " + players[loop].name, players[loop].locationX + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+
+      ctx.shadowBlur = 20;
+      ctx.drawImage(skeletonSheet.getSheet(players[loop].ImageIndex), (players[loop].locationX - 32), players[loop].locationY - 32);
     }
-    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50 - mapWidth + canvas.width, player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+    // 자신이 오른쪽에 있는 경우
+    // this.player.locationX+670>3200
+    // 공식은 상대위치 - 맵 width + 화면 width (-42는 offset이므로 상관 X)
+    else if (this.player.locationX + 670 > 3200) {
 
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
-    ctx.font = "18px Arial";
-    ctx.shadowBlur = 0;
+      drawBar("rgba(0, 0, 0, 0.8)", fillColor, players[loop].locationX - 50 - mapWidth + canvas.width, players[loop].locationY - 42, 100, 10, 1, players[loop].hp * (100 / players[loop].maxhp));
 
-    // 닉네임
-    ctx.fillText(player.level + "lv " + player.name, player.locationX - mapWidth + canvas.width + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
-    ctx.strokeText(player.level + "lv " + player.name, player.locationX - mapWidth + canvas.width + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
-    ctx.shadowBlur = 20;
-    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - mapWidth + canvas.width, player.locationY - 32);
-  }
-  // 자신이 중간에 있는 경우
-  // 자신이 중간에 있음으로, 상대의 위치를 이에 맞추어야 한다.
-  // 상대위치 - 자신위치 + 화면크기/2
-  else {
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.font = "18px Arial";
+      ctx.shadowBlur = 0;
 
-    let fillColor = "red";
-    if (player.team == this.player.team) {
-      fillColor = "blue";
+      // 닉네임
+      ctx.fillText(players[loop].level + "lv " + players[loop].name, players[loop].locationX - mapWidth + canvas.width + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+      ctx.strokeText(players[loop].level + "lv " + players[loop].name, players[loop].locationX - mapWidth + canvas.width + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+      ctx.shadowBlur = 20;
+      ctx.drawImage(skeletonSheet.getSheet(players[loop].ImageIndex), (players[loop].locationX - 32) - mapWidth + canvas.width, players[loop].locationY - 32);
     }
-    drawBar("rgba(0, 0, 0, 0.8)", fillColor, player.locationX - 50 - this.player.locationX + (canvas.width / 2), player.locationY - 42, 100, 10, 1, player.hp * (100 / player.maxhp));
+    // 자신이 중간에 있는 경우
+    // 자신이 중간에 있음으로, 상대의 위치를 이에 맞추어야 한다.
+    // 상대위치 - 자신위치 + 화면크기/2
+    else {
+      drawBar("rgba(0, 0, 0, 0.8)", fillColor, players[loop].locationX - 50 - this.player.locationX + (canvas.width / 2), players[loop].locationY - 42, 100, 10, 1, players[loop].hp * (100 / players[loop].maxhp));
 
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
-    ctx.font = "18px Arial";
-    ctx.shadowBlur = 0;
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.font = "18px Arial";
+      ctx.shadowBlur = 0;
 
-    // 닉네임을 그린다.
-    ctx.fillText(player.level + "lv " + player.name, (player.locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
-    ctx.strokeText(player.level + "lv " + player.name, (player.locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(player.level + "lv " + player.name).width, player.locationY - 52);
-    ctx.shadowBlur = 20;
-    ctx.drawImage(skeletonSheet.getSheet(player.ImageIndex), (player.locationX - 32) - this.player.locationX + (canvas.width / 2), player.locationY - 32);
+      // 닉네임을 그린다.
+      ctx.fillText(players[loop].level + "lv " + players[loop].name, (players[loop].locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+      ctx.strokeText(players[loop].level + "lv " + players[loop].name, (players[loop].locationX) - this.player.locationX + (canvas.width / 2) + 50 - ctx.measureText(players[loop].level + "lv " + players[loop].name).width, players[loop].locationY - 52);
+      ctx.shadowBlur = 20;
+      ctx.drawImage(skeletonSheet.getSheet(players[loop].ImageIndex), (players[loop].locationX - 32) - this.player.locationX + (canvas.width / 2), players[loop].locationY - 32);
+    }
+    ctx.restore();
   }
-  ctx.restore();
 }
 
 // 자신의 위치에 따라 맵의 어디를 그려야 할지 정해짐
@@ -840,7 +846,7 @@ function drawMiniMap() {
   // 나를 제외한 플레이어를 그림
   for (var loop = 0; loop < players.length; loop++) {
     ctx.beginPath();
-    ctx.arc(XOnMinimap + (players[loop].locationX / 12),
+    ctx.arc(XOnMinimap + (players[loop].locationX / 10.3),
       YOnMinimap - ((canvas.height - players[loop].locationY * 2 - 600) / 10), 5, 0, Math.PI * 2);
     ctx.fillStyle = "red";
     if (player.team == players[loop].team) {
@@ -867,21 +873,24 @@ function drawTower() {
 }
 
 function drawScore() {
+  ctx.save();
   ctx.fillStyle = "white";
   ctx.strokeStyle = "black";
   ctx.font = "40px Arial";
   ctx.strokeText(Math.floor(towers[0]) + " : " + Math.floor(towers[1]), canvas.width / 2 - ctx.measureText(Math.floor(towers[0]) + " : " + Math.floor(towers[1])).width / 2, 50);
   ctx.fillText(Math.floor(towers[0]) + " : " + Math.floor(towers[1]), canvas.width / 2 - ctx.measureText(Math.floor(towers[0]) + " : " + Math.floor(towers[1])).width / 2, 50);
+  ctx.restore();
 }
 
 function drawLeaderBoard() {
-  console.log(BTopUsers);
   ctx.save();
   ctx.fillStyle = "white";
   ctx.font = "bolder 10px Arial";
   ctx.textBaseline="top";
 
-  if(player.team = "A"){
+
+
+  if(player.team == "A"){
     for (var loop = 0; loop < ATopUsers.length; loop++) {
       if(ATopUsers[loop].id == player.id){
         drawBar("rgba(0, 0, 0, 0.8)", "#00ff80",20,20 + loop*16 ,180,14,1, ATopUsers[loop].score * (180 / ATopUsers[0].score));
@@ -899,10 +908,26 @@ function drawLeaderBoard() {
       ctx.strokeText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
       ctx.fillText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
     }
+  } else if(player.team == "B"){
+    for (var loop = 0; loop < BTopUsers.length; loop++) {
+      if(BTopUsers[loop].id == player.id){
+        console.log("fuck = "+BTopUsers[loop].score);
+        drawBar("rgba(0, 0, 0, 0.8)", "#00ff80",canvas.width-200,20 + loop*16 ,180,14,1, BTopUsers[loop].score * (180 / BTopUsers[0].score));
+      } else{
+        drawBar("rgba(0, 0, 0, 0.8)","blue",canvas.width-200,20 + loop*16 ,180,14,1, BTopUsers[loop].score * (180 / BTopUsers[0].score));
+      }
+      // ctx.strokeText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      // ctx.fillText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      ctx.strokeText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
+      ctx.fillText("#" + (loop + 1) + "  " + BTopUsers[loop].name + "  " + BTopUsers[loop].score, canvas.width-200, 20 + loop * 16);
+    }
+
+    for (var loop = 0; loop < ATopUsers.length; loop++) {
+      drawBar("rgba(0, 0, 0, 0.8)","red",20,20 + loop*16 ,180,14,1, ATopUsers[loop].score * (180 / ATopUsers[0].score));
+      ctx.strokeText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+      ctx.fillText("#" + (loop + 1) + "  " + ATopUsers[loop].name + "  " + ATopUsers[loop].score, 20, 20 + loop * 16);
+    }
   }
-
-
-
   ctx.restore();
 }
 

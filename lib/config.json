@@ -1,6 +1,39 @@
 {
   "port": 3002,
-  "foodMass": 1,
+  "canvasWidth" : 1340,
+  "AtowerIndexMin" : 3578,
+  "AtowerIndexMax" : 3609,
+  "BtowerIndexMin" : 3612,
+  "BtowerIndexMax" : 3643,
+  "playerMass" : 32,
+  "startLocationY" : 50,
+
+  "groundFriction" : 0.1,
+  "airFriction" : 0.08,
+  "iceFriction" : 0.001,
+  "gravity" : 2,
+
+  "jumpHeight" : 150,
+  "speed" : 20,
+  "throwPower" : 100,
+  "throwDemage" : 10,
+  "hp" : 100,
+  "maxHp" : 100,
+  "maxBallCount" : 4,
+  "recoveryHpAblilty" : 5,
+  "nextLevelScore" : 100,
+  "ballHp" : 20,
+  "jumpDemage" : 20,
+  "levelUpRate" : 1.5,
+
+  "mapWidth" : 3200,
+  "screenHalf" : 670,
+
+  "ballMass" : 15,
+
+
+
+
   "fireFood": 20,
   "limitSplit": 16,
   "defaultPlayerMass": 10,

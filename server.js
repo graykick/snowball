@@ -10,46 +10,90 @@
 var express = require('express'),
   cluster = require('cluster'),
   redis = require('socket.io-redis'),
+  redisC = require("redis"),
   randomColor = require('randomcolor'),
   Vector = require('./lib/vector.js'),
   Player = require('./lib/player.js'),
   Ball = require('./lib/ball.js'),
   Tower = require('./lib/tower.js'),
+  c = require('./lib/config.json');
 
-  canvasWidth = 1340,
+  canvasWidth = c.canvasWidth,
   testNum = 0,
 
-  PORT = 3002;
+  PORT = c.port;
 
 if (cluster.isMaster) {
   var cpus = require('os').cpus().length;
   for (var i = 0; i < cpus; i++) {
     cluster.fork();
   }
+  // var app = express(),
+  // server = require('http').createServer(app),
+  // io = require('socket.io').listen(server);
+  // io.adapter(redis({
+  //   host: 'localhost',
+  //   port: 6379
+  // }));
+  //
+  // var client = redisC.createClient(6379, 'localhost');
+  // // client.on('connect', function() {
+  // //
+  // // }
+  //
+  // setInterval(() => {
+  //   io.emit("master","fuck you iam master");
+  //   client.hmget("player",(err, reply) => {
+  //     try{
+  //       console.log("player redis test = "+reply.fuck);
+  //     } catch(e) {
+  //
+  //     }
+  //
+  //   })
+  // },100);
+
 } else {
   var app = express(),
-    server = require('http').createServer(app),
-    io = require('socket.io').listen(server),
-
-    SOCKET_LIST = {},
-    PLAYER_LIST = {},
-    ballArr = [],
-    players = [],
-    corpseArr = [],
-    deadPlayer = {},
-    Aplayers = {
-      length: 0
-    },
-    Bplayers = {
-      length: 0
-    },
-    Atower = new Tower(3578, 3609), // Atower range 3578 ~ 3609
-    Btower = new Tower(3412, 3643), // B tower :  3612 ~ 3643
-    ATopUsers = [],
-    BTopUsers = [],
+  server = require('http').createServer(app),
+  io = require('socket.io').listen(server),
+  SOCKET_LIST = {},
+  PLAYER_LIST = {},
+  ballArr = [],
+  players = [],
+  corpseArr = [],
+  deadPlayer = {},
+  Aplayers = {
+    length: 0
+  },
+  Bplayers = {
+    length: 0
+  },
+  Atower = new Tower(c.AtowerIndexMin, c.AtowerIndexMax), // Atower range 3578 ~ 3609
+  Btower = new Tower(c.BtowerIndexMin, c.BtowerIndexMax), // B tower :  3612 ~ 3643
+  ATopUsers = [],
+  BTopUsers = [],
     // 서버에 제일 처음 접속했을 때 loop를 실행하기위한 flag
     // 이를 사용하지 않는다면, 접속자가 0명일때도 loop가 돌거나, 접속할때 마다 루프가 새로 생성됨
-    startFlag = true;
+  startFlag = true;
+
+  var gameLoopHandler;
+  var updateLoopHandler;
+  var corpseImpactLoopHandler;
+  var leaderBoardLoopHandler;
+
+  // var client = redisC.createClient(6379, 'localhost');
+  // client.on('connect', function() {
+  //   console.log('connected yeah');
+  //
+  // });
+  // client.get("test", function(err, reply) {
+  //   // reply is null when the key is missing
+  //   console.log("get test"+reply+" vs "+process.pid);
+  // });
+  // client.set(["test", process.pid]);
+
+
 
   io.adapter(redis({
     host: 'localhost',
@@ -71,7 +115,7 @@ if (cluster.isMaster) {
 
   io.sockets.on('connection', function (socket) {
     console.log("someone connected " + process.pid);
-    var player = new Player(new Vector(Math.random() * canvasWidth + 1, 50), 32);
+    var player = new Player(new Vector(Math.random() * canvasWidth + 1, 50), c.playerMass);
     player.socketId = socket.id;
     PLAYER_LIST[socket.id] = player;
     SOCKET_LIST[socket.id] = socket;
@@ -125,15 +169,12 @@ if (cluster.isMaster) {
       if (player.maxBallCount >= player.nowBallCount) {
         player.nowBallCount++;
         var newBall = player.throwBall(data.mouseX, data.mouseY);
-
+      //  var newBallDir = newBall.dir.copy();
         // 반동을 어떤 방향으로 줄지 정함
         // 공을 오른쪽으로 던지면, 반동은 왼쪽으로 반대의 경우엔, 오른쪽으로 applyForth 호출
-        if (data.mouseX > player.location.x) {
-          player.applyForth(new Vector(-10, 0));
-        } else {
-          player.applyForth(new Vector(10, 0));
-        }
-        // ball객체에대한 setting이 완료 되었으므로, ballArr에 추가
+
+        player.applyForth(Vector.multStatic(newBall.dir,-0.15)); //공 방향만큼 반동추가
+
         ballArr.push(newBall);
       }
     })
@@ -260,10 +301,10 @@ if (cluster.isMaster) {
   function start() {
     if (startFlag) {
       startFlag = false;
-      setInterval(gameLoop, 1000 / 60);
-      setInterval(update, 10);
-      setInterval(corpseImpact, 500);
-      setInterval(leaderBoard, 1000);
+      gameLoopHandler = setInterval(gameLoop, 1000 / 60);
+      updateLoopHandler = setInterval(update, 10);
+      corpseImpactLoopHandler = setInterval(corpseImpact, 500);
+      leaderBoardLoopHandler = setInterval(leaderBoard, 1000);
     }
   }
 
@@ -346,6 +387,8 @@ if (cluster.isMaster) {
       // 클라이언트에 필요한 정보만을 담은 객체와 객체를 담은 배열을 emit
       // gameloop에서 삭제된 경우 가끔 오류가 발생하여 예외처리
       try {
+        //io.broadcast("allEmit",PLAYER_LIST[loop].nickName)
+        //io.emit("allEmit", PLAYER_LIST[loop].nickName);
         SOCKET_LIST[loop].emit("update", makePlayerObject(PLAYER_LIST[loop]), enemysArr, balls);
         SOCKET_LIST[loop].emit("corpsesData", corpseArr);
         SOCKET_LIST[loop].emit("tower", [Atower.hp, Btower.hp]);
@@ -392,6 +435,24 @@ if (cluster.isMaster) {
             ballArr.splice(inLoop, 1);
             continue;
           } catch (e) { } finally { }
+        } else if((ballArr[inLoop].ownerSocketId != PLAYER_LIST[outLoop].socketId) && (ballArr[inLoop].team == PLAYER_LIST[outLoop].team) && Vector.subStatic(PLAYER_LIST[outLoop].location, ballArr[inLoop].location).mag() < PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass){
+            var radius = PLAYER_LIST[outLoop].mass + ballArr[inLoop].mass;
+
+            //체력 증가
+            PLAYER_LIST[outLoop].hp += 0.2;
+
+            // 공에 맞았음으로 반동을 적용
+            if (ballArr[inLoop].location.x > PLAYER_LIST[outLoop].location.x) {
+              PLAYER_LIST[outLoop].applyForth(new Vector(-1, 0));
+            } else {
+              PLAYER_LIST[outLoop].applyForth(new Vector(1, 0));
+            }
+            // 배열에서 맞은 공 삭제
+            try {
+              PLAYER_LIST[ballArr[inLoop].ownerSocketId].nowBallCount--;
+              ballArr.splice(inLoop, 1);
+              continue;
+            } catch (e) { } finally { }
         }
       }
     }
@@ -439,7 +500,7 @@ if (cluster.isMaster) {
 
   // 플레이어가 사망시 호출
   function makeDeathBall(player) {
-    var circleNum = Math.round(player.score / 5) + 1; // 사망한 플레이어의 점수에따른 영혼의 갯수
+    var circleNum = Math.round(player.score / 10) + 1; // 사망한 플레이어의 점수에따른 영혼의 갯수
     var colorArr = randomColor({
       count: circleNum,
       hue: 'red'
@@ -526,5 +587,16 @@ if (cluster.isMaster) {
 
   function towerCheck() {
     if (Atower.hp >= 0) { } else if (Btower.hp >= 0) { }
+  }
+
+  function gameClear(){
+    for(var loop in SOCKET_LIST){
+      SOCKET_LIST[loop].emit("gameClear");
+    }
+    startFlag = true;
+    clearInterval(gameLoopHandler);
+    clearInterval(updateLoopHandler);
+    clearInterval(corpseImpactLoopHandler);
+    clearInterval(leaderBoardLoopHandler);
   }
 }
