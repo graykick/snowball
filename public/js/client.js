@@ -407,14 +407,11 @@ function animate(canvas, balls_intro, lastTime, mousePos) {
     animate(loginCanvas, balls_intro, lastTime, mousePos);
   });
 }
-var mousePos = {
-  x: 9999,
-  y: 9999
-};
 loginCanvas.addEventListener('mousemove', function(evt) {
   var pos = getMousePos(loginCanvas, evt);
   mousePos.x = pos.x;
   mousePos.y = pos.y;
+
 });
 
 loginCanvas.addEventListener('mouseout', function(evt) {
@@ -425,6 +422,7 @@ loginCanvas.addEventListener('mouseout', function(evt) {
 /* 게임 */
 function startSocket() {
   socket = io({transports: ['websocket']});
+  //socket = io();
 
   socket.on("connected", () => {
     if (window.localStorage) {
@@ -505,11 +503,31 @@ function startSocket() {
   })
 
   socket.on("allEmit",(nick) => {
-    console.log("test = "+nick);
+    console.log(nick);
   })
 
   socket.on("master",(data) => {
     console.log(data);
+  })
+
+  socket.on("gameClear", () => {
+    console.log("gameClear!!!!!!!!!!!!!!!!!!!!!!");
+    // document.getElementById("NAME").innerHTML = "name : " + information.name;
+    // document.getElementById("SCORE").innerHTML = "score : " + information.score;
+    // document.getElementById("LEVEL").innerHTML = "level : " + information.level;
+    //
+    // document.getElementById("MAXHP").innerHTML = "maxhp : " + information.MAXHP;
+    // document.getElementById("SPEED").innerHTML = "speed : " + information.SPEED;
+    // document.getElementById("THROWPOWER").innerHTML = "throw power : " + information.THROWPOWER;
+    // document.getElementById("MAXBALLCOUNT").innerHTML = "max ball count : " + information.MAXBALLCOUNT;
+    // document.getElementById("BALLDEMAGE").innerHTML = "ball demage : " + information.BALLDEMAGE;
+    // document.getElementById("BALLHP").innerHTML = "ball hp : " + information.BALLHP;
+    // document.getElementById("JUMPDEMAGE").innerHTML = "jump demage : " + information.JUMPDEMAGE;
+    document.getElementById("clearWrapper").style.display = "flex";
+  })
+
+  socket.on("doneNewGame", () => {
+    document.getElementById("clearWrapper").style.display = "none";
   })
 
 
@@ -539,6 +557,11 @@ function startSocket() {
       requestAnimFrame(animationStart);
     }
   }
+}
+
+function reStart(){
+  console.log("reStart");
+  socket.emit("newGame");
 }
 
 function upgradeEmit(abilyty) {
@@ -911,7 +934,6 @@ function drawLeaderBoard() {
   } else if(player.team == "B"){
     for (var loop = 0; loop < BTopUsers.length; loop++) {
       if(BTopUsers[loop].id == player.id){
-        console.log("fuck = "+BTopUsers[loop].score);
         drawBar("rgba(0, 0, 0, 0.8)", "#00ff80",canvas.width-200,20 + loop*16 ,180,14,1, BTopUsers[loop].score * (180 / BTopUsers[0].score));
       } else{
         drawBar("rgba(0, 0, 0, 0.8)","blue",canvas.width-200,20 + loop*16 ,180,14,1, BTopUsers[loop].score * (180 / BTopUsers[0].score));

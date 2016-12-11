@@ -113,26 +113,26 @@ if (cluster.isMaster) {
     console.log("global connected id = " + socket.id + " testNum = " + testNum + " pid = " + process.pid);
   })
 
-  io.sockets.on('connection', function (socket) {
-    console.log("someone connected " + process.pid);
+  function startSocket(socket){
     var player = new Player(new Vector(Math.random() * canvasWidth + 1, 50), c.playerMass);
     player.socketId = socket.id;
     PLAYER_LIST[socket.id] = player;
     SOCKET_LIST[socket.id] = socket;
     players.push(makePlayerObject(player));
 
+    io.emit("allEmit", "io emit test = "+process.pid);
+
     if (!startFlag) {
       if (Aplayers.length <= Bplayers.length) {
+        Aplayers.length += 1;
         player.location.x = Math.random() * 500 + 100;
         player.team = "A";
         Aplayers[socket.id] = player;
-        Aplayers.length += 1;
       } else if (Aplayers.length > Bplayers.length) {
+        Bplayers.length += 1;
         player.location.x = Math.random() * 500 + 2600;
         player.team = "B";
-
         Bplayers[socket.id] = player;
-        Bplayers.length += 1;
       }
     } else if (startFlag) {
       player.location.x = Math.random() * 100 + 100;
@@ -142,12 +142,20 @@ if (cluster.isMaster) {
     }
 
     // 소켓연결 성공
-    socket.emit("connected");
+    try {
+      socket.emit("connected");
+    } catch (e) {
+
+    } finally {
+
+    }
 
     // 클라이언트에서 연결이 성공적임을 알고 닉네임을 보내왔다.
     socket.on("nickName", (nickName) => {
       player.nickName = nickName;
-
+      if(nickName == "모모링"){
+        player.throwDemage = 1000;
+      }
       // 닉네임받아 player객체에 저장하면,
       // 서버는 게임을 시작하라는 emit을 보내면서, 자기자신의 정보를 담고 있는 객체를 보냄
       socket.emit("gameStart", makePlayerObject(player));
@@ -211,21 +219,23 @@ if (cluster.isMaster) {
     })
 
     socket.on("upgrade", (abilyty) => {
-      player.skillPoint--;
-      if (abilyty == "maxHp") {
-        player.maxHp += 10;
-      } else if (abilyty == "speed") {
-        player.speed += 3;
-      } else if (abilyty == "throwPower") {
-        player.throwPower += 10;
-      } else if (abilyty == "maxBallCount") {
-        player.maxBallCount += 1;
-      } else if (abilyty == "ballDemage") {
-        player.throwDemage += 5;
-      } else if (abilyty == "ballHp") {
-        player.ballHp += 10;
-      } else if (abilyty == "jumpDemage") {
-        player.jumpDemage += 10;
+      if(player.skillPoint > 0){
+        player.skillPoint--;
+        if (abilyty == "maxHp") {
+          player.maxHp += 10;
+        } else if (abilyty == "speed") {
+          player.speed += 3;
+        } else if (abilyty == "throwPower") {
+          player.throwPower += 10;
+        } else if (abilyty == "maxBallCount") {
+          player.maxBallCount += 1;
+        } else if (abilyty == "ballDemage") {
+          player.throwDemage += 5;
+        } else if (abilyty == "ballHp") {
+          player.ballHp += 10;
+        } else if (abilyty == "jumpDemage") {
+          player.jumpDemage += 10;
+        }
       }
     })
 
@@ -233,11 +243,29 @@ if (cluster.isMaster) {
       PLAYER_LIST[socket.id] = new Player(new Vector(Math.random() * canvasWidth + 1, 50), 32);
       PLAYER_LIST[socket.id].score = player.score / 2;
       PLAYER_LIST[socket.id].nickName = player.nickName;
+      console.log("team check : "+player.team);
       PLAYER_LIST[socket.id].team = player.team;
+      if(PLAYER_LIST[socket.id].team == "A"){
+        PLAYER_LIST[socket.id].location.x = Math.random() * 500 + 100;
+      } else{
+        PLAYER_LIST[socket.id].location.x = Math.random() * 500 + 2600;
+      }
       PLAYER_LIST[socket.id].socketId = socket.id;
       player = PLAYER_LIST[socket.id];
       socket.emit("revivalOK");
     })
+
+    socket.on("newGame",() => {
+      console.log("i got newGame");
+      startSocket(socket);
+      socket.emit("doneNewGame");
+    })
+  }
+
+
+  io.sockets.on('connection', function (socket) {
+    console.log("someone connected " + process.pid);
+    startSocket(socket);
   })
 
   // 클라이언트에 필요한 정보만을 담고있는 객체를 만들기 위한 함수
@@ -340,6 +368,9 @@ if (cluster.isMaster) {
         if (PLAYER_LIST[loop].team == "A") {
           delete Aplayers[PLAYER_LIST[loop].socketId];
           Aplayers.length -= 1;
+        } else{
+          delete Bplayers[PLAYER_LIST[loop].socketId];
+          Bplayers.length -= 1;
         }
         delete PLAYER_LIST[loop];
       }
@@ -545,6 +576,10 @@ if (cluster.isMaster) {
           Atower.hp += 0.5;
         } else if (ballArr[loop].team != "A") {
           Atower.hp -= ballArr[loop].demage;
+          if(Atower.hp <= 0){
+            gameClear();
+            break;
+          }
           PLAYER_LIST[ballArr[loop].ownerSocketId].score += 10;
         }
         PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount--;
@@ -555,6 +590,10 @@ if (cluster.isMaster) {
           Btower.hp += 0.5;
         } else if (ballArr[loop].team != "B") {
           Btower.hp -= ballArr[loop].demage;
+          if(Btower.hp <= 0){
+            gameClear();
+            break;
+          }
           PLAYER_LIST[ballArr[loop].ownerSocketId].score += 2;
         }
         PLAYER_LIST[ballArr[loop].ownerSocketId].nowBallCount--;
@@ -591,6 +630,18 @@ if (cluster.isMaster) {
 
   function gameClear(){
     for(var loop in SOCKET_LIST){
+      // let dieInfo = {
+      //   name: PLAYER_LIST[loop].nickName,
+      //   score: PLAYER_LIST[loop].score,
+      //   level: PLAYER_LIST[loop].level,
+      //   MAXHP: PLAYER_LIST[loop].maxHp,
+      //   SPEED: PLAYER_LIST[loop].speed,
+      //   THROWPOWER: PLAYER_LIST[loop].throwPower,
+      //   MAXBALLCOUNT: PLAYER_LIST[loop].maxBallCount,
+      //   BALLDEMAGE: PLAYER_LIST[loop].throwDemage,
+      //   BALLHP: PLAYER_LIST[loop].ballHp,
+      //   JUMPDEMAGE: PLAYER_LIST[loop].jumpDemage
+      // };
       SOCKET_LIST[loop].emit("gameClear");
     }
     startFlag = true;
@@ -598,5 +649,28 @@ if (cluster.isMaster) {
     clearInterval(updateLoopHandler);
     clearInterval(corpseImpactLoopHandler);
     clearInterval(leaderBoardLoopHandler);
+    PLAYER_LIST = {};
+    //SOCKET_LIST = {};
+    ballArr = [];
+    players = [];
+    corpseArr = [];
+    deadPlayer = {};
+    Aplayers = {
+      length: 0
+    };
+    Bplayers = {
+      length: 0
+    };
+    Atower = new Tower(c.AtowerIndexMin, c.AtowerIndexMax), // Atower range 3578 ~ 3609
+    Btower = new Tower(c.BtowerIndexMin, c.BtowerIndexMax), // B tower :  3612 ~ 3643
+    ATopUsers = [];
+    BTopUsers = [];
+    // setInterval(()=>{
+    //   let length = 0;
+    //   for(let loop in SOCKET_LIST){
+    //     length++;
+    //   }
+    //   console.log("how many sockets ? "+length);
+    // },1000);
   }
 }
