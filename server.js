@@ -81,6 +81,7 @@ if (cluster.isMaster) {
   var updateLoopHandler;
   var corpseImpactLoopHandler;
   var leaderBoardLoopHandler;
+  var walkingAnimationHandler;
 
   // var client = redisC.createClient(6379, 'localhost');
   // client.on('connect', function() {
@@ -333,6 +334,13 @@ if (cluster.isMaster) {
       updateLoopHandler = setInterval(update, 10);
       corpseImpactLoopHandler = setInterval(corpseImpact, 500);
       leaderBoardLoopHandler = setInterval(leaderBoard, 1000);
+      walkingAnimationHandler = setInterval(walkingAnimation, 250);
+    }
+  }
+
+  function walkingAnimation(){
+    for(var loop in PLAYER_LIST){
+      PLAYER_LIST[loop].walkingAnimation();
     }
   }
 
@@ -342,6 +350,7 @@ if (cluster.isMaster) {
     // 만약 플레이어가 사망 상태라면, PLAYER_LIST객체에서 해당 플레이어를 삭제
     for (var loop in PLAYER_LIST) {
       PLAYER_LIST[loop].run();
+    //  PLAYER_LIST[loop].walkingAnimation();
       if (PLAYER_LIST[loop].skillPoint >= 1) {
         levelUp(loop);
       }
@@ -649,6 +658,7 @@ if (cluster.isMaster) {
     clearInterval(updateLoopHandler);
     clearInterval(corpseImpactLoopHandler);
     clearInterval(leaderBoardLoopHandler);
+    clearInterval(walkingAnimationHandler);
     PLAYER_LIST = {};
     //SOCKET_LIST = {};
     ballArr = [];
