@@ -80,7 +80,8 @@ The game will then be accessible at `http://localhost:3002` or the respective se
 
 ---
 #### Images
-Ateam Character(/readMeImages/MY1.png)
+![Ateam Character NaYeon from twice](/readMeImages/MY1.png)
+![Bteam Character MoMo from twice](/readMeImages/MY1.png)
 <!--
 ## FAQ
 1. **What is this game?**
