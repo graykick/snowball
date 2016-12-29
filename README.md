@@ -2,7 +2,7 @@ snowball.io
 =============
 
 A simple but powerful snowball.io built with socket.IO and HTML5 canvas on top of NodeJS.
-![Ateam Character NaYeon from twice](/readMeImages/intro.png)
+![Ateam Character NaYeon from twice](/readMeImages/intro.PNG)
 ![Ateam Character NaYeon from twice](/readMeImages/main.png)
 
 
