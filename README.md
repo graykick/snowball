@@ -2,6 +2,9 @@ snowball.io
 =============
 
 A simple but powerful snowball.io built with socket.IO and HTML5 canvas on top of NodeJS.
+![Ateam Character NaYeon from twice](/readMeImages/intro.png)
+![Ateam Character NaYeon from twice](/readMeImages/main.png)
+
 
 <!--need game screenshot image-->
 
@@ -80,8 +83,9 @@ The game will then be accessible at `http://localhost:3002` or the respective se
 
 ---
 #### Images
-![Ateam Character NaYeon from twice](/readMeImages/NY1.png)
-![Bteam Character MoMo from twice](/readMeImages/MM1.png)
+Ateam Character NaYeon from twice ![Ateam Character NaYeon from twice](/readMeImages/NY1.png)
+Bteam Character MoMo from twice ![Bteam Character MoMo from twice](/readMeImages/MM1.png)
+
 <!--
 ## FAQ
 1. **What is this game?**
