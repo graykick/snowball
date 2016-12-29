@@ -5,8 +5,6 @@ A simple but powerful snowball.io built with socket.IO and HTML5 canvas on top o
 
 <!--need game screenshot image-->
 
-## Live Demos
-An updated and live list of live demos can be found on the [Live Demos wiki page](https://github.com/firepunch/snowball/wiki/Live-Demos).
 <!--need deomo-->
 ---
 
@@ -48,6 +46,7 @@ Or...
 
 #### Requirements
 To run / install this game, you'll need: 
+- Redis
 - NodeJS with NPM installed.
 - socket.IO.
 - Express.
@@ -58,6 +57,16 @@ After cloning the source code from Github, you need to run the following command
 
 ```
 npm install
+```
+
+#### Running the Redis
+After downloading all the dependencies, you should run Redis Server before run main Server.:
+```
+snowball\redis-2.4.5-win32-win64\64bit\redis-server.exe
+```
+or
+```
+snowball\redis-2.4.5-win32-win64\32bit\redis-server.exe
 ```
 
 #### Running the Server
